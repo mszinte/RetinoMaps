@@ -28,12 +28,11 @@ To run:
 >> cd ~/projects/stereo_prf/analysis_code/preproc/functional
 2. run python command
 python fmriprep_sbatch.py [main directory] [project name] [subject num]
-                          [hour proc.] [anat only] [aroma] [fmapfree] 
-                          [skip bids validation] [cifti] [dof] [email account] [group]
+                          [hour proc.] [anat_only_(y/n)] [aroma_(y/n)] [fmapfree_(y/n)] 
+                          [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 15 1 0 1 0 1 12 
-                            martin.szinte@univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 12 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -61,7 +60,7 @@ hcp_cifti_val = int(sys.argv[9])
 dof = int(sys.argv[10])
 email = sys.argv[11]
 group = sys.argv[12]
-project_name = sys.argv[13]
+server_project = sys.argv[13]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
@@ -75,18 +74,18 @@ log_dir = "{main_dir}/{project_dir}/derivatives/fmriprep/log_outputs".format(
 # special input
 anat_only, use_aroma, use_fmapfree, anat_only_end, use_skip_bids_val, \
     hcp_cifti, tf_export, tf_bind = '','','','','', '', '', ''
-if anat == 1:
+if anat == 'anat_only_y':
     anat_only = ' --anat-only'
     anat_only_end = '_anat'
     nb_procs = 8
 
-if aroma == 1:
+if aroma == 'aroma_y':
     use_aroma = ' --use-aroma'
 
-if fmapfree == 1:
+if fmapfree == 'fmapfree_y':
     use_fmapfree= ' --use-syn-sdc'
 
-if skip_bids_val == 1:
+if skip_bids_val == 'skip_bids_val_y':
     use_skip_bids_val = ' --skip_bids_validation'
 
 if hcp_cifti_val == 1:
@@ -101,7 +100,7 @@ slurm_cmd = """\
 #SBATCH --mail-type=ALL
 #SBATCH -p {cluster_name}
 #SBATCH --mail-user={email}
-#SBATCH -A {proj_name}
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
@@ -110,7 +109,7 @@ slurm_cmd = """\
 #SBATCH -o {log_dir}/{subject}_fmriprep{anat_only_end}_%N_%j_%a.out
 #SBATCH -J {subject}_fmriprep{anat_only_end}
 #SBATCH --mail-type=BEGIN,END\n\n{tf_export}
-""".format(proj_name=proj_name, nb_procs=nb_procs, hour_proc=hour_proc, 
+""".format(server_project=server_project, nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, anat_only_end=anat_only_end, memory_val=memory_val,
            log_dir=log_dir, email=email, tf_export=tf_export,
            cluster_name=cluster_name)
