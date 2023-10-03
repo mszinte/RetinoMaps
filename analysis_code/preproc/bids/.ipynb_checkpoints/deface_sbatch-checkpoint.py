@@ -18,11 +18,11 @@ Defaced images
 -----------------------------------------------------------------------------------------
 To run: run python commands
 >> cd ~/projects/[project]/analysis_code/preproc/bids/
->> python deface_sbatch.py [main directory] [project name] [subject num] [server_project] [overwrite] [server]
+>> python deface_sbatch.py [main directory] [project name] [subject num] [group] [server_project] [overwrite] [server]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/preproc/bids/
-python deface_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 b327 1 1
+python deface_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327 1 1
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -38,9 +38,10 @@ deb = pdb.set_trace
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
-server_project = sys.argv[4]
-ovewrite_in = int(sys.argv[5])
-server_in = int(sys.argv[6])
+group = sys.argv[4]
+server_project = sys.argv[5]
+ovewrite_in = int(sys.argv[6])
+server_in = int(sys.argv[7])
 hour_proc = 4
 nb_procs = 8
 log_dir = "{}/{}/derivatives/pp_data/logs".format(main_dir, project_dir, subject)
@@ -61,6 +62,17 @@ slurm_cmd = """\
     nb_procs=nb_procs, hour_proc=hour_proc, 
     subject=subject, log_dir=log_dir,
     server_project=server_project)
+
+# define FSL comande 
+fsl_cmd = """\
+export FSLDIR='{main_dir}/{project_dir}/code/fsl'
+export PATH=$PATH:$FSLDIR/bin
+source $FSLDIR/etc/fslconf/fsl.sh\n""".format(main_dir=main_dir, project_dir=project_dir)
+
+# define change mode change group comande
+chmod_cmd = """chmod -Rf 771 {main_dir}/{project_dir}\n""".format(main_dir=main_dir, project_dir=project_dir)
+chgrp_cmd = """chgrp -Rf {group} {main_dir}/{project_dir}\n""".format(main_dir=main_dir, project_dir=project_dir, group=group)
+
 
 # get files
 session = 'ses-01'
@@ -85,8 +97,11 @@ else:
     deface_cmd_T1 = "pydeface {fn} --verbose\n".format(fn = t1w_filename)
     deface_cmd_T2 = "pydeface {fn} --verbose\n".format(fn = t2w_filename)
 
+of.write(fsl_cmd)    
 of.write(deface_cmd_T1)
 of.write(deface_cmd_T2)
+of.write(chmod_cmd)
+of.write(chgrp_cmd)
 of.close()
 
 print(sh_file)

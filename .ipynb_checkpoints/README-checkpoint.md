@@ -31,7 +31,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 - [ ] deface participants t1w image [deface_sbatch.py](analysis_code/preproc/bids/deface_sbatch.py) 
     </br>Note: run script for each subject separately.
 - [ ] validate bids format [https://bids-standard.github.io/bids-validator/] / alternately, use a docker [https://pypi.org/project/bids-validator/]
-    </br>Note: for the webpage, use Chrome and wait for at least 30 min, even if nothing seems to happen.
+    </br>Note: for the webpage, use FireFox and wait for at least 30 min, even if nothing seems to happen.
 
 #### Structural preprocessing
 - [ ] fMRIprep with anat-only option [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
