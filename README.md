@@ -1,4 +1,4 @@
-# AMBLYO_PRF
+# RetinoMaps
 ## About
 ---
 We study cerebral areas implicated in both vision and eye movements..</br>
@@ -7,7 +7,7 @@ This repository contain all code allowing us to analyse our dataset [OpenNeuro:D
 ---
 ## Authors (alphabetic order): 
 ---
-Uriel LASCOMBES & Martin SZINTE
+Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ### Main dependencies
 ---
@@ -27,13 +27,10 @@ Uriel LASCOMBES & Martin SZINTE
 ### Pre-processing
 
 #### BIDS
-- [] convert dicom to niix [dcm2nii_bids_rename.py](analysis_code/preproc/bids/dcm2nii_bids_rename.py) 
-    </br>Note: each created .json file will miss a field "TaskName":"prf", to add manually for each functionnal scan, saved explicitly with encoding utf-8.
-- [] create events files [event_files_bidify.py](analysis_code/preproc/bids/event_files_bidify.py) 
-    </br>Note: for missing event files, create a file with a column header line and an n/a line.
-- [x] deface participants t1w image [deface_sbatch.py](analysis_code/preproc/bids/deface_sbatch.py) 
+- [ ] copy relevant data from PredictEye [copy_data.py](analysis_code/preproc/bids/bids_copy_data.sh) 
+- [ ] deface participants t1w image [deface_sbatch.py](analysis_code/preproc/bids/deface_sbatch.py) 
     </br>Note: run script for each subject separately.
-- [] validate bids format [https://bids-standard.github.io/bids-validator/] / alternately, use a docker [https://pypi.org/project/bids-validator/]
+- [ ] validate bids format [https://bids-standard.github.io/bids-validator/] / alternately, use a docker [https://pypi.org/project/bids-validator/]
     </br>Note: for the webpage, use Chrome and wait for at least 30 min, even if nothing seems to happen.
 
 #### Structural preprocessing

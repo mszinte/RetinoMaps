@@ -9,35 +9,19 @@ Input(s):
 sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: subject (e.g. sub-001)
-sys.argv[4]: overwrite images (0 = no, 1 = yes)
-sys.argv[5]: server job or not (1 = server, 0 = terminal)
+sys.argv[4]: server job or not (1 = server, 0 = terminal)
+sys.argv[5]: overwrite images (0 = no, 1 = yes)
+sys.argv[6]: server job or not (1 = server, 0 = terminal)
 -----------------------------------------------------------------------------------------
 Output(s):
 Defaced images
 -----------------------------------------------------------------------------------------
 To run: run python commands
->> cd ~/projects/stereo_prf/analysis_code/preproc/bids/
+>> cd ~/projects/[project]/analysis_code/preproc/bids/
 >> python deface_sbatch.py [main directory] [project name] [subject num] [overwrite] [server]
 -----------------------------------------------------------------------------------------
 Exemple:
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-01 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-02 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-03 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-04 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-05 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-06 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-07 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-08 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-09 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-10 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-11 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-12 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-13 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-14 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-15 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-16 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-17 1 0
-python deface_sbatch.py /scratch/mszinte/data stereo_prf sub-18 1 0
+python deface_sbatch.py /scratch/mszinte/data [project] sub-01 1 1
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -53,8 +37,9 @@ deb = pdb.set_trace
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
-ovewrite_in = int(sys.argv[4])
-server_in = int(sys.argv[5])
+server_project = sys.argv[4]
+ovewrite_in = int(sys.argv[5])
+server_in = int(sys.argv[6])
 hour_proc = 4
 nb_procs = 8
 log_dir = "{}/{}/derivatives/pp_data/logs".format(main_dir, project_dir, subject)
@@ -65,13 +50,16 @@ except: pass
 slurm_cmd = """\
 #!/bin/bash
 #SBATCH -p skylake
-#SBATCH -A b161
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task={nb_procs}
 #SBATCH --time={hour_proc}:00:00
 #SBATCH -e {log_dir}/{subject}_deface_%N_%j_%a.err
 #SBATCH -o {log_dir}/{subject}_deface_%N_%j_%a.out
-#SBATCH -J {subject}_deface\n\n""".format(nb_procs=nb_procs, hour_proc=hour_proc, subject=subject, log_dir=log_dir)
+#SBATCH -J {subject}_deface\n\n""".format(
+    nb_procs=nb_procs, hour_proc=hour_proc, 
+    subject=subject, log_dir=log_dir,
+    server_project=server_project)
 
 # get files
 session = 'ses-02'
