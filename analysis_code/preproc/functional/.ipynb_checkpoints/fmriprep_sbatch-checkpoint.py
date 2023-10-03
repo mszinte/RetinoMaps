@@ -25,14 +25,14 @@ preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/functional
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 2. run python command
 python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [hour proc.] [anat_only_(y/n)] [aroma_(y/n)] [fmapfree_(y/n)] 
-                          [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [project_group]
+                          [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 12 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 12 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -52,15 +52,15 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 sub_num = subject[-2:]
 hour_proc = int(sys.argv[4])
-anat = int(sys.argv[5])
-aroma = int(sys.argv[6])
-fmapfree = int(sys.argv[7])
-skip_bids_val = int(sys.argv[8])
+anat = sys.argv[5]
+aroma = sys.argv[6]
+fmapfree = sys.argv[7]
+skip_bids_val = sys.argv[8]
 hcp_cifti_val = int(sys.argv[9])
 dof = int(sys.argv[10])
 email = sys.argv[11]
 group = sys.argv[12]
-project_name = sys.argv[13]
+server_project = sys.argv[13]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
@@ -100,7 +100,7 @@ slurm_cmd = """\
 #SBATCH --mail-type=ALL
 #SBATCH -p {cluster_name}
 #SBATCH --mail-user={email}
-#SBATCH -A {project_name}
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
@@ -109,7 +109,7 @@ slurm_cmd = """\
 #SBATCH -o {log_dir}/{subject}_fmriprep{anat_only_end}_%N_%j_%a.out
 #SBATCH -J {subject}_fmriprep{anat_only_end}
 #SBATCH --mail-type=BEGIN,END\n\n{tf_export}
-""".format(project_name=project_name, nb_procs=nb_procs, hour_proc=hour_proc, 
+""".format(server_project=server_project, nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, anat_only_end=anat_only_end, memory_val=memory_val,
            log_dir=log_dir, email=email, tf_export=tf_export,
            cluster_name=cluster_name)
