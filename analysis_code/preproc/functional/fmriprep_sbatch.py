@@ -25,7 +25,7 @@ preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/functional
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 2. run python command
 python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [hour proc.] [anat_only_(y/n)] [aroma_(y/n)] [fmapfree_(y/n)] 
@@ -52,10 +52,10 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 sub_num = subject[-2:]
 hour_proc = int(sys.argv[4])
-anat = int(sys.argv[5])
-aroma = int(sys.argv[6])
-fmapfree = int(sys.argv[7])
-skip_bids_val = int(sys.argv[8])
+anat = sys.argv[5]
+aroma = sys.argv[6]
+fmapfree = sys.argv[7]
+skip_bids_val = sys.argv[8]
 hcp_cifti_val = int(sys.argv[9])
 dof = int(sys.argv[10])
 email = sys.argv[11]
