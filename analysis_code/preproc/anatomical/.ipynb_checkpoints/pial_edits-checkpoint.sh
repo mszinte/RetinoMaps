@@ -43,8 +43,9 @@ fi
 # Check + edit pial surface
 echo "\n>> Edit the brain mask following https://invibe.nohost.me/bookstack/books/preprocessing/page/manual-edition-of-the-brain-segmentation"
 echo ">> When you are done, save the brainmask and quit freeview"
-freeview -v ~/temp_data/$3/mri/T1.mgz \
-~/temp_data/$3/mri/brainmask.mgz:opacity=0.5 \
+freeview -v ~/temp_data/$3/mri/T1.mgz
+            ~/temp_data/$3/mri/T2.mgz\
+            ~/temp_data/$3/mri/brainmask.mgz:opacity=0.5 \
 -f ~/temp_data/$3/surf/lh.white:edgecolor=yellow \
 ~/temp_data/$3/surf/lh.pial:edgecolor=red \
 ~/temp_data/$3/surf/rh.white:edgecolor=yellow \
