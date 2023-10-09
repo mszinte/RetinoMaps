@@ -17,12 +17,12 @@ Sagital view video and images of the brain segmentation
 To run:
 0. TO RUN LOCALLY WITH FREEWIEW INSTALLED (not on server)
 1. cd to function
->> cd ~/disks/meso_H/projects/stereo_prf/analysis_code/preproc/anatomical/
+>> cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/preproc/anatomical/
 2. run python command
 python sagital_view.py [main directory] [project name] [subject num] [video name]
 -----------------------------------------------------------------------------------------
 Exemple:
-python sagital_view.py ~/disks/meso_S/data/ amblyo_prf sub-01 before_edit
+python sagital_view.py ~/disks/meso_S/data/ RetinoMaps sub-01 before_edit
 -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
