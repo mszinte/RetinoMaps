@@ -17,12 +17,12 @@
 # To run:
 # 0. TO RUN LOCALLY WITH FREEWIEW INSTALLED (not on server)
 # 1. cd to function
-# >> cd ~/disks/meso_H/projects/stereo_prf/analysis_code/preproc/anatomical/
+# >> cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/preproc/anatomical/
 # 2. run shell command
 # sh pial_edits.sh [main directory] [project name] [subject name] [mesocentre_ID]
 # -----------------------------------------------------------------------------------------
 # Exemple:
-# sh pial_edits.sh /scratch/mszinte/data/ amblyo_prf sub-01 mszinte
+# sh pial_edits.sh /scratch/mszinte/data/ RetinoMaps sub-01 mszinte
 # -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (mail@martinszinte.net)
 # -----------------------------------------------------------------------------------------
@@ -43,13 +43,13 @@ fi
 # Check + edit pial surface
 echo "\n>> Edit the brain mask following https://invibe.nohost.me/bookstack/books/preprocessing/page/manual-edition-of-the-brain-segmentation"
 echo ">> When you are done, save the brainmask and quit freeview"
-freeview -v ~/temp_data/$3/mri/T1.mgz
-            ~/temp_data/$3/mri/T2.mgz\
+freeview -v ~/temp_data/$3/mri/T1.mgz \
+            ~/temp_data/$3/mri/T2.mgz \
             ~/temp_data/$3/mri/brainmask.mgz:opacity=0.5 \
--f ~/temp_data/$3/surf/lh.white:edgecolor=yellow \
-~/temp_data/$3/surf/lh.pial:edgecolor=red \
-~/temp_data/$3/surf/rh.white:edgecolor=yellow \
-~/temp_data/$3/surf/rh.pial:edgecolor=red
+            -f ~/temp_data/$3/surf/lh.white:edgecolor=yellow \
+            ~/temp_data/$3/surf/lh.pial:edgecolor=red \
+            ~/temp_data/$3/surf/rh.white:edgecolor=yellow \
+            ~/temp_data/$3/surf/rh.pial:edgecolor=red
 
 # move the file to the right place
 while true; do
