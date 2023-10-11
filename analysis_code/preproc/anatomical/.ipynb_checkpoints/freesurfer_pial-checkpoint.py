@@ -16,12 +16,12 @@ new freesurfer segmentation files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/anatomical/
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/anatomical/
 2. run python command
-python freesurfer_pial.py [main directory] [project name] [subject] [group]
+python freesurfer_pial.py [main directory] [project name] [subject] [group] [proj_name]
 -----------------------------------------------------------------------------------------
 Exemple:
-python freesurfer_pial.py /scratch/mszinte/data amblyo_prf sub-01 327
+python freesurfer_pial.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -37,13 +37,14 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+proj_name = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name = 'skylake'
 hour_proc = 20
 nb_procs = 8
 memory_val = 48
-proj_name = 'a327'
+
 
 # define directory and freesurfer licence
 log_dir = "{}/{}/derivatives/freesurfer_pial/log_outputs".format(main_dir,project_dir)
