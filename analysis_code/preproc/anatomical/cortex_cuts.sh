@@ -22,8 +22,8 @@
 # sh preproc/cortex_cuts.sh [main directory] [project name] [subject name] [mesocentre_ID] [hemisphere]
 # -----------------------------------------------------------------------------------------
 # Exemple:
-# sh cortex_cuts.sh /scratch/mszinte/data amblyo_prf sub-01 mszinte lh
-# sh cortex_cuts.sh /scratch/mszinte/data amblyo_prf sub-01 mszinte rh
+# sh cortex_cuts.sh /scratch/mszinte/data RetinoMaps sub-01 mszinte lh
+# sh cortex_cuts.sh /scratch/mszinte/data RetinoMaps sub-01 mszinte rh
 # -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (mail@martinszinte.net)
 # -----------------------------------------------------------------------------------------
