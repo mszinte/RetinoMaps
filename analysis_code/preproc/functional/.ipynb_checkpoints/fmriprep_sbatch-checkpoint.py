@@ -32,7 +32,7 @@ python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 12 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 6 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -115,12 +115,13 @@ slurm_cmd = """\
            cluster_name=cluster_name)
 
 # define singularity cmd
-singularity_cmd = "singularity run --cleanenv -B {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/ participant --participant-label {sub_num} --bold2t1w-dof {dof} --bold2t1w-init header --output-spaces T1w fsaverage{hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
+singularity_cmd = "singularity run --cleanenv -B {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/ participant --participant-label {sub_num} --bold2t1w-dof {dof} --bold2t1w-init header --output-spaces T1w fsnative fsaverage{hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
         tf_bind=tf_bind, main_dir=main_dir, project_dir=project_dir,
         simg=singularity_dir, sub_num=sub_num, nb_procs=nb_procs,
         anat_only=anat_only, use_aroma=use_aroma, use_fmapfree=use_fmapfree,
         use_skip_bids_val=use_skip_bids_val, hcp_cifti=hcp_cifti, memory_val=memory_val,
         dof=dof)
+
 
 # define permission cmd
 chmod_cmd = "\nchmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
