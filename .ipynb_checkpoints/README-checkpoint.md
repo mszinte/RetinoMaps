@@ -52,7 +52,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 ### Post-processing
 
 #### PRF analysis
-- [ ] create the visual matrix design [vdm_builder.py](analysis_code/postproc/prf/vdm_builder.py)
+- [ ] create the visual matrix design [vdm_builder.py](analysis_code/postproc/prf/fit/vdm_builder.py)
 - [ ] Execute [prf_fit.py](analysis_code/postproc/prf/fit/prf_fit.py) to fit pRF parameters (eccentricity, size, amplitude, baseline, rsquare): run only [submit_fit_jobs.py](analysis_code/postproc/prf/fit/submit_fit_jobs.py)
 - [ ] Compute pRF derivatives [compute_derivatives.py](analysis_code/postproc/prf/postfit/compute_derivatives.py)
 - [ ] make pycortex maps [pycortex_maps.py](analysis_code/postproc/prf/postfit/pycortex_maps.py)
