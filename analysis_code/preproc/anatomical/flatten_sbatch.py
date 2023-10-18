@@ -16,12 +16,12 @@ preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/anatomical/
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/anatomical/
 2. run python command
 python flatten_sbatch.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Example:
-python flatten_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 327
+python flatten_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -39,12 +39,12 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+server_project = sys.argv[5]
 sub_num = subject[-2:]
 hemis = ['lh', 'rh']
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
-proj_name = 'a327'
 nb_procs = 8
 memory_val = 48
 hour_proc = 20
@@ -62,7 +62,7 @@ for hemi in hemis:
     slurm_cmd = """\
 #!/bin/bash
 #SBATCH -p skylake
-#SBATCH -A {proj_name}
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
@@ -71,7 +71,7 @@ for hemi in hemis:
 #SBATCH -o {log_dir}/{subject}_{hemi}_flatten_%N_%j_%a.out
 #SBATCH -J {subject}_{hemi}_flatten
 export SUBJECTS_DIR='{fs_dir}'
-cd '{fs_dir}/{subject}/surf/'\n\n""".format(proj_name=proj_name, nb_procs=nb_procs, hour_proc=hour_proc, 
+cd '{fs_dir}/{subject}/surf/'\n\n""".format(server_project=server_project, nb_procs=nb_procs, hour_proc=hour_proc, 
                                             subject=subject, memory_val=memory_val, log_dir=log_dir, 
                                             fs_dir=fs_dir, hemi=hemi)
 
