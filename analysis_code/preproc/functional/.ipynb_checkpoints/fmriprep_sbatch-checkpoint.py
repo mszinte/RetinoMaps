@@ -64,7 +64,7 @@ server_project = sys.argv[13]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
-singularity_dir = "{main_dir}/{project_dir}/code/singularity/fmriprep-20.2.3.simg".format(
+singularity_dir = "{main_dir}/{project_dir}/code/singularity/fmriprep-23.1.3.simg".format(
     main_dir=main_dir, project_dir=project_dir)
 nb_procs = 32
 memory_val = 100
