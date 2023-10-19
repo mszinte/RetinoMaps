@@ -32,7 +32,7 @@ python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_y aroma_n fmapfree_y skip_bids_val_n 1 6 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_n aroma_n fmapfree_y skip_bids_val_n 1 6 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ server_project = sys.argv[13]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
-singularity_dir = "{main_dir}/{project_dir}/code/singularity/fmriprep-23.1.3.simg".format(
+singularity_dir = "{main_dir}/{project_dir}/code/singularity/fmriprep-23.1.4.simg".format(
     main_dir=main_dir, project_dir=project_dir)
 nb_procs = 32
 memory_val = 100
