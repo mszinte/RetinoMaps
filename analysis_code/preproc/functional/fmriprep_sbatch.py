@@ -29,10 +29,10 @@ To run:
 2. run python command
 python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [hour proc.] [anat_only_(y/n)] [aroma_(y/n)] [fmapfree_(y/n)] 
-                          [skip_bids_val_(y/n)] [cifti] [dof] [email account] [group] [server_project]
+                          [skip_bids_val_(y/n)] [cifti_output_170k_(y/n)] [fsaverage(y/n)] [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_n aroma_n fmapfree_y skip_bids_val_n 1 6 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 15 anat_only_n aroma_n fmapfree_n skip_bids_val_n cifti_output_170k_n fsaverage_y 6 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -56,11 +56,12 @@ anat = sys.argv[5]
 aroma = sys.argv[6]
 fmapfree = sys.argv[7]
 skip_bids_val = sys.argv[8]
-hcp_cifti_val = int(sys.argv[9])
-dof = int(sys.argv[10])
-email = sys.argv[11]
-group = sys.argv[12]
-server_project = sys.argv[13]
+hcp_cifti_val = sys.argv[9]
+fsaverage_val = sys.argv[10]
+dof = int(sys.argv[11])
+email = sys.argv[12]
+group = sys.argv[13]
+server_project = sys.argv[14]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
@@ -72,8 +73,10 @@ log_dir = "{main_dir}/{project_dir}/derivatives/fmriprep/log_outputs".format(
     main_dir=main_dir, project_dir=project_dir)
 
 # special input
-anat_only, use_aroma, use_fmapfree, anat_only_end, use_skip_bids_val, \
-    hcp_cifti, tf_export, tf_bind = '','','','','', '', '', ''
+anat_only, use_aroma, use_fmapfree, anat_only_end, \
+use_skip_bids_val, hcp_cifti, tf_export, tf_bind, fsaverage = '','','','','', '', '', '', ''
+
+
 if anat == 'anat_only_y':
     anat_only = ' --anat-only'
     anat_only_end = '_anat'
@@ -88,11 +91,14 @@ if fmapfree == 'fmapfree_y':
 if skip_bids_val == 'skip_bids_val_y':
     use_skip_bids_val = ' --skip_bids_validation'
 
-if hcp_cifti_val == 1:
-    tf_export = 'export SINGULARITYENV_TEMPLATEFLOW_HOME=/opt/templateflow'
-    tf_bind = "{main_dir}/{project_dir}/code/singularity/fmriprep_tf/:/opt/templateflow".format(
-        main_dir=main_dir, project_dir=project_dir)
+if hcp_cifti_val == 'cifti_output_170k_y':
     hcp_cifti = ' --cifti-output 170k'
+    
+if fsaverage_val == 'fsaverage_y':
+    tf_export = 'export SINGULARITYENV_TEMPLATEFLOW_HOME=/opt/templateflow'
+    tf_bind = "-B {main_dir}/{project_dir}/code/singularity/fmriprep_tf/:/opt/templateflow".format(
+        main_dir=main_dir,project_dir=project_dir) 
+    fsaverage = 'fsaverage'
     
 # define SLURM cmd
 slurm_cmd = """\
@@ -115,11 +121,11 @@ slurm_cmd = """\
            cluster_name=cluster_name)
 
 # define singularity cmd
-singularity_cmd = "singularity run --cleanenv -B {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt --fs-subjects-dir /work_dir/{project_dir}/derivatives/fmriprep/freesurfer/ /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/fmriprep/ participant --participant-label {sub_num} --bold2t1w-dof {dof} --bold2t1w-init header --output-spaces T1w fsnative fsaverage{hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
+singularity_cmd = "singularity run --cleanenv {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt --fs-subjects-dir /work_dir/{project_dir}/derivatives/fmriprep/freesurfer/ /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/fmriprep/ participant --participant-label {sub_num} --bold2t1w-dof {dof} --bold2t1w-init header --output-spaces T1w fsnative {fsaverage} {hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
         tf_bind=tf_bind, main_dir=main_dir, project_dir=project_dir,
         simg=singularity_dir, sub_num=sub_num, nb_procs=nb_procs,
         anat_only=anat_only, use_aroma=use_aroma, use_fmapfree=use_fmapfree,
-        use_skip_bids_val=use_skip_bids_val, hcp_cifti=hcp_cifti, memory_val=memory_val,
+        use_skip_bids_val=use_skip_bids_val, fsaverage = fsaverage,hcp_cifti=hcp_cifti, memory_val=memory_val,
         dof=dof)
 
 
