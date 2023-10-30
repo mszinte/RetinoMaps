@@ -16,12 +16,12 @@ Output(s):
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd /home/mszinte/projects/stereo_prf/analysis_code/preproc/functional/
+>> cd /home/mszinte/projects/RetinoMaps/analysis_code/preproc/functional/
 2. run python command
 python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end.py /scratch/mszinte/data amblyo_prf sub-01 327
+python preproc_end.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -48,26 +48,54 @@ from scipy.signal import savgol_filter
 trans_cmd = 'rsync -avuz --progress'
 deb = ipdb.set_trace
 
-# Inputs
-main_dir = sys.argv[1]
-project_dir = sys.argv[2]
-subject = sys.argv[3]
-group = sys.argv[4]
+# # Inputs
+# main_dir = sys.argv[1]
+# project_dir = sys.argv[2]
+# subject = sys.argv[3]
+# group = sys.argv[4]
+
+# # load settings
+# with open('../../settings.json') as f:
+#     json_s = f.read()
+#     analysis_info = json.loads(json_s)
+# TR = analysis_info['TR']
+# task = analysis_info['task']
+# high_pass_threshold = analysis_info['high_pass_threshold'] 
+# high_pass_type = analysis_info['high_pass_type'] 
+# session = analysis_info['session']
+
+
+
+
+main_dir = '/Users/uriel/disks/meso_shared'
+project_dir = 'RetinoMaps'
+subject = 'sub-02b'
+group = '327'
+session = 'ses-01'
+
+
+file_path = '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/fmriprep/fmriprep/sub-02b/ses-02/func'
+main_dir = '/Users/uriel/disks/meso_shared/'
+project_dir = 'RetinoMaps'
+file_name ='sub-02_ses-02_task-pMF_run-01_hemi-L_space-fsaverage_bold.func.gii'
+subject = 'sub-02'
 
 # load settings
-with open('../../settings.json') as f:
+with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 TR = analysis_info['TR']
-task = analysis_info['task']
+#tasks = analysis_info['task_names']
 high_pass_threshold = analysis_info['high_pass_threshold'] 
 high_pass_type = analysis_info['high_pass_type'] 
-session = analysis_info['session']
+sessions = analysis_info['session']
+
+
 
 # Get fmriprep filenames
 fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(main_dir, project_dir, subject, session)
-fmriprep_func_fns = glob.glob("{}/*_desc-preproc_bold.nii.gz".format(fmriprep_dir))
-fmriprep_mask_fns = glob.glob("{}/*_desc-brain_mask.nii.gz".format(fmriprep_dir))
+fmriprep_func_fns = glob.glob("{}/*_space-fsLR_den-170k_bold.dtseries.nii".format(fmriprep_dir))
+
 pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(main_dir, project_dir, subject)
 os.makedirs(pp_data_func_dir, exist_ok=True)
 

@@ -5,6 +5,7 @@
     "sub_task_list": ["","sac","sp"],
     "session" : ["ses-01","ses-02"], 
     "task_names": ["rest","pMF","pRF","PurLoc","SacLoc","PurVELoc","SacVELoc"],
+    "cluster_name": "skylake",
     "preproc":["fmriprep_dct","fmriprep_dct_pca"],
     "registration_type":["T1w", "MNI152NLin2009cAsym"],
     "task_runs": [2,5,5,2,2,2,2],
