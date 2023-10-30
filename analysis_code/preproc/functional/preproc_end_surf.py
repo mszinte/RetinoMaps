@@ -52,6 +52,16 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
+# load settings
+with open('../../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+TR = analysis_info['TR']
+tasks = analysis_info['task_names']
+high_pass_threshold = analysis_info['high_pass_threshold'] 
+high_pass_type = analysis_info['high_pass_type'] 
+sessions = analysis_info['session']
+
 # main_dir = '/Users/uriel/disks/meso_shared'
 # project_dir = 'RetinoMaps'
 # subject = 'sub-02b'
@@ -75,15 +85,7 @@ group = sys.argv[4]
 # sessions = analysis_info['session']
 
 
-# load settings
-with open('../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-TR = analysis_info['TR']
-tasks = analysis_info['task_names']
-high_pass_threshold = analysis_info['high_pass_threshold'] 
-high_pass_type = analysis_info['high_pass_type'] 
-sessions = analysis_info['session']
+
 
 
 # TR = 1.3
@@ -92,7 +94,7 @@ sessions = analysis_info['session']
 # high_pass_type = 'dct'
 # sessions = 'ses-01'
 
-
+session = 'ses-01'
 
 for session in sessions :
 
@@ -127,7 +129,7 @@ for session in sessions :
             surf_data_L = np.vstack(surf_data_L)
             
             # High pass filtering Left hemisphere
-            n_vol_L = surf_data_R.shape[0]
+            n_vol_L = surf_data_L.shape[0]
             ft_L = np.linspace(0.5 * TR, (n_vol_L + 0.5) * TR, n_vol_L, endpoint=False)
             hp_set_L = _cosine_drift(high_pass_threshold, ft_L)
             surf_data_L = signal.clean(surf_data_L, detrend=False, standardize=True, confounds=hp_set_L)
@@ -165,8 +167,9 @@ for session in sessions :
             print(task)
     
             # Average tasks runs
-            preproc_files_L = glob.glob("{}/*_hemi-R_space-fsnative_bold_{}.nii.gz".format(pp_data_func_dir, high_pass_type))
-            preproc_files_R = glob.glob("{}/*_hemi-L_space-fsnative_bold_{}.nii.gz".format(pp_data_func_dir, high_pass_type))
+            preproc_files_L = glob.glob("{}/*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir, high_pass_type))
+            preproc_files_R = glob.glob("{}/*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir, high_pass_type))
+    
             
             avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg".format(main_dir, project_dir, subject)
             os.makedirs(avg_dir, exist_ok=True)
@@ -177,11 +180,15 @@ for session in sessions :
             avg_file_L = "{}/{}_task-{}_hemi-L_space-fsnative_bold_{}_avg.func.gii".format(avg_dir, subject, task,high_pass_type)
             
             
-            avg_img_L = nb.load(preproc_files_L[0])
-            data_avg_L = np.zeros(avg_img_L.shape)
+            avg_val_img_L = nb.load(preproc_files_L[0])
+            avg_im_L = [x.data for x in avg_val_img_L.darrays]
+            avg_im_L = np.vstack(avg_im_L)
+            data_avg_L = np.zeros(avg_im_L.shape)
             
-            avg_img_R = nb.load(preproc_files_R[0])
-            data_avg_R = np.zeros(avg_img_R.shape)
+            avg_val_img_R = nb.load(preproc_files_R[0])
+            avg_im_R = [x.data for x in avg_val_img_R.darrays]
+            avg_im_R = np.vstack(avg_im_R)
+            data_avg_R = np.zeros(avg_im_R.shape)
              
             print("averaging...")
             for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):

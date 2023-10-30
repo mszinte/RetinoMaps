@@ -18,10 +18,10 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 2. run python command
->> python pcm_sbatch.py [main directory] [project name] [subject num] [group] [server project]
+>> python preproc_end_sbatch.py [main directory] [project name] [subject num] [group] [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pcm_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -52,14 +52,14 @@ server_project = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name  = analysis_info['cluster_name']
-proj_name = analysis_info['proj_name']
+proj_name = analysis_info['project_name']
 nb_procs = 8
 memory_val = 48
 hour_proc = 4
 
 # set folders
-log_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/log_outputs".format(main_dir, project_dir, subject)
-job_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/jobs".format(main_dir, project_dir, subject)
+log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
+job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, project_dir, subject)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(job_dir, exist_ok=True)
 
@@ -71,9 +71,9 @@ slurm_cmd = """\
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
 #SBATCH --time={hour_proc}:00:00
-#SBATCH -e {log_dir}/{subject}_pcm_%N_%j_%a.err
-#SBATCH -o {log_dir}/{subject}_pcm_%N_%j_%a.out
-#SBATCH -J {subject}_pcm
+#SBATCH -e {log_dir}/{subject}_preproc_end_%N_%j_%a.err
+#SBATCH -o {log_dir}/{subject}_preproc_end_%N_%j_%a.out
+#SBATCH -J {subject}_preproc_end
 """.format(server_project=server_project, cluster_name=cluster_name,
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
