@@ -64,15 +64,13 @@ sessions = analysis_info['session']
 
 # main_dir = '/Users/uriel/disks/meso_shared'
 # project_dir = 'RetinoMaps'
-# subject = 'sub-02b'
+# subject = 'sub-02'
 # group = '327'
-
-
-# file_path = '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/fmriprep/fmriprep/sub-02b/ses-02/func'
-# main_dir = '/Users/uriel/disks/meso_shared/'
-# project_dir = 'RetinoMaps'
-# file_name ='sub-02_ses-02_task-pMF_run-01_hemi-L_space-fsaverage_bold.func.gii'
-# subject = 'sub-02b'
+# TR = 1.3
+# tasks = 'pRF'
+# high_pass_threshold = 0.01
+# high_pass_type = 'dct'
+# sessions = 'ses-01'
 
 # # load settings
 # with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
@@ -88,13 +86,9 @@ sessions = analysis_info['session']
 
 
 
-# TR = 1.3
-# tasks = 'pRF'
-# high_pass_threshold = 0.01
-# high_pass_type = 'dct'
-# sessions = 'ses-01'
 
-session = 'ses-01'
+
+
 
 for session in sessions :
 
@@ -180,54 +174,54 @@ for session in sessions :
             avg_file_L = "{}/{}_task-{}_hemi-L_space-fsnative_bold_{}_avg.func.gii".format(avg_dir, subject, task,high_pass_type)
             
             
-            avg_val_img_L = nb.load(preproc_files_L[0])
-            avg_im_L = [x.data for x in avg_val_img_L.darrays]
-            avg_im_L = np.vstack(avg_im_L)
-            data_avg_L = np.zeros(avg_im_L.shape)
+            # avg_val_img_L = nb.load(preproc_files_L[0])
+            # avg_im_L = [x.data for x in avg_val_img_L.darrays]
+            # avg_im_L = np.vstack(avg_im_L)
+            # data_avg_L = np.zeros(avg_im_L.shape)
             
-            avg_val_img_R = nb.load(preproc_files_R[0])
-            avg_im_R = [x.data for x in avg_val_img_R.darrays]
-            avg_im_R = np.vstack(avg_im_R)
-            data_avg_R = np.zeros(avg_im_R.shape)
+            # avg_val_img_R = nb.load(preproc_files_R[0])
+            # avg_im_R = [x.data for x in avg_val_img_R.darrays]
+            # avg_im_R = np.vstack(avg_im_R)
+            # data_avg_R = np.zeros(avg_im_R.shape)
              
-            print("averaging...")
-            for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):
-                try : 
+            # print("averaging...")
+            # for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):
+            #     try : 
 
-                    print('add: {}'.format(preproc_file_L))
-                    data_val_L = []
-                    data_val_R = []
+            #         print('add: {}'.format(preproc_file_L))
+            #         data_val_L = []
+            #         data_val_R = []
                     
-                    # Load left hemisphere data
-                    data_val_img_L = nb.load(preproc_file_L)
-                    data_val_L = [x.data for x in data_val_img_L.darrays]
-                    data_val_L = np.vstack(data_val_L)
+            #         # Load left hemisphere data
+            #         data_val_img_L = nb.load(preproc_file_L)
+            #         data_val_L = [x.data for x in data_val_img_L.darrays]
+            #         data_val_L = np.vstack(data_val_L)
                     
-                    # Load right hemisphere data
-                    data_val_img_R = nb.load(preproc_file_R)
-                    data_val_R = [x.data for x in data_val_img_R.darrays]
-                    data_val_R = np.vstack(data_val_R)
+            #         # Load right hemisphere data
+            #         data_val_img_R = nb.load(preproc_file_R)
+            #         data_val_R = [x.data for x in data_val_img_R.darrays]
+            #         data_val_R = np.vstack(data_val_R)
                     
-                    # Averaging 
-                    data_avg_L += data_val_L/len(preproc_files_L)
-                    data_avg_R += data_val_R/len(preproc_files_R)
+            #         # Averaging 
+            #         data_avg_L += data_val_L/len(preproc_files_L)
+            #         data_avg_R += data_val_R/len(preproc_files_R)
                     
-                    # export left hesmisphere averaging data
-                    avg_img_L = nb.gifti.GiftiImage()
-                    for avg_data_L in data_avg_L:
-                        avg_darray_L = nb.gifti.GiftiDataArray(avg_data_L)
-                        avg_img_L.add_gifti_data_array(avg_darray_L)  
-                    nb.save(avg_img_L, avg_file_L)
+            #         # export left hesmisphere averaging data
+            #         avg_img_L = nb.gifti.GiftiImage()
+            #         for avg_data_L in data_avg_L:
+            #             avg_darray_L = nb.gifti.GiftiDataArray(avg_data_L)
+            #             avg_img_L.add_gifti_data_array(avg_darray_L)  
+            #         nb.save(avg_img_L, avg_file_L)
                     
-                    # export right hesmisphere averaging data
-                    avg_img_R = nb.gifti.GiftiImage()
-                    for avg_data_R in data_avg_R:
-                        avg_darray_R = nb.gifti.GiftiDataArray(avg_data_R)
-                        avg_img_L.add_gifti_data_array(avg_darray_R)  
-                    nb.save(avg_img_R, avg_file_R)
+            #         # export right hesmisphere averaging data
+            #         avg_img_R = nb.gifti.GiftiImage()
+            #         for avg_data_R in data_avg_R:
+            #             avg_darray_R = nb.gifti.GiftiDataArray(avg_data_R)
+            #             avg_img_L.add_gifti_data_array(avg_darray_R)  
+            #         nb.save(avg_img_R, avg_file_R)
                     
-                except :      
-                    print("An error occure during averaging task {task}".format(task = task))
+            #     except :      
+            #         print("An error occure during averaging task {task}".format(task = task))
             
                 
             # Leave-one-out averages
@@ -239,16 +233,25 @@ for session in sessions :
             
             
             # Left hemisphere 
-            for loo_num, avg_runs in enumerate(combi_L):
-                try : 
+            for loo_num, avg_runs in enumerate(combi_L): 
+                
+                
+                try:
+                    print(loo_num)
+
 
                     print("loo_avg-{}".format(loo_num+1))
-                
-                    # compute average between loo runs
-                    loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_loo_avg-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
                     
-                    preproc_img_L = nb.load(preproc_files_L[0])
-                    data_loo_avg_L = np.zeros(preproc_img_L.shape)
+                    # compute average between loo runs
+                    loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_avg_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+    
+    
+                
+                
+                    preproc_val_L = nb.load(preproc_files_L[0])
+                    preproc_data_L = [x.data for x in preproc_val_L.darrays]
+                    preproc_data_L = np.vstack(preproc_data_L)
+                    data_loo_avg_L = np.zeros(preproc_data_L.shape)
                 
                     for avg_run in avg_runs:
                         print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
@@ -259,18 +262,17 @@ for session in sessions :
                         
                     
                     loo_avg_img_L = nb.gifti.GiftiImage()
-                    for data in data_loo_avg_L:
-                        darray = nb.gifti.GiftiDataArray(data)
-                        loo_avg_img_L.add_gifti_data_array(darray)
+                    for data_loo_L in data_loo_avg_L:
+                        darray_loo_L = nb.gifti.GiftiDataArray(data_loo_L)
+                        loo_avg_img_L.add_gifti_data_array(darray_loo_L)
                     
-                    
-                       
+                                              
                     nb.save(loo_avg_img_L, loo_avg_file_L)        
                 
                     # copy loo run (left one out run)
                     for loo in preproc_files_L:
                         if loo not in avg_runs:
-                            loo_file_L =  "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+                            loo_file_L =  "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_loo_avg-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
                             print("loo: {}".format(loo))
                             os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
 
@@ -287,9 +289,11 @@ for session in sessions :
                     # compute average between loo runs
                     loo_avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_bold_{}_loo_avg-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
                     
-                    preproc_img_R = nb.load(preproc_files_R[0])
-                    data_loo_avg_R = np.zeros(preproc_img_R.shape)
-                
+                    preproc_val_R = nb.load(preproc_files_R[0])
+                    preproc_data_R = [x.data for x in preproc_val_R.darrays]
+                    preproc_data_R = np.vstack(preproc_data_R)
+                    data_loo_avg_R = np.zeros(preproc_data_R.shape)
+                    
                     for avg_run in avg_runs:
                         print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
                         data_val_R = []
@@ -299,9 +303,9 @@ for session in sessions :
                         
                     
                     loo_avg_img_R = nb.gifti.GiftiImage()
-                    for data in data_loo_avg_R:
-                        darray = nb.gifti.GiftiDataArray(data)
-                        loo_avg_img_R.add_gifti_data_array(darray)
+                    for data_loo_R in data_loo_avg_R:
+                        darray_loo_R = nb.gifti.GiftiDataArray(data_loo_R)
+                        loo_avg_img_R.add_gifti_data_array(darray_loo_R)
                     
                     
                        
@@ -321,7 +325,7 @@ for session in sessions :
             # Anatomy
             print("getting anatomy...")
             output_files = ['dseg','desc-preproc_T1w','desc-aparcaseg_dseg','desc-aseg_dseg','desc-brain_mask']
-            orig_dir_anat = "{}/{}/derivatives/fmriprep/fmriprep/{}/ses-02/anat/".format(main_dir, project_dir, subject)
+            orig_dir_anat = "{}/{}/derivatives/fmriprep/fmriprep/{}/ses-01/anat/".format(main_dir, project_dir, subject)
             dest_dir_anat = "{}/{}/derivatives/pp_data/{}/anat".format(main_dir, project_dir, subject)
             os.makedirs(dest_dir_anat,exist_ok=True)
             
@@ -331,6 +335,6 @@ for session in sessions :
                 os.system("{} {} {}".format(trans_cmd, orig_file, dest_file))
         
 
-# # Define permission cmd
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# Define permission cmd
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

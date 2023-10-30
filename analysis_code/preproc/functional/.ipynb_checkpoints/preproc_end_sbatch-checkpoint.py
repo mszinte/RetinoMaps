@@ -81,7 +81,7 @@ slurm_cmd = """\
 preproc_end_cmd = "python preproc_end_surf.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
 # create sh fn
-sh_fn = "{}/{}_pcm.sh".format(job_dir, subject)
+sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
 of = open(sh_fn, 'w')
 of.write("{}".format(slurm_cmd))
