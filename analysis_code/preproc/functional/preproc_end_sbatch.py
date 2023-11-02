@@ -89,11 +89,7 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
 of = open(sh_fn, 'w')
-of.write("{}".format(slurm_cmd))
-of.write("{}".format(preproc_end_surf_HCP_cmd))
-of.write("{}".format(preproc_end_surf_fsnative_cmd))
-of.write("{}".format(chmod_cmd))
-of.write("{}".format(chgrp_cmd))
+of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_HCP_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
 of.close()
 
 # Submit jobs

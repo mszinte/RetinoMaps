@@ -21,7 +21,7 @@ To run:
 python pycortex_import.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Executions:
-python pycortex_import.py /scratch/mszinte/data amblyo_prf sub-01 327
+python pycortex_import.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
