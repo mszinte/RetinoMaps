@@ -46,7 +46,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 #### Functional preprocessing
 - [ ] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
 - [ ] supress bad run [bad_run.py](analysis_code/preproc/functional/bad_run.py)
-- [ ] high-pass, z-score, average and leave-one-out average [preproc_end.py](analysis_code/preproc/functional/preproc_end.py)
+- [ ] high-pass, z-score, average and leave-one-out average,HCP_170k verison [preproc_end_surf_HCP.py](analysis_code/preproc/functional/preproc_end_surf_HCP.py), fsnative verison [preproc_end_surf_fsnative.py](analysis_code/preproc/functional/preproc_end_surf_fsnative.py). Run ONLY : [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [ ] Load freesurfer and execute [pycortex_import.py](analysis_code/preproc/functional/pycortex_import.py): run only [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 
 ### Post-processing

@@ -106,8 +106,8 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns):
     nb_procs=nb_procs, log_dir=prf_logs_dir, job_dur=job_dur, sub=subject, fit_num=fit_num)
 
     # define fit cmd
-    fit_cmd = "python prf_fit.py {} {} {} {} {} {}".format(
-        subject, input_fn, vdm_fn, fit_fn, pred_fn, nb_procs)
+    fit_cmd = "python prf_fit.py {} {} {} {} {} {} {}".format(
+        subject, input_fn_HCP,input_fn_fsnative, vdm_fn, fit_fn, pred_fn, nb_procs)
 
     # create sh
     sh_fn = "{}/jobs/{}_prf_fit-{}.sh".format(prf_dir,subject,fit_num)
