@@ -82,13 +82,6 @@ sessions = analysis_info['session']
 # sessions = analysis_info['session']
 
 
-
-
-
-
-
-
-
 for session in sessions :
     
     if session == 'ses-01':
@@ -99,7 +92,7 @@ for session in sessions :
     fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(main_dir, project_dir, subject, session)    
     fmriprep_func_RH_fns = glob.glob("{}/*_hemi-R_space-fsnative_bold.func.gii".format(fmriprep_dir))
     fmriprep_func_LH_fns = glob.glob("{}/*_hemi-L_space-fsnative_bold.func.gii".format(fmriprep_dir))
-    pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(main_dir, project_dir, subject)
+    pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct/fsnative".format(main_dir, project_dir, subject)
     os.makedirs(pp_data_func_dir, exist_ok=True)
     
     # High pass filtering and z-scoring
@@ -108,7 +101,13 @@ for session in sessions :
         #try : 
         # Load data
         surface_data_R_img = nb.load(func_fn_R)
+        surface_data_R_header = surface_data_R_img.header
+        surface_data_R_meta = surface_data_R_img.meta
+        
         surface_data_L_img = nb.load(func_fn_L)
+        surface_data_L_header = surface_data_L_img.header
+        surface_data_L_meta = surface_data_L_img.meta
+        
         
         # Right hemisphere
         surf_data_R = [x.data for x in surface_data_R_img.darrays]
@@ -131,7 +130,7 @@ for session in sessions :
         surf_data_R = signal.clean(surf_data_R, detrend=False, standardize=True, confounds=hp_set_R)
     
         #Export left hemisphere filtering data
-        flt_im_L = nb.gifti.GiftiImage()
+        flt_im_L = nb.gifti.GiftiImage(header = surface_data_L_header, meta = surface_data_L_meta)
         for flt_data_L in surf_data_L:
             flt_darray_L = nb.gifti.GiftiDataArray(flt_data_L)
             flt_im_L.add_gifti_data_array(flt_darray_L)
@@ -141,7 +140,7 @@ for session in sessions :
         
         
         #Export right hemisphere filtering data
-        flt_im_R = nb.gifti.GiftiImage()
+        flt_im_R = nb.gifti.GiftiImage(header = surface_data_R_header, meta = surface_data_R_meta)
         for flt_data_R in surf_data_R:
             flt_darray_R = nb.gifti.GiftiDataArray(flt_data_R)
             flt_im_R.add_gifti_data_array(flt_darray_R)
@@ -160,7 +159,7 @@ for session in sessions :
             preproc_files_L = glob.glob("{}/*_task-{}_*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
             preproc_files_R = glob.glob("{}/*_task-{}_*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
             
-            avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg".format(main_dir, project_dir, subject)
+            avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative".format(main_dir, project_dir, subject)
             os.makedirs(avg_dir, exist_ok=True)
             
             
@@ -189,11 +188,20 @@ for session in sessions :
                 
                 # Load left hemisphere data
                 data_val_img_L = nb.load(preproc_file_L)
+                
+                
+                header_val_img_L = data_val_img_L.header
+                meta_val_img_L = data_val_img_L.meta
+                
                 data_val_L = [x.data for x in data_val_img_L.darrays]
                 data_val_L = np.vstack(data_val_L)
                 
                 # Load right hemisphere data
                 data_val_img_R = nb.load(preproc_file_R)
+                
+                header_val_img_R = data_val_img_R.header
+                meta_val_img_R = data_val_img_R.meta
+                
                 data_val_R = [x.data for x in data_val_img_R.darrays]
                 data_val_R = np.vstack(data_val_R)
                 
@@ -202,14 +210,14 @@ for session in sessions :
                 data_avg_R += data_val_R/len(preproc_files_R)
                 
                 # export left hesmisphere averaging data
-                avg_img_L = nb.gifti.GiftiImage()
+                avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
                 for avg_data_L in data_avg_L:
                     avg_darray_L = nb.gifti.GiftiDataArray(avg_data_L)
                     avg_img_L.add_gifti_data_array(avg_darray_L)  
                 nb.save(avg_img_L, avg_file_L)
                 
                 # export right hesmisphere averaging data
-                avg_img_R = nb.gifti.GiftiImage()
+                avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
                 for avg_data_R in data_avg_R:
                     avg_darray_R = nb.gifti.GiftiDataArray(avg_data_R)
                     avg_img_L.add_gifti_data_array(avg_darray_R)  
@@ -228,7 +236,9 @@ for session in sessions :
             
             
             # Left hemisphere 
-            for loo_num, avg_runs in enumerate(combi_L): 
+            for loo_num, avg_runs in enumerate(combi_L):
+                loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg/fsnative".format(main_dir, project_dir, subject)
+                os.makedirs(loo_avg_dir, exist_ok=True)
                 
                 
                 # try:
@@ -238,7 +248,7 @@ for session in sessions :
                 print("loo_avg-{}".format(loo_num+1))
                 
                 # compute average between loo runs
-                loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_avg_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+                loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_avg_loo-{}.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
 
 
             
@@ -257,7 +267,7 @@ for session in sessions :
                     data_loo_avg_L += data_val_L/len(avg_runs)
                     
                 
-                loo_avg_img_L = nb.gifti.GiftiImage()
+                loo_avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
                 for data_loo_L in data_loo_avg_L:
                     darray_loo_L = nb.gifti.GiftiDataArray(data_loo_L)
                     loo_avg_img_L.add_gifti_data_array(darray_loo_L)
@@ -303,7 +313,7 @@ for session in sessions :
                     data_loo_avg_R += data_val_R/len(avg_runs)
                     
                 
-                loo_avg_img_R = nb.gifti.GiftiImage()
+                loo_avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
                 for data_loo_R in data_loo_avg_R:
                     darray_loo_R = nb.gifti.GiftiDataArray(data_loo_R)
                     loo_avg_img_R.add_gifti_data_array(darray_loo_R)
@@ -314,7 +324,7 @@ for session in sessions :
                 # copy loo run (left one out run)
                 for loo in preproc_files_R:
                     if loo not in avg_runs:
-                        loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_bold_{}_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+                        loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_bold_{}_loo-{}.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
                         print("loo: {}".format(loo))
                         os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
 

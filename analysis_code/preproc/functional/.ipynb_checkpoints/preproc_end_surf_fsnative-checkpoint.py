@@ -82,13 +82,6 @@ sessions = analysis_info['session']
 # sessions = analysis_info['session']
 
 
-
-
-
-
-
-
-
 for session in sessions :
     
     if session == 'ses-01':
@@ -99,7 +92,7 @@ for session in sessions :
     fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(main_dir, project_dir, subject, session)    
     fmriprep_func_RH_fns = glob.glob("{}/*_hemi-R_space-fsnative_bold.func.gii".format(fmriprep_dir))
     fmriprep_func_LH_fns = glob.glob("{}/*_hemi-L_space-fsnative_bold.func.gii".format(fmriprep_dir))
-    pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(main_dir, project_dir, subject)
+    pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct/fsnative".format(main_dir, project_dir, subject)
     os.makedirs(pp_data_func_dir, exist_ok=True)
     
     # High pass filtering and z-scoring
@@ -160,7 +153,7 @@ for session in sessions :
             preproc_files_L = glob.glob("{}/*_task-{}_*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
             preproc_files_R = glob.glob("{}/*_task-{}_*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
             
-            avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg".format(main_dir, project_dir, subject)
+            avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative".format(main_dir, project_dir, subject)
             os.makedirs(avg_dir, exist_ok=True)
             
             
@@ -228,7 +221,9 @@ for session in sessions :
             
             
             # Left hemisphere 
-            for loo_num, avg_runs in enumerate(combi_L): 
+            for loo_num, avg_runs in enumerate(combi_L):
+                loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg/fsnative".format(main_dir, project_dir, subject)
+                os.makedirs(loo_avg_dir, exist_ok=True)
                 
                 
                 # try:
@@ -238,7 +233,7 @@ for session in sessions :
                 print("loo_avg-{}".format(loo_num+1))
                 
                 # compute average between loo runs
-                loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_avg_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+                loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_bold_{}_avg_loo-{}.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
 
 
             
@@ -314,7 +309,7 @@ for session in sessions :
                 # copy loo run (left one out run)
                 for loo in preproc_files_R:
                     if loo not in avg_runs:
-                        loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_bold_{}_loo-{}.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+                        loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_bold_{}_loo-{}.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
                         print("loo: {}".format(loo))
                         os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
 
