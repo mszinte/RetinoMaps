@@ -46,11 +46,17 @@ import datetime
 import ipdb
 deb = ipdb.set_trace
 
-# Inputs
-main_dir = sys.argv[1]
-project_dir = sys.argv[2]
-subject = sys.argv[3]
-group = sys.argv[4]
+# # Inputs
+# main_dir = sys.argv[1]
+# project_dir = sys.argv[2]
+# subject = sys.argv[3]
+# group = sys.argv[4]
+
+main_dir = '/Users/uriel/disks/meso_shared'
+project_dir = 'RetinoMaps'
+subject = 'sub-02'
+group = '327'
+session = 'ses-01'
 
 # Cluster settings
 fit_per_hour = 15000.0
@@ -68,24 +74,26 @@ prf_logs_dir = "{}/{}/prf/log_outputs".format(pp_dir, subject)
 os.makedirs(prf_logs_dir, exist_ok=True)
 
 # define permission cmd
-chmod_cmd = "\nchmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
-chgrp_cmd = "\nchgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
+chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
+chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
 
 # Define fns (filenames)
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
-pp_avg_fns = glob.glob("{}/{}/func/fmriprep_dct_avg/*avg*.nii.gz".format(pp_dir,subject))
-for fit_num, pp_avg_fn in enumerate(pp_avg_fns):
-    
-    input_fn = pp_avg_fn
-    fit_fn = "{}/{}_prf-fit.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
-    pred_fn = "{}/{}_prf-pred.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+pp_avg_fns_HCP = glob.glob("{}/{}/func/fmriprep_dct_avg/HCP_170k/*avg*.dtseries.nii".format(pp_dir,subject))
+pp_avg_fns_fsnative = glob.glob("{}/{}/func/fmriprep_dct_avg/fsnative/*avg*.func.gii".format(pp_dir,subject))
 
-    if os.path.isfile(fit_fn):
-        if os.path.getsize(fit_fn) != 0:
-            print("output file {} already exists: aborting analysis".format(fit_fn))
+for fit_num, pp_avg_fn in enumerate(pp_avg_fns_HCP):
+    
+    input_fn_HCP = pp_avg_fn
+    fit_fn_HCP = "{}/{}_prf-fit.dtseries.nii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+    pred_fn_HCP = "{}/{}_prf-pred.dtseries.nii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-13])
+
+    if os.path.isfile(fit_fn_HCP):
+        if os.path.getsize(fit_fn_HCP) != 0:
+            print("output file {} already exists: aborting analysis".format(fit_fn_HCP))
             exit()
 
-    data = nb.load(input_fn).get_fdata()
+    data = nb.load(input_fn_HCP).get_fdata()
     data_var = np.var(data,axis=-1)
     mask = data_var!=0.0    
     num_vox = mask[...].sum()
@@ -106,14 +114,15 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns):
     nb_procs=nb_procs, log_dir=prf_logs_dir, job_dur=job_dur, sub=subject, fit_num=fit_num)
 
     # define fit cmd
-    fit_cmd = "python prf_fit.py {} {} {} {} {} {} {}".format(
-        subject, input_fn_HCP,input_fn_fsnative, vdm_fn, fit_fn, pred_fn, nb_procs)
-
+    fit_cmd = "python prf_fit.py {} {} {} {} {} {} {} {} {}".format(
+        subject, input_fn_HCP, input_fn_fsnative, vdm_fn, fit_fn_HCP, fit_fn_fsnative, pred_fn_HCP, pred_fn_fsnative, nb_procs)
+    
+    
     # create sh
     sh_fn = "{}/jobs/{}_prf_fit-{}.sh".format(prf_dir,subject,fit_num)
 
     of = open(sh_fn, 'w')
-    of.write("{}{}{}{}".format(slurm_cmd, fit_cmd, chmod_cmd, chgrp_cmd))
+    of.write("{} \n{} \n{} \n{}".format(slurm_cmd, fit_cmd, chmod_cmd, chgrp_cmd))
     of.close()
 
     # Submit jobs

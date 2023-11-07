@@ -54,10 +54,10 @@ input_fn_HCP = sys.argv[2]
 input_fn_fsnative = sys.argv[3]
 input_vd = sys.argv[4]
 fit_fn_HCP = sys.argv[5]
-fit_fn_fsnative = sys.argv[5]
-pred_fn_HCP = sys.argv[6]
-pred_fn_fsnative = sys.argv[7]
-nb_procs = int(sys.argv[8])
+fit_fn_fsnative = sys.argv[6]
+pred_fn_HCP = sys.argv[7]
+pred_fn_fsnative = sys.argv[8]
+nb_procs = int(sys.argv[9])
 
 # Analysis parameters
 with open('../../../settings.json') as f:
