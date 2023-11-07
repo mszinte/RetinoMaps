@@ -137,7 +137,7 @@ for session in sessions :
         avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/HCP_170k".format(main_dir, project_dir, subject)
         os.makedirs(avg_dir, exist_ok=True)
         
-        avg_file = "{}/{}_task-{}_space-fsLR_den-170k_bold_{}_avg.dtseries.nii".format(avg_dir, subject, task,high_pass_type)
+        avg_file = "{}/{}_task-{}_fmriprep_{}_avg_bold.dtseries.nii".format(avg_dir, subject, task,high_pass_type)
         img = nb.load(preproc_files[0])
         data_avg = np.zeros(img.shape)
         
@@ -167,7 +167,7 @@ for session in sessions :
             print("loo_avg-{}".format(loo_num+1))
         
             # compute average between loo runs
-            loo_avg_file = "{}/{}_task-{}_fmriprep_bold_{}_avg_loo-{}.dtseries.nii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
+            loo_avg_file = "{}/{}_task-{}_fmriprep_{}_avg_loo-{}_bold.dtseries.nii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
             
             img = nb.load(preproc_files[0])
             data_loo_avg = np.zeros(img.shape)
@@ -186,7 +186,7 @@ for session in sessions :
             # copy loo run (left one out run)
             for loo in preproc_files:
                 if loo not in avg_runs:
-                    loo_file = "{}/{}_task-{}_fmriprep_bold_{}_loo-{}.dtseries.nii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
+                    loo_file = "{}/{}_task-{}_fmriprep_{}_loo-{}_bold.dtseries.nii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
                     print("loo: {}".format(loo))
                     os.system("{} {} {}".format(trans_cmd, loo, loo_file))
                                                     
