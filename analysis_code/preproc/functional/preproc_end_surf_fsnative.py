@@ -153,181 +153,181 @@ for session in sessions :
        
 
     for task in tasks:
-            print(task)
-    
-            # Average tasks runs
-            preproc_files_R = glob.glob("{}/*_task-{}_*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
-            preproc_files_L = glob.glob("{}/*_task-{}_*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
-            
-            # make avg dir
-            avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative".format(main_dir, project_dir, subject)
-            os.makedirs(avg_dir, exist_ok=True)
-            
-            
-            # avg files 
-            avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,high_pass_type)
-            avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,high_pass_type)
-            
-            
-            avg_val_img_L = nb.load(preproc_files_L[0])
-            avg_im_L = [x.data for x in avg_val_img_L.darrays]
-            avg_im_L = np.vstack(avg_im_L)
-            data_avg_L = np.zeros(avg_im_L.shape)
-            
-            avg_val_img_R = nb.load(preproc_files_R[0])
-            avg_im_R = [x.data for x in avg_val_img_R.darrays]
-            avg_im_R = np.vstack(avg_im_R)
-            data_avg_R = np.zeros(avg_im_R.shape)
-             
-            print("averaging...")
-            for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):
-                # try : 
+        print(task)
 
-                print('add: {}'.format(preproc_file_L))
+        # Average tasks runs
+        preproc_files_R = glob.glob("{}/*_task-{}_*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
+        preproc_files_L = glob.glob("{}/*_task-{}_*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
+        
+        # make avg dir
+        avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative".format(main_dir, project_dir, subject)
+        os.makedirs(avg_dir, exist_ok=True)
+        
+        
+        # avg files 
+        avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,high_pass_type)
+        avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,high_pass_type)
+        
+        
+        avg_val_img_L = nb.load(preproc_files_L[0])
+        avg_im_L = [x.data for x in avg_val_img_L.darrays]
+        avg_im_L = np.vstack(avg_im_L)
+        data_avg_L = np.zeros(avg_im_L.shape)
+        
+        avg_val_img_R = nb.load(preproc_files_R[0])
+        avg_im_R = [x.data for x in avg_val_img_R.darrays]
+        avg_im_R = np.vstack(avg_im_R)
+        data_avg_R = np.zeros(avg_im_R.shape)
+         
+        print("averaging...")
+        for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):
+            # try : 
+
+            print('add: {}'.format(preproc_file_L))
+            data_val_L = []
+            data_val_R = []
+            
+            # Load left hemisphere data
+            data_val_img_L = nb.load(preproc_file_L)
+            
+            
+            header_val_img_L = data_val_img_L.header
+            meta_val_img_L = data_val_img_L.meta
+            
+            data_val_L = [x.data for x in data_val_img_L.darrays]
+            data_val_L = np.vstack(data_val_L)
+            
+            # Load right hemisphere data
+            data_val_img_R = nb.load(preproc_file_R)
+            
+            header_val_img_R = data_val_img_R.header
+            meta_val_img_R = data_val_img_R.meta
+            
+            data_val_R = [x.data for x in data_val_img_R.darrays]
+            data_val_R = np.vstack(data_val_R)
+            
+            # Averaging 
+            data_avg_L += data_val_L/len(preproc_files_L)
+            data_avg_R += data_val_R/len(preproc_files_R)
+            
+            # export left hesmisphere averaging data
+            avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
+            for avg_data_L in data_avg_L:
+                avg_darray_L = nb.gifti.GiftiDataArray(avg_data_L)
+                avg_img_L.add_gifti_data_array(avg_darray_L)  
+            nb.save(avg_img_L, avg_file_L)
+            
+            # export right hesmisphere averaging data
+            avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
+            for avg_data_R in data_avg_R:
+                avg_darray_R = nb.gifti.GiftiDataArray(avg_data_R)
+                avg_img_L.add_gifti_data_array(avg_darray_R)  
+            nb.save(avg_img_R, avg_file_R)
+                
+            # except :      
+            #     print("An error occure during averaging task {task}".format(task = task))
+        
+            
+        # Leave-one-out averages
+        if len(preproc_files_L):
+            combi_L = list(it.combinations(preproc_files_L, len(preproc_files_L)-1))
+        
+        if len(preproc_files_R):
+            combi_R = list(it.combinations(preproc_files_R, len(preproc_files_R)-1))
+        
+        
+        # Left hemisphere 
+        for loo_num, avg_runs in enumerate(combi_L):
+            loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg/fsnative".format(main_dir, project_dir, subject)
+            os.makedirs(loo_avg_dir, exist_ok=True)
+            
+            
+            # try:
+            print(loo_num)
+
+
+            print("loo_avg-{}".format(loo_num+1))
+            
+            # compute average between loo runs
+            loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_avg_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
+
+
+        
+        
+            preproc_val_L = nb.load(preproc_files_L[0])
+            preproc_data_L = [x.data for x in preproc_val_L.darrays]
+            preproc_data_L = np.vstack(preproc_data_L)
+            data_loo_avg_L = np.zeros(preproc_data_L.shape)
+        
+            for avg_run in avg_runs:
+                print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
                 data_val_L = []
-                data_val_R = []
-                
-                # Load left hemisphere data
-                data_val_img_L = nb.load(preproc_file_L)
-                
-                
-                header_val_img_L = data_val_img_L.header
-                meta_val_img_L = data_val_img_L.meta
-                
+                data_val_img_L = nb.load(avg_run)
                 data_val_L = [x.data for x in data_val_img_L.darrays]
                 data_val_L = np.vstack(data_val_L)
+                data_loo_avg_L += data_val_L/len(avg_runs)
                 
-                # Load right hemisphere data
-                data_val_img_R = nb.load(preproc_file_R)
-                
-                header_val_img_R = data_val_img_R.header
-                meta_val_img_R = data_val_img_R.meta
-                
+            
+            loo_avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
+            for data_loo_L in data_loo_avg_L:
+                darray_loo_L = nb.gifti.GiftiDataArray(data_loo_L)
+                loo_avg_img_L.add_gifti_data_array(darray_loo_L)
+            
+                                      
+            nb.save(loo_avg_img_L, loo_avg_file_L)        
+        
+            # copy loo run (left one out run)
+            for loo in preproc_files_L:
+                if loo not in avg_runs:
+                    loo_file_L =  "{}/{}_task-{}_hemi-L_fmriprep_{}_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
+                    print("loo: {}".format(loo))
+                    os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
+
+            # except : 
+            #     print("An error occure during loo task {task} left hemisphere".format(task = task))
+        
+        # Right hemisphere 
+        for loo_num, avg_runs in enumerate(combi_R):
+            # try : 
+            print(loo_num)
+
+
+            print("loo_avg-{}".format(loo_num+1))
+            
+            # compute average between loo runs
+            loo_avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_loo-{}_bold.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+
+
+        
+        
+            preproc_val_R = nb.load(preproc_files_R[0])
+            preproc_data_R = [x.data for x in preproc_val_R.darrays]
+            preproc_data_R = np.vstack(preproc_data_R)
+            data_loo_avg_R = np.zeros(preproc_data_R.shape)
+        
+            for avg_run in avg_runs:
+                print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
+                data_val_R = []
+                data_val_img_R = nb.load(avg_run)
                 data_val_R = [x.data for x in data_val_img_R.darrays]
                 data_val_R = np.vstack(data_val_R)
+                data_loo_avg_R += data_val_R/len(avg_runs)
                 
-                # Averaging 
-                data_avg_L += data_val_L/len(preproc_files_L)
-                data_avg_R += data_val_R/len(preproc_files_R)
-                
-                # export left hesmisphere averaging data
-                avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
-                for avg_data_L in data_avg_L:
-                    avg_darray_L = nb.gifti.GiftiDataArray(avg_data_L)
-                    avg_img_L.add_gifti_data_array(avg_darray_L)  
-                nb.save(avg_img_L, avg_file_L)
-                
-                # export right hesmisphere averaging data
-                avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
-                for avg_data_R in data_avg_R:
-                    avg_darray_R = nb.gifti.GiftiDataArray(avg_data_R)
-                    avg_img_L.add_gifti_data_array(avg_darray_R)  
-                nb.save(avg_img_R, avg_file_R)
-                    
-                # except :      
-                #     print("An error occure during averaging task {task}".format(task = task))
             
-                
-            # Leave-one-out averages
-            if len(preproc_files_L):
-                combi_L = list(it.combinations(preproc_files_L, len(preproc_files_L)-1))
+            loo_avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
+            for data_loo_R in data_loo_avg_R:
+                darray_loo_R = nb.gifti.GiftiDataArray(data_loo_R)
+                loo_avg_img_R.add_gifti_data_array(darray_loo_R)
             
-            if len(preproc_files_R):
-                combi_R = list(it.combinations(preproc_files_R, len(preproc_files_R)-1))
-            
-            
-            # Left hemisphere 
-            for loo_num, avg_runs in enumerate(combi_L):
-                loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg/fsnative".format(main_dir, project_dir, subject)
-                os.makedirs(loo_avg_dir, exist_ok=True)
-                
-                
-                # try:
-                print(loo_num)
-
-
-                print("loo_avg-{}".format(loo_num+1))
-                
-                # compute average between loo runs
-                loo_avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_avg_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
-
-
-            
-            
-                preproc_val_L = nb.load(preproc_files_L[0])
-                preproc_data_L = [x.data for x in preproc_val_L.darrays]
-                preproc_data_L = np.vstack(preproc_data_L)
-                data_loo_avg_L = np.zeros(preproc_data_L.shape)
-            
-                for avg_run in avg_runs:
-                    print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
-                    data_val_L = []
-                    data_val_img_L = nb.load(avg_run)
-                    data_val_L = [x.data for x in data_val_img_L.darrays]
-                    data_val_L = np.vstack(data_val_L)
-                    data_loo_avg_L += data_val_L/len(avg_runs)
-                    
-                
-                loo_avg_img_L = nb.gifti.GiftiImage(header = header_val_img_L, meta= meta_val_img_L)
-                for data_loo_L in data_loo_avg_L:
-                    darray_loo_L = nb.gifti.GiftiDataArray(data_loo_L)
-                    loo_avg_img_L.add_gifti_data_array(darray_loo_L)
-                
-                                          
-                nb.save(loo_avg_img_L, loo_avg_file_L)        
-            
-                # copy loo run (left one out run)
-                for loo in preproc_files_L:
-                    if loo not in avg_runs:
-                        loo_file_L =  "{}/{}_task-{}_hemi-L_fmriprep_{}_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
-                        print("loo: {}".format(loo))
-                        os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
-
-                # except : 
-                #     print("An error occure during loo task {task} left hemisphere".format(task = task))
-            
-            # Right hemisphere 
-            for loo_num, avg_runs in enumerate(combi_R):
-                # try : 
-                print(loo_num)
-
-
-                print("loo_avg-{}".format(loo_num+1))
-                
-                # compute average between loo runs
-                loo_avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_loo-{}_bold.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
-
-
-            
-            
-                preproc_val_R = nb.load(preproc_files_R[0])
-                preproc_data_R = [x.data for x in preproc_val_R.darrays]
-                preproc_data_R = np.vstack(preproc_data_R)
-                data_loo_avg_R = np.zeros(preproc_data_R.shape)
-            
-                for avg_run in avg_runs:
-                    print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
-                    data_val_R = []
-                    data_val_img_R = nb.load(avg_run)
-                    data_val_R = [x.data for x in data_val_img_R.darrays]
-                    data_val_R = np.vstack(data_val_R)
-                    data_loo_avg_R += data_val_R/len(avg_runs)
-                    
-                
-                loo_avg_img_R = nb.gifti.GiftiImage(header = header_val_img_R, meta= meta_val_img_R)
-                for data_loo_R in data_loo_avg_R:
-                    darray_loo_R = nb.gifti.GiftiDataArray(data_loo_R)
-                    loo_avg_img_R.add_gifti_data_array(darray_loo_R)
-                
-                                          
-                nb.save(loo_avg_img_R, loo_avg_file_R)        
-            
-                # copy loo run (left one out run)
-                for loo in preproc_files_R:
-                    if loo not in avg_runs:
-                        loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_{}_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
-                        print("loo: {}".format(loo))
-                        os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
+                                      
+            nb.save(loo_avg_img_R, loo_avg_file_R)        
+        
+            # copy loo run (left one out run)
+            for loo in preproc_files_R:
+                if loo not in avg_runs:
+                    loo_file_R =  "{}/{}_task-{}_hemi-R_fmriprep_{}_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
+                    print("loo: {}".format(loo))
+                    os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
 
 
                 # except : 

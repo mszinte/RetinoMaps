@@ -55,7 +55,7 @@ cluster_name  = analysis_info['cluster_name']
 proj_name = analysis_info['project_name']
 nb_procs = 8
 memory_val = 48
-hour_proc = 4
+hour_proc = 5
 
 # set folders
 log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
@@ -88,9 +88,14 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 # create sh fn
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
+# of = open(sh_fn, 'w')
+# of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_HCP_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
+# of.close()
+
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_HCP_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
+of.write("{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
 of.close()
+
 
 # Submit jobs
 print("Submitting {} to queue".format(sh_fn))
