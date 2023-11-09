@@ -44,8 +44,12 @@ import nibabel as nb
 deb = ipdb.set_trace
 
 # functions import
+
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import set_pycortex_config_file
+sys.path.append('{}/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils'.format(os.getcwd()))
+
+# os.chdir('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils')
+# from pycortex_utils import set_pycortex_config_file
 
 # get inputs
 main_dir = sys.argv[1]
@@ -59,6 +63,19 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 xfm_name = analysis_info['xfm_name']
 task = analysis_info['task']
+
+# main_dir = '/Users/uriel/disks/meso_shared'
+# project_dir = 'RetinoMaps'
+# subject = 'sub-02'
+# group = '327'
+
+
+# with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
+#     json_s = f.read()
+#     analysis_info = json.loads(json_s)
+# xfm_name = analysis_info['xfm_name']
+# task = analysis_info['task_names']
+
 
 # define directories and get fns
 fmriprep_dir = "{}/{}/derivatives/fmriprep".format(main_dir, project_dir)
