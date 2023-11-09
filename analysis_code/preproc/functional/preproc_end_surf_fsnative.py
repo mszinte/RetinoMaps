@@ -41,7 +41,9 @@ import ipdb
 import numpy as np
 import nibabel as nb
 import itertools as it
+from scipy import stats
 from nilearn import signal
+
 from nilearn.glm.first_level.design_matrix import _cosine_drift
 trans_cmd = 'rsync -avuz --progress'
 deb = ipdb.set_trace
@@ -69,7 +71,7 @@ sessions = analysis_info['session']
 # tasks = 'pRF'
 # high_pass_threshold = 0.01
 # high_pass_type = 'dct'
-# sessions = 'ses-01'
+# sessions = ['ses-01']
 
 # # load settings
 # with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
@@ -79,10 +81,12 @@ sessions = analysis_info['session']
 
 # high_pass_threshold = analysis_info['high_pass_threshold'] 
 # high_pass_type = analysis_info['high_pass_type'] 
-# sessions = analysis_info['session']
+
 
 
 for session in sessions :
+    
+
     
     if session == 'ses-01':
         tasks = ['pRF']
@@ -98,7 +102,6 @@ for session in sessions :
     # High pass filtering and z-scoring
     print("high-pass filtering...")
     for func_fn_R,func_fn_L in zip(fmriprep_func_RH_fns,fmriprep_func_LH_fns) :
-        #try : 
         # Load data
         surface_data_R_img = nb.load(func_fn_R)
         surface_data_R_header = surface_data_R_img.header
@@ -147,18 +150,119 @@ for session in sessions :
         
         out_flt_file_R = "{}/{}_{}.func.gii".format(pp_data_func_dir,func_fn_R.split('/')[-1][:-9],high_pass_type)   
         nb.save(flt_im_R, out_flt_file_R)
-
-        # except :
-        #     print("An error occure during filterinr {func_fn_R} or {func_fn_L}".format(func_fn_R=func_fn_R,func_fn_L = func_fn_L))
-       
-
+ 
+        
+ 
     for task in tasks:
         print(task)
 
-        # Average tasks runs
+        # preproc tasks runs
         preproc_files_R = glob.glob("{}/*_task-{}_*_hemi-R_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
         preproc_files_L = glob.glob("{}/*_task-{}_*_hemi-L_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task, high_pass_type))
         
+        
+        # make correlation directory
+        corr_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_corr/fsnative".format(main_dir, project_dir, subject)
+        os.makedirs(corr_dir, exist_ok=True)
+
+        # output files 
+        cor_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_correlations_bold.func.gii".format(corr_dir, subject, task,high_pass_type)
+        cor_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_correlations_bold.func.gii".format(corr_dir, subject, task,high_pass_type)
+        
+        
+        # load preproc files to have meta and header
+        preproc_img_L = nb.load(preproc_files_L[0])
+        preproc_data_L = [x.data for x in preproc_img_L.darrays]
+        preproc_data_L = np.vstack(preproc_data_L)
+        
+        preproc_img_header_L = preproc_img_L.header
+        preproc_img_meta_L = preproc_img_L.meta
+        
+        
+        
+        # make empty right image
+        preproc_img_R = nb.load(preproc_files_R[0])
+        preproc_data_R = [x.data for x in preproc_img_R.darrays]
+        preproc_data_R = np.vstack(preproc_data_R)
+        
+        preproc_img_header_R = preproc_img_R.header
+        preproc_img_meta_R = preproc_img_R.meta
+       
+
+
+        
+
+        # Correlations
+        print('starting correlations')
+        
+        # compute the combination 
+        combis_L = list(it.combinations(preproc_files_L, 2))
+        combis_R = list(it.combinations(preproc_files_R, 2))
+        
+        # Left hemisphere
+        cor_final_L = np.zeros((preproc_data_L.shape[1]))
+        for combi_L in combis_L:
+            task_cor_L = np.zeros((preproc_data_L.shape[1]))
+            
+            a_img_L = nb.load(combi_L[0])
+            a_data_L = [x.data for x in a_img_L.darrays]
+            a_data_L = np.vstack(a_data_L)
+    
+            b_img_L = nb.load(combi_L[1])
+            b_data_L = [x.data for x in b_img_L.darrays]
+            b_data_L = np.vstack(b_data_L)
+            
+            for vertice_L in range(a_data_L.shape[1]):
+                corr_L, _ = stats.pearsonr(a_data_L[:, vertice_L], b_data_L[:, vertice_L])
+                task_cor_L[vertice_L] = corr_L
+        
+            cor_final_L += task_cor_L / len(combis_L)
+        
+        print('starting exportation')
+        
+        # export left hemisphere correlations file
+        corr_img_L = nb.gifti.GiftiImage(header=preproc_img_header_L, meta=preproc_img_meta_L)
+        for corr_data_L in cor_final_L:
+            corr_darray_L = nb.gifti.GiftiDataArray(corr_data_L)
+            corr_img_L.add_gifti_data_array(corr_darray_L)
+        cor_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_correlations_bold.func.gii".format(corr_dir, subject, task, high_pass_type)
+        nb.save(corr_img_L, cor_file_L)
+        
+        print('left hemisphere correlation done')
+        
+        # Right hemisphere
+        cor_final_R = np.zeros((preproc_data_R.shape[1]))
+        for combi_R in combis_R:
+            task_cor_R = np.zeros((preproc_data_R.shape[1]))
+            
+            a_img_R = nb.load(combi_R[0])
+            a_data_R = [x.data for x in a_img_R.darrays]
+            a_data_R = np.vstack(a_data_R)
+    
+            b_img_R = nb.load(combi_R[1])
+            b_data_R = [x.data for x in b_img_R.darrays]
+            b_data_R = np.vstack(b_data_R)
+        
+            for vertice_R in range(a_data_R.shape[1]):
+
+        
+                corr_R, _ = stats.pearsonr(a_data_R[:, vertice_R], b_data_R[:, vertice_R])
+                task_cor_R[vertice_R] = corr_R
+        
+            cor_final_R += task_cor_R / len(combis_R)
+        
+        # export right hemisphere correlations file
+        corr_img_R = nb.gifti.GiftiImage(header=preproc_img_header_R, meta=preproc_img_meta_R)
+        for corr_data_R in cor_final_R:
+            corr_darray_R = nb.gifti.GiftiDataArray(corr_data_R)
+            corr_img_R.add_gifti_data_array(corr_darray_R)
+        cor_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_correlations_bold.func.gii".format(corr_dir, subject, task, high_pass_type)
+        nb.save(corr_img_R, cor_file_R)
+        print('right hemisphere correlation done')
+
+
+        # Averaging 
+        print('averaging')
         # make avg dir
         avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative".format(main_dir, project_dir, subject)
         os.makedirs(avg_dir, exist_ok=True)
@@ -169,19 +273,13 @@ for session in sessions :
         avg_file_L = "{}/{}_task-{}_hemi-L_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,high_pass_type)
         
         
-        avg_val_img_L = nb.load(preproc_files_L[0])
-        avg_im_L = [x.data for x in avg_val_img_L.darrays]
-        avg_im_L = np.vstack(avg_im_L)
-        data_avg_L = np.zeros(avg_im_L.shape)
-        
-        avg_val_img_R = nb.load(preproc_files_R[0])
-        avg_im_R = [x.data for x in avg_val_img_R.darrays]
-        avg_im_R = np.vstack(avg_im_R)
-        data_avg_R = np.zeros(avg_im_R.shape)
+
          
         print("averaging...")
         for preproc_file_L, preproc_file_R in zip(preproc_files_L,preproc_files_R):
-            # try : 
+            
+            data_avg_R = np.zeros(preproc_data_R.shape)
+            data_avg_L = np.zeros(preproc_data_L.shape) 
 
             print('add: {}'.format(preproc_file_L))
             data_val_L = []
@@ -295,7 +393,7 @@ for session in sessions :
             print("loo_avg-{}".format(loo_num+1))
             
             # compute average between loo runs
-            loo_avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_loo-{}_bold.func.gii".format(avg_dir, subject,task,high_pass_type, loo_num+1)
+            loo_avg_file_R = "{}/{}_task-{}_hemi-R_fmriprep_{}_avg_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,high_pass_type, loo_num+1)
 
 
         
@@ -330,23 +428,3 @@ for session in sessions :
                     os.system("{} {} {}".format(trans_cmd, loo, loo_file_L))
 
 
-                # except : 
-                #    print("An error occure during loo task {task} right hemisphere".format(task = task))
-  
-                                                            
-            # # Anatomy
-            # print("getting anatomy...")
-            # output_files = ['dseg','desc-preproc_T1w','desc-aparcaseg_dseg','desc-aseg_dseg','desc-brain_mask']
-            # orig_dir_anat = "{}/{}/derivatives/fmriprep/fmriprep/{}/ses-01/anat/".format(main_dir, project_dir, subject)
-            # dest_dir_anat = "{}/{}/derivatives/pp_data/{}/anat".format(main_dir, project_dir, subject)
-            # os.makedirs(dest_dir_anat,exist_ok=True)
-            
-            # for output_file in output_files:
-            #     orig_file = "{}/{}_{}_{}.nii.gz".format(orig_dir_anat, subject, session, output_file)
-            #     dest_file = "{}/{}_{}.nii.gz".format(dest_dir_anat, subject, output_file)
-            #     os.system("{} {} {}".format(trans_cmd, orig_file, dest_file))
-        
-
-# # Define permission cmd
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
