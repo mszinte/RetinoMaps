@@ -44,12 +44,8 @@ import nibabel as nb
 deb = ipdb.set_trace
 
 # functions import
-
 sys.path.append("{}/../../utils".format(os.getcwd()))
-sys.path.append('{}/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils'.format(os.getcwd()))
-
-# os.chdir('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils')
-# from pycortex_utils import set_pycortex_config_file
+from pycortex_utils import set_pycortex_config_file
 
 # get inputs
 main_dir = sys.argv[1]
@@ -57,33 +53,11 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
-# define analysis parameters
-with open('../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-xfm_name = analysis_info['xfm_name']
-task = analysis_info['task']
-
-# main_dir = '/Users/uriel/disks/meso_shared'
-# project_dir = 'RetinoMaps'
-# subject = 'sub-02'
-# group = '327'
-
-
-# with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
-#     json_s = f.read()
-#     analysis_info = json.loads(json_s)
-# xfm_name = analysis_info['xfm_name']
-# task = analysis_info['task_names']
-
-
 # define directories and get fns
 fmriprep_dir = "{}/{}/derivatives/fmriprep".format(main_dir, project_dir)
 fs_dir = "{}/{}/derivatives/fmriprep/freesurfer".format(main_dir, project_dir)
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 temp_dir = "{}/{}/derivatives/temp_data/{}_rand_ds/".format(main_dir, project_dir, subject)
-file_list = sorted(glob.glob("{}/{}/derivatives/pp_data/{}/func/fmriprep_dct/*{}*.nii.gz".format(main_dir, project_dir, subject, task)))
-
 
 # set pycortex db and colormaps
 set_pycortex_config_file(cortex_dir)
@@ -99,25 +73,13 @@ try: cortex.freesurfer.import_flat(fs_subject=subject, cx_subject=subject,
                                   freesurfer_subject_dir=fs_dir, patch='full', auto_overwrite=True)
 except: pass
 
-# add transform to pycortex db
-print('Add transform: xfm_name: {}'.format(xfm_name))
-transform = cortex.xfm.Transform(np.identity(4), file_list[0])
-transform.save(subject, xfm_name, 'magnet')
-
-# add masks to pycortex transform
-print('add mask: xfm_name: {}'.format(xfm_name))
-xfm_masks = analysis_info['xfm_masks']
-ref = nb.load(file_list[0])
-for xfm_mask in xfm_masks:
-    mask = cortex.get_cortical_mask(subject=subject, xfmname=xfm_name, type=xfm_mask)
-    mask_img = nb.Nifti1Image(dataobj=mask.transpose((2,1,0)), affine=ref.affine, header=ref.header)
-    mask_file = "{}/db/{}/transforms/{}/mask_{}.nii.gz".format(cortex_dir, subject, xfm_name, xfm_mask)
-    mask_img.to_filename(mask_file)
-
 # create participant pycortex overlays
 print('create subject pycortex overlays to check')
-voxel_vol = cortex.Volume(np.random.randn(ref.shape[2], ref.shape[1], ref.shape[0]), subject = subject, xfmname = xfm_name)
-ds = cortex.Dataset(rand=voxel_vol)
+surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "fiducial")]
+num_verts = surfs[0].pts.shape[0] + surfs[1].pts.shape[0]
+rand_data = np.random.randn(num_verts)
+vertex_data = cortex.Vertex(rand_data, subject)
+ds = cortex.Dataset(rand=vertex_data)
 cortex.webgl.make_static(outpath=temp_dir, data=ds)
 
 # Define permission cmd
