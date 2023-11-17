@@ -21,7 +21,7 @@ To run:
 >> python decode_eyes_movements_sbatch.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python decode_eyes_movements_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327
+python decode_eyes_movements_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@univ-amu.fr)
 -----------------------------------------------------------------------------------------
@@ -38,8 +38,9 @@ import sys
 import ipdb
 deb = ipdb.set_trace
 
+
 # define analysis parameters
-with open('../../../settings.json') as f:
+with open('../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 
@@ -48,45 +49,46 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+server_project = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name  = analysis_info['cluster_name']
-proj_name = analysis_info['proj_name']
+proj_name = analysis_info['project_name']
 nb_procs = 8
 memory_val = 48
-hour_proc = 4
+hour_proc = 5
 
 # set folders
-log_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/log_outputs".format(main_dir, project_dir, subject)
-job_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/jobs".format(main_dir, project_dir, subject)
+log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
+job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, project_dir, subject)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(job_dir, exist_ok=True)
 
 slurm_cmd = """\
 #!/bin/bash
 #SBATCH -p {cluster_name}
-#SBATCH -A {proj_name}
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
 #SBATCH --time={hour_proc}:00:00
-#SBATCH -e {log_dir}/{subject}_pcm_%N_%j_%a.err
-#SBATCH -o {log_dir}/{subject}_pcm_%N_%j_%a.out
-#SBATCH -J {subject}_pcm
-""".format(proj_name=proj_name, cluster_name=cluster_name,
+#SBATCH -e {log_dir}/{subject}_decode_%N_%j_%a.err
+#SBATCH -o {log_dir}/{subject}_decode_%N_%j_%a.out
+#SBATCH -J {subject}_decode
+""".format(server_project=server_project, cluster_name=cluster_name,
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
-compute_pcm_cmd = "python decode_eyes_movements.py {} {} {} {}".format(main_dir, project_dir, subject, group)
-chmod_cmd = "\nchmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
-chgrp_cmd = "\nchgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
+decod_cmd = "python decode_eyes_movements.py {} {} {} {}".format(main_dir, project_dir, subject, group)
+chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
+chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
 
 
 # create sh fn
 sh_fn = "{}/{}_decode.sh".format(job_dir, subject)
 
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{}".format(slurm_cmd,compute_pcm_cmd,chmod_cmd,chgrp_cmd))
+of.write("{} \n{} \n{} \n{}".format(slurm_cmd,decod_cmd,chmod_cmd,chgrp_cmd))
 
 of.close()
 
