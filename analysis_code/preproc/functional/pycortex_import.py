@@ -16,7 +16,7 @@ None
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/functional/
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/functional/
 2. run python command
 python pycortex_import.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
@@ -34,13 +34,16 @@ warnings.filterwarnings("ignore")
 # imports
 import os
 import sys
+print("Interpréteur Python:", sys.executable)
+print("Préfixe d'installation:", sys.prefix)
+
 import json
 import glob
 import numpy as np
-import ipdb
-import importlib
 import cortex
+import importlib
 import nibabel as nb
+import ipdb
 deb = ipdb.set_trace
 
 # functions import
