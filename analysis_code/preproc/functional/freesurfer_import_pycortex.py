@@ -16,12 +16,12 @@ None
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/stereo_prf/analysis_code/preproc/functional/
+>> cd ~/projects/RetinoMaps/analysis_code/preproc/functional/
 2. run python command
 python freesurfer_import_pycortex.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Executions:
-python freesurfer_import_pycortex.py /scratch/mszinte/data amblyo_prf sub-01 327
+python freesurfer_import_pycortex.py /scratch/mszinte/data RetinoMaps sub-02 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -60,19 +60,24 @@ export SUBJECTS_DIR={}\n\
 export FS_LICENSE={}\n\
 source $FREESURFER_HOME/SetUpFreeSurfer.sh\n""".format(main_dir, project_dir, fs_dir, fs_license)
 
+
+
 #define pycortex cmd
 py_cortex_cmd = "python pycortex_import.py {} {} {} {}".format(main_dir,project_dir,subject,group)
 
 # create sh folder and file
 sh_dir = "{}/{}_freesurfer_import_pycortex.sh".format(jobs_dir, subject)
 
+# Define permission cmd
+chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
+chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
+
+
 of = open(sh_dir, 'w')
-of.write("{}{}".format(freesurfer_cmd,py_cortex_cmd))
+of.write("{}{}\n{}\n{}".format(freesurfer_cmd,py_cortex_cmd,chmod_cmd,chgrp_cmd))
 of.close()
 
-# Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+
 
 #Run freesurfer and pycortex
 os.system("{}".format(sh_dir))

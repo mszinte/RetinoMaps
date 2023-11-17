@@ -148,6 +148,15 @@ def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRG
                                       blue = mat[...,2].astype(np.uint8),
                                       subject = subject,
                                       alpha = alpha.astype(np.uint8))
+    elif cortex_type=='Vertex':
+        
+        # define Vertex 
+        braindata = cortex.Vertex(data = data,
+                                 subject = subject,
+                                 description = description,
+                                 cmap = cmap,
+                                 vmin = vmin,
+                                 vmax = vmax)
         
     braindata_fig = cortex.quickshow(braindata = braindata,
                                      depth = depth,
