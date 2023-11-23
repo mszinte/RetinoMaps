@@ -46,9 +46,29 @@ sys.path.insert(0,r'/tmp/prfpy')
 import prfpy
 from prfpy.stimulus import PRFStimulus2D
 from prfpy.model import Iso2DGaussianModel, Norm_Iso2DGaussianModel
-from prfpy.fit import Iso2DGaussianFitter
+from prfpy.fit import Iso2DGaussianFitter,Norm_Iso2DGaussianFitter
 import nibabel as nb
 
+
+
+# subject = 'sub-02' 
+# input_fn_HCP = '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/pp_data/sub-02/func/fmriprep_dct_avg/HCP_170k/sub-02_task-pRF_fmriprep_dct_avg_bold.dtseries.nii'
+# input_vd = '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/vdm/vdm.npy' 
+# fit_fn_HCP= '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/pp_data/sub-02/prf/fit/sub-02_task-pRF_fmriprep_dct_avg_bold.dtser_prf-fit.dtseries.nii'
+# pred_fn_HCP = '/Users/uriel/disks/meso_shared/RetinoMaps/derivatives/pp_data/sub-02/prf/fit/sub-02_task-pRF_fmriprep_dct_avg_bold_prf-pred.dtseries.nii'
+# nb_procs = '8' 
+
+
+# # Analysis parameters
+# # load settings
+# with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
+#     json_s = f.read()
+#     analysis_info = json.loads(json_s)
+# screen_size_cm = analysis_info['screen_size_cm']
+# screen_distance_cm = analysis_info['screen_distance_cm']
+# TR = analysis_info['TR']
+# grid_nr = analysis_info['grid_nr']
+# max_ecc_size = analysis_info['max_ecc_size']
 
 # Get inputs
 start_time = datetime.datetime.now()
@@ -75,6 +95,7 @@ elif sys.argv[5].endswith('.gii'):
 
 nb_procs = int(sys.argv[6])
 
+
 # Analysis parameters
 with open('../../../settings.json') as f:
     json_s = f.read()
@@ -85,10 +106,15 @@ TR = analysis_info['TR']
 grid_nr = analysis_info['grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
 
+
+
 # Get task specific visual design matrix
 vdm = np.load(input_vd)
 
-if input_fn_HCP in locals(): 
+
+
+
+if 'input_fn_HCP' in vars(): 
 
 
     # Load HCP 170k data 
@@ -189,21 +215,21 @@ if input_fn_HCP in locals():
                                     use_previous_gaussian_fitter_hrf=use_previous_gaussian_fitter_hrf)
     
     norm_grid_bounds = [(0,1000),(0,1000)] #only prf amplitudes between 0 and 1000, only neural baseline values between 0 and 1000
-
-    DN_fitter.grid_fit(surround_amplitude_grid=np.linspace(0,10,grid_nr),
-                 surround_size_grid=np.linspace(1,10,grid_nr),
-                 neural_baseline_grid=np.linspace(0,10,grid_nr),
-                 surround_baseline_grid=np.linspace(1,10,grid_nr), 
+    num = 7
+    DN_fitter.grid_fit(surround_amplitude_grid=np.linspace(0,10,num),
+                 surround_size_grid=np.linspace(1,10,num),
+                 neural_baseline_grid=np.linspace(0,10,num),
+                 surround_baseline_grid=np.linspace(1,10,num), 
                  verbose = False, 
                  n_batches = 8, 
                  rsq_threshold= 0.01, 
                  fixed_grid_baseline=0, 
                  grid_bounds=norm_grid_bounds,
-                 hrf_1_grid=np.linspace(0,10,grid_nr),
+                 hrf_1_grid=np.linspace(0,10,num),
                  hrf_2_grid=np.linspace(0,0,1),
-                 ecc_grid=eccs[:grid_nr],
-                 polar_grid=polars[:grid_nr],
-                 size_grid=sizes[:grid_nr])
+                 ecc_grid=eccs[:num],
+                 polar_grid=polars[:num],
+                 size_grid=sizes[:num])
     
     
     #iterative DN fit
@@ -266,8 +292,3 @@ if input_fn_HCP in locals():
         start_time=start_time, end_time=end_time, dur=end_time - start_time))
 
 
-elif input_fn_fsnative in locals(): 
-    #start with fsnative
-    
-else: 
-    print('problems')

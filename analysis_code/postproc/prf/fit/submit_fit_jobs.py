@@ -20,12 +20,12 @@ To run:
 -----------------------------------------------------------------------------------------
 Exemple:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/prf/fit
+>> cd ~/projects/RetinoMaps/analysis_code/postproc/prf/fit
 2. run python command
 python submit_fit_jobs.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python submit_fit_jobs.py /scratch/mszinte/data amblyo_prf sub-01 327
+python submit_fit_jobs.py /scratch/mszinte/data RetinoMaps sub-02 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -46,17 +46,17 @@ import datetime
 import ipdb
 deb = ipdb.set_trace
 
-# # Inputs
-# main_dir = sys.argv[1]
-# project_dir = sys.argv[2]
-# subject = sys.argv[3]
-# group = sys.argv[4]
+# Inputs
+main_dir = sys.argv[1]
+project_dir = sys.argv[2]
+subject = sys.argv[3]
+group = sys.argv[4]
 
-main_dir = '/Users/uriel/disks/meso_shared'
-project_dir = 'RetinoMaps'
-subject = 'sub-02'
-group = '327'
-session = 'ses-01'
+
+# main_dir = '/Users/uriel/disks/meso_shared'
+# project_dir = 'RetinoMaps'
+# subject = 'sub-02'
+# group = '327'
 
 # Cluster settings
 fit_per_hour = 15000.0
@@ -81,17 +81,19 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
 pp_avg_fns_HCP = glob.glob("{}/{}/func/fmriprep_dct_avg/HCP_170k/*avg*.dtseries.nii".format(pp_dir,subject))
 pp_avg_fns_fsnative = glob.glob("{}/{}/func/fmriprep_dct_avg/fsnative/*avg*.func.gii".format(pp_dir,subject))
-pp_avg_fns_concat = np.concatenate(pp_avg_fns_HCP,pp_avg_fns_fsnative)
+pp_avg_fns_concat = np.concatenate((pp_avg_fns_HCP,pp_avg_fns_fsnative))
 
 
-for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
+for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat[0:1]):
+
     
 
 
 ### HCP 
     if  pp_avg_fn.endswith('.nii'):
         
-        fit_fn = "{}/{}_prf-fit.dtseries.nii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+        
+        fit_fn = "{}/{}_prf-fit.dtseries.nii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-13])
         pred_fn = "{}/{}_prf-pred.dtseries.nii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-13])
 
         if os.path.isfile(fit_fn):
@@ -110,19 +112,19 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
     
         # create job shell
         slurm_cmd = """\
-    #!/bin/bash
-    #SBATCH -p skylake
-    #SBATCH -A b327
-    #SBATCH --nodes=1
-    #SBATCH --cpus-per-task={nb_procs}
-    #SBATCH --time={job_dur}
-    #SBATCH -e {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.err
-    #SBATCH -o {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.out
-    #SBATCH -J {sub}_fit_{fit_num}\n\n""".format(
+#!/bin/bash
+#SBATCH -p skylake
+#SBATCH -A b327
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task={nb_procs}
+#SBATCH --time={job_dur}
+#SBATCH -e {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.err
+#SBATCH -o {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.out
+#SBATCH -J {sub}_fit_{fit_num}\n\n""".format(
         nb_procs=nb_procs, log_dir=prf_logs_dir, job_dur=job_dur, sub=subject, fit_num=fit_num)
     
         # define fit cmd
-        fit_cmd = "python prf_fit.py {} {} {} {} {} {}".format(
+        fit_cmd = "python prf_fit_surf.py {} {} {} {} {} {}".format(
             subject, input_fn_HCP, vdm_fn, fit_fn,  pred_fn , nb_procs)
         
         
@@ -165,15 +167,15 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
     
         # create job shell
         slurm_cmd = """\
-    #!/bin/bash
-    #SBATCH -p skylake
-    #SBATCH -A b327
-    #SBATCH --nodes=1
-    #SBATCH --cpus-per-task={nb_procs}
-    #SBATCH --time={job_dur}
-    #SBATCH -e {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.err
-    #SBATCH -o {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.out
-    #SBATCH -J {sub}_fit_{fit_num}\n\n""".format(
+#!/bin/bash
+#SBATCH -p skylake
+#SBATCH -A b327
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task={nb_procs}
+#SBATCH --time={job_dur}
+#SBATCH -e {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.err
+#SBATCH -o {log_dir}/{sub}_fit_{fit_num}_%N_%j_%a.out
+#SBATCH -J {sub}_fit_{fit_num}\n\n""".format(
         nb_procs=nb_procs, log_dir=prf_logs_dir, job_dur=job_dur, sub=subject, fit_num=fit_num)
     
         # define fit cmd
