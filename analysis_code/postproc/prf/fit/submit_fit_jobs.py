@@ -59,7 +59,7 @@ group = sys.argv[4]
 # group = '327'
 
 # Cluster settings
-fit_per_hour = 5000.0
+fit_per_hour = 900.0
 nb_procs = 8
 
 # Define directories
