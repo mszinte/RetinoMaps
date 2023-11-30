@@ -106,7 +106,7 @@ if 'input_fn_fsnative' in vars():
     data_fsnative = [x.data for x in data_img_fsnative.darrays]
     data_fsnative = np.vstack(data_fsnative) 
     
-    data_fsnative = data_fsnative[:,10:20 ] # juste for test
+    #data_fsnative = data_fsnative[:,10:20 ] # juste for test
     data_fsnative = data_fsnative.T # juste for test
     
 
@@ -133,7 +133,7 @@ if 'input_fn_fsnative' in vars():
     # grid fit
     print("Grid fit Gauss")
     gauss_fitter = Iso2DGaussianFitter(data=data_fsnative, model=gauss_model, n_jobs=nb_procs)
-    gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, verbose=True)
+    gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, verbose=False,n_batches=8)
     
  
     # iterative fit
@@ -157,13 +157,27 @@ if 'input_fn_fsnative' in vars():
     num = 7
     fixed_grid_baseline=0
     norm_grid_bounds = [(0,1000),(0,1000)] 
+    
     DN_fitter.grid_fit(surround_amplitude_grid=np.linspace(0,10,num),
+                       
              surround_size_grid=np.linspace(1,10,num),
+             
              neural_baseline_grid=np.linspace(0,10,num),
+             
              surround_baseline_grid=np.linspace(1,10,num),
+             
+             n_batches=8,
+             
+             rsq_threshold=0.0001,
+             
+             verbose = False,
+             
              fixed_grid_baseline=fixed_grid_baseline,
+             
              grid_bounds=norm_grid_bounds,
+             
              hrf_1_grid=np.linspace(0,10,num),
+             
              hrf_2_grid=np.linspace(0,0,1),
              # ecc_grid=eccs,
              # polar_grid=polars,
