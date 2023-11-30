@@ -21,7 +21,7 @@ To run:
 >> python preproc_end_sbatch.py [main directory] [project name] [subject num] [group] [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-03 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -88,13 +88,13 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 # create sh fn
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
-of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_fsnative_cmd,preproc_end_surf_HCP_cmd,chmod_cmd,chgrp_cmd))
-of.close()
-
 # of = open(sh_fn, 'w')
-# of.write("{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
+# of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_fsnative_cmd,preproc_end_surf_HCP_cmd,chmod_cmd,chgrp_cmd))
 # of.close()
+
+of = open(sh_fn, 'w')
+of.write("{} \n{} \n{} \n{}".format(slurm_cmd,preproc_end_surf_fsnative_cmd,chmod_cmd,chgrp_cmd))
+of.close()
 
 
 # Submit jobs

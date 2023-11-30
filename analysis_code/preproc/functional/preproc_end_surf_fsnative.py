@@ -44,8 +44,15 @@ import itertools as it
 from scipy import stats
 from nilearn import signal
 
+
+import shutil
+
+
 from nilearn.glm.first_level.design_matrix import _cosine_drift
 trans_cmd = 'rsync -avuz --progress'
+
+sys.path.append("{}/../../utils".format(os.getcwd()))
+from gifti_utils import make_giti_image
 deb = ipdb.set_trace
 
 # Inputs
@@ -66,14 +73,15 @@ hemis = ['L','R']
 
 
 
-
 for session in sessions :
     
     if session == 'ses-01':
         tasks = ['pRF']
     else : 
         tasks = ["rest","pMF","PurLoc","SacLoc","PurVELoc","SacVELoc"]
-         
+    
+   
+    
     fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(main_dir, project_dir, subject, session)
     pp_data_func_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct/fsnative".format(main_dir, project_dir, subject)
     os.makedirs(pp_data_func_dir, exist_ok=True)
@@ -89,8 +97,7 @@ for session in sessions :
 
             # Load data
             surface_data_hemi_img = nb.load(func_fn_hemi)
-            surface_data_hemi_header = surface_data_hemi_img.header
-            surface_data_hemi_meta = surface_data_hemi_img.meta
+
             
  
             surf_data_hemi = [x.data for x in surface_data_hemi_img.darrays]
@@ -100,21 +107,22 @@ for session in sessions :
             n_vol_hemi = surf_data_hemi.shape[0]
             ft_hemi = np.linspace(0.5 * TR, (n_vol_hemi + 0.5) * TR, n_vol_hemi, endpoint=False)
             hp_set_hemi = _cosine_drift(high_pass_threshold, ft_hemi)
-            surf_data_hemi = signal.clean(surf_data_hemi, detrend=False, standardize=True, confounds=hp_set_hemi)
-             
+            surf_data_hemi = signal.clean(surf_data_hemi, detrend=False, standardize=False, confounds=hp_set_hemi)
+            
+            # Compute the Z-score 
+            surf_data_hemi =  (surf_data_hemi - np.mean(surf_data_hemi, axis=0)) / np.std(surf_data_hemi, axis=0)
+            
         
-            #Export filtering data
-            flt_im_hemi = nb.gifti.GiftiImage(header = surface_data_hemi_header, meta = surface_data_hemi_meta)
-            for flt_data_hemi in surf_data_hemi:
-                flt_darray_hemi = nb.gifti.GiftiDataArray(flt_data_hemi)
-                flt_im_hemi.add_gifti_data_array(flt_darray_hemi)
-                
+            # Make a GIFTI image with the preproceced data
+            flt_im_hemi = make_giti_image(surface_data_hemi_img,surf_data_hemi)
+            
+            #Export preproceced data
             out_flt_file_hemi = "{}/{}_{}.func.gii".format(pp_data_func_dir,func_fn_hemi.split('/')[-1][:-9],high_pass_type) 
             nb.save(flt_im_hemi, out_flt_file_hemi)
-        
+            
         for task in tasks:
             print(task)
-    
+     
             # preproc tasks runs
             preproc_files_hemi = glob.glob("{}/*_task-{}_*_hemi-{}_space-fsnative_bold_{}.func.gii".format(pp_data_func_dir,task,hemi, high_pass_type))
 
@@ -163,13 +171,14 @@ for session in sessions :
             print('starting exportation')
             
             # export correlations file
-            corr_img_hemi = nb.gifti.GiftiImage(header=preproc_img_header_hemi, meta=preproc_img_meta_hemi)
-            for corr_data_hemi in cor_final_hemi:
-                corr_darray_hemi = nb.gifti.GiftiDataArray(corr_data_hemi)
-                corr_img_hemi.add_gifti_data_array(corr_darray_hemi)
-            cor_file_hemi = "{}/{}_task-{}_hemi-{}_fmriprep_{}_correlations_bold.func.gii".format(corr_dir, subject, task,hemi, high_pass_type)
-            nb.save(corr_img_hemi, cor_file_hemi)
             
+            cor_final_hemi = cor_final_hemi.astype(np.float32) 
+            corr_img_hemi = nb.gifti.GiftiImage(header=preproc_img_header_hemi, meta=preproc_img_meta_hemi)
+            corr_darray_hemi = nb.gifti.GiftiDataArray(data=cor_final_hemi.flatten())
+            corr_img_hemi.add_gifti_data_array(corr_darray_hemi)
+            nb.save(corr_img_hemi, cor_file_hemi)
+        
+  
     
             # Averaging 
             print('averaging')
@@ -181,32 +190,29 @@ for session in sessions :
             avg_file_hemi = "{}/{}_task-{}_hemi-{}_fmriprep_{}_avg_bold.func.gii".format(avg_dir, subject, task,hemi,high_pass_type)
  
             print("averaging...")
+            data_avg_hemi = np.zeros(preproc_data_hemi.shape)
+            
             for preproc_file_hemi in preproc_files_hemi:
                 
-                data_avg_hemi = np.zeros(preproc_data_hemi.shape)
-
                 print('add: {}'.format(preproc_file_hemi))
+
                 data_val_hemi = []
-                
                 # Load data
-                data_val_img_hemi = nb.load(preproc_file_hemi)
+                preproc_img_hemi = nb.load(preproc_file_hemi)
+
                 
-                header_val_img_hemi = data_val_img_hemi.header
-                meta_val_img_hemi = data_val_img_hemi.meta
-                
-                data_val_hemi = [x.data for x in data_val_img_hemi.darrays]
+                data_val_hemi = [x.data for x in preproc_img_hemi.darrays]
                 data_val_hemi = np.vstack(data_val_hemi)
                 
                 # Averaging 
                 data_avg_hemi += data_val_hemi/len(preproc_files_hemi)
 
-                # export averaging data
-                avg_img_hemi = nb.gifti.GiftiImage(header = header_val_img_hemi, meta= meta_val_img_hemi)
-                for avg_data_hemi in data_avg_hemi:
-                    avg_darray_hemi = nb.gifti.GiftiDataArray(avg_data_hemi)
-                    avg_img_hemi.add_gifti_data_array(avg_darray_hemi)  
-                nb.save(avg_img_hemi, avg_file_hemi)
+            # export averaging data
+            avg_img_hemi = make_giti_image(preproc_img_hemi,data_avg_hemi)
+            nb.save(avg_img_hemi, avg_file_hemi)
                 
+                
+ 
             # Leave-one-out averages
             if len(preproc_files_hemi):
                 combi_hemi = list(it.combinations(preproc_files_hemi, len(preproc_files_hemi)-1))
@@ -221,11 +227,12 @@ for session in sessions :
                 loo_avg_file_hemi = "{}/{}_task-{}_hemi-{}_fmriprep_{}_avg_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,hemi,high_pass_type, loo_num+1)
     
                 # load data and make the loo_avg object
-                preproc_val_hemi = nb.load(preproc_files_hemi[0])
-                preproc_data_hemi = [x.data for x in preproc_val_hemi.darrays]
+                preproc_img_hemi = nb.load(preproc_files_hemi[0])
+                
+                preproc_data_hemi = [x.data for x in preproc_img_hemi.darrays]
                 preproc_data_hemi = np.vstack(preproc_data_hemi)
+                
                 data_loo_avg_hemi = np.zeros(preproc_data_hemi.shape)
-            
             
                 # compute leave on out averagin
                 for avg_run in avg_runs:
@@ -239,12 +246,10 @@ for session in sessions :
                 
                 
                 # export leave one out file 
-                loo_avg_img_hemi = nb.gifti.GiftiImage(header = header_val_img_hemi, meta= meta_val_img_hemi)
-                for data_loo_hemi in data_loo_avg_hemi:
-                    darray_loo_hemi = nb.gifti.GiftiDataArray(data_loo_hemi)
-                    loo_avg_img_hemi.add_gifti_data_array(darray_loo_hemi)
+                loo_avg_img_hemi = make_giti_image(preproc_img_hemi,data_loo_avg_hemi)
                 
-                                          
+
+                                                          
                 nb.save(loo_avg_img_hemi, loo_avg_file_hemi)        
             
                 # copy loo run (left one out run)
@@ -253,7 +258,19 @@ for session in sessions :
                         loo_file_hemi =  "{}/{}_task-{}_hemi-{}_fmriprep_{}_loo-{}_bold.func.gii".format(loo_avg_dir, subject,task,hemi,high_pass_type, loo_num+1)
                         print("loo: {}".format(loo))
                         os.system("{} {} {}".format(trans_cmd, loo, loo_file_hemi))
-    
+
+# Anatomy
+print("getting anatomy...")
+orig_dir_anat = "{}/{}/derivatives/fmriprep/fmriprep/{}/ses-01/anat/".format(main_dir, project_dir, subject)
+anat_files = glob.glob("{}/*.surf.gii".format(orig_dir_anat))
+
+dest_dir_anat = "{}/{}/derivatives/pp_data/{}/anat".format(main_dir, project_dir, subject)
+os.makedirs(dest_dir_anat, exist_ok=True)
+
+for orig_file in anat_files:
+    file_name = os.path.basename(orig_file)
+    dest_file = os.path.join(dest_dir_anat, file_name)
+    shutil.copyfile(orig_file, dest_file)
     
             
 
