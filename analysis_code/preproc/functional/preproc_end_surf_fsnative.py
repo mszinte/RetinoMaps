@@ -268,6 +268,7 @@ anat_files = glob.glob("{}/*.surf.gii".format(orig_dir_anat))
 dest_dir_anat = "{}/{}/derivatives/pp_data/{}/anat".format(main_dir, project_dir, subject)
 os.makedirs(dest_dir_anat, exist_ok=True)
 
+# load flat data and change medadata to make them readable by wb_view
 for hemi in hemis : 
     if hemi == 'L' :
         flat_img_l = nb.load('{}/flat_lh.gii'.format(pycortex_flat_dir))
@@ -281,6 +282,7 @@ for hemi in hemis :
         flat_img_r.darrays[0].meta['GeometricType']= 'Flat'
         nb.save(flat_img_r,'{}/{}_flat_rh.surf.gii'.format(dest_dir_anat,subject))
 
+# import surface anat data 
 for orig_file in anat_files:
     file_name = os.path.basename(orig_file)
     dest_file = os.path.join(dest_dir_anat, file_name)
