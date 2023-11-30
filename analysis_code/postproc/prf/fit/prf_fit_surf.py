@@ -106,7 +106,7 @@ if 'input_fn_fsnative' in vars():
     data_fsnative = [x.data for x in data_img_fsnative.darrays]
     data_fsnative = np.vstack(data_fsnative) 
     
-    # data_fsnative = data_fsnative[:,10:20 ] # juste for test
+    data_fsnative = data_fsnative[:,10:20 ] # juste for test
     data_fsnative = data_fsnative.T # juste for test
     
 
