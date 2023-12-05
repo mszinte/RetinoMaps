@@ -18,7 +18,8 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 2. run python command
->> python preproc_end_sbatch.py [main directory] [project name] [subject num] [group] [server project]
+>> python preproc_end_sbatch.py [main directory] [project name] [subject num] [group] 
+    [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
 python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327

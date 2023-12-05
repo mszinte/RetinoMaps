@@ -80,5 +80,6 @@ of.close()
 sb.call('freeview -cmd {}'.format(sh_fn), shell=True)
 
 # convert images in video
-mk_vid_cmd = 'ffmpeg -framerate 5 -pattern_type glob -i "{}/*.png" -b:v 2M -c:v mpeg4 {}/{}_{}.mp4'.format(image_dir, vid_dir, subject, vid_name)
+mk_vid_cmd = 'ffmpeg -framerate 5 -pattern_type glob -i "{}/*.png" -b:v 2M -c:v mpeg4 {}/{}_{}.mp4'.format(
+    image_dir, vid_dir, subject, vid_name)
 os.system(mk_vid_cmd)

@@ -29,10 +29,13 @@ To run:
 2. run python command
 python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [hour proc.] [anat_only_(y/n)] [aroma_(y/n)] [fmapfree_(y/n)] 
-                          [skip_bids_val_(y/n)] [cifti_output_170k_(y/n)] [fsaverage(y/n)] [dof] [email account] [group] [server_project]
+                          [skip_bids_val_(y/n)] [cifti_output_170k_(y/n)] [fsaverage(y/n)]
+                          [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-09 30 anat_only_n aroma_n fmapfree_n skip_bids_val_n cifti_output_170k_y fsaverage_y 12 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-09 30 anat_only_n aroma_n
+    fmapfree_n skip_bids_val_n cifti_output_170k_y fsaverage_y 12 
+    uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -97,7 +100,7 @@ if hcp_cifti_val == 'cifti_output_170k_y':
 if fsaverage_val == 'fsaverage_y':
     tf_export = 'export SINGULARITYENV_TEMPLATEFLOW_HOME=/opt/templateflow'
     tf_bind = "-B {main_dir}/{project_dir}/code/singularity/fmriprep_tf/:/opt/templateflow".format(
-        main_dir=main_dir,project_dir=project_dir) 
+        main_dir=main_dir, project_dir=project_dir) 
     fsaverage = 'fsaverage'
     
 # define SLURM cmd
@@ -120,14 +123,6 @@ slurm_cmd = """\
            log_dir=log_dir, email=email, tf_export=tf_export,
            cluster_name=cluster_name)
 
-# # define singularity cmd
-# singularity_cmd = "singularity run --cleanenv {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt --fs-subjects-dir /work_dir/{project_dir}/derivatives/fmriprep/freesurfer/ /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/fmriprep/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/derivatives/temp_data/ --bold2t1w-dof {dof} --bold2t1w-init header --output-spaces T1w fsnative {fsaverage} {hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
-#         tf_bind=tf_bind, main_dir=main_dir, project_dir=project_dir,
-#         simg=singularity_dir, sub_num=sub_num, nb_procs=nb_procs,
-#         anat_only=anat_only, use_aroma=use_aroma, use_fmapfree=use_fmapfree,
-#         use_skip_bids_val=use_skip_bids_val, fsaverage = fsaverage,hcp_cifti=hcp_cifti, memory_val=memory_val,
-#         dof=dof)
-
 #define singularity cmd
 singularity_cmd = "singularity run --cleanenv {tf_bind} -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/{project_dir}/code/freesurfer/license.txt --fs-subjects-dir /work_dir/{project_dir}/derivatives/fmriprep/freesurfer/ /work_dir/{project_dir}/ /work_dir/{project_dir}/derivatives/fmriprep/fmriprep/ participant --participant-label {sub_num} -w /work_dir/temp/ --bold2t1w-dof {dof} --output-spaces T1w fsnative {fsaverage} {hcp_cifti} --low-mem --mem-mb {memory_val}000 --nthreads {nb_procs:.0f} {anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
         tf_bind=tf_bind, main_dir=main_dir, project_dir=project_dir,
@@ -135,8 +130,6 @@ singularity_cmd = "singularity run --cleanenv {tf_bind} -B {main_dir}:/work_dir 
         anat_only=anat_only, use_aroma=use_aroma, use_fmapfree=use_fmapfree,
         use_skip_bids_val=use_skip_bids_val, fsaverage = fsaverage,hcp_cifti=hcp_cifti, memory_val=memory_val,
         dof=dof)
-
-
 
 # define permission cmd
 chmod_cmd = "\nchmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
