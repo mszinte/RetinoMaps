@@ -39,7 +39,7 @@ import numpy as np
 import json
 import glob
 import pandas as pd
-from scipy.stats import loguniform, randint
+from scipy.stats import loguniform 
 
 
 import warnings
@@ -47,7 +47,7 @@ warnings.filterwarnings("ignore")
 
 #sklearn import
 
-from sklearn.model_selection import GridSearchCV
+
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
