@@ -52,12 +52,6 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
-
-# main_dir = '/Users/uriel/disks/meso_shared'
-# project_dir = 'RetinoMaps'
-# subject = 'sub-02'
-# group = '327'
-
 # Cluster settings
 fit_per_hour = 900.0
 nb_procs = 8
@@ -85,9 +79,8 @@ pp_avg_fns_concat = np.concatenate((pp_avg_fns_fsnative,pp_avg_fns_HCP,))
 
 
 for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
-
     
-### fsnative    
+    ### fsnative    
     if pp_avg_fn.endswith('.gii'):
         fit_fn_gauss = "{}/{}_prf-fit_gauss.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
         pred_fn_gauss = "{}/{}_prf-pred_gauss.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
@@ -99,9 +92,6 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
             if os.path.getsize(fit_fn_gauss) != 0:
                 print("output file {} already exists: aborting analysis".format(fit_fn_gauss))
                 exit()
-        
-        
-        
         
         input_fn_fsnative = pp_avg_fn
         img = nb.load(input_fn_fsnative)
@@ -129,7 +119,6 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
         # define fit cmd
         fit_cmd = "python prf_fit_surf.py {} {} {} {} {} {} {} {} ".format(
             subject, input_fn_fsnative, vdm_fn, fit_fn_gauss, pred_fn_gauss , fit_fn_DN, pred_fn_DN , nb_procs)
-        
         
         # create sh
         sh_fn = "{}/jobs/{}_fsnative_prf_fit-{}.sh".format(prf_dir,subject,fit_num)

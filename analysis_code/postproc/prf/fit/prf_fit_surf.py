@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-prf_fit.py
+prf_fit_surf.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-pRF fit code run by submit_fit.py
+pRF fit adapted for surfaces, run by submit_fit.py
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name
@@ -61,8 +61,7 @@ input_vd = sys.argv[3]
 
 if sys.argv[4].endswith('.nii'):
     fit_fn_HCP_gauss = sys.argv[4]
-    fit_fn_HCP_DN = sys.argv[5]  
-    
+    fit_fn_HCP_DN = sys.argv[5]      
 elif sys.argv[4].endswith('.gii'):
     fit_fn_fsnative_gauss = sys.argv[4]
     fit_fn_fsnative_DN = sys.argv[5] 
@@ -70,12 +69,9 @@ elif sys.argv[4].endswith('.gii'):
 if sys.argv[6].endswith('.nii'):
     pred_fn_HCP_gauss = sys.argv[6]
     pred_fn_HCP_DN = sys.argv[7]
-    
 elif sys.argv[6].endswith('.gii'):
     pred_fn_fsnative_gauss = sys.argv[6]
     pred_fn_fsnative_DN = sys.argv[7]
-
-
 
 nb_procs = int(sys.argv[8])
 
@@ -89,30 +85,16 @@ TR = analysis_info['TR']
 grid_nr = analysis_info['grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
 
-
-
 # Get task specific visual design matrix
 vdm = np.load(input_vd)
 
+# GIFTI
 if 'input_fn_fsnative' in vars(): 
 
-
     # Load fsnative data 
-    data_img_fsnative = nb.load(input_fn_fsnative)
-    meta = data_img_fsnative.meta
-    header = data_img_fsnative.header
-    
-    
-    data_fsnative = [x.data for x in data_img_fsnative.darrays]
-    data_fsnative = np.vstack(data_fsnative) 
-    
-    #data_fsnative = data_fsnative[:,10:20 ] # juste for test
-    data_fsnative = data_fsnative.T # juste for test
-    
+    data_img_fsnative, data_fsnative = load_gifti_image(input_fn_fsnative)
+    data_fsnative = data_fsnative.T
 
-        
-        
-        
     fit_mat_gauss_fsnative = np.zeros((data_fsnative.shape[0],data_fsnative.shape[1],6))
     pred_mat_gauss_fsnative = np.zeros(data_fsnative.shape)
     
@@ -133,15 +115,12 @@ if 'input_fn_fsnative' in vars():
     # grid fit
     print("Grid fit Gauss")
     gauss_fitter = Iso2DGaussianFitter(data=data_fsnative, model=gauss_model, n_jobs=nb_procs)
-    gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, verbose=False,n_batches=8)
+    gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, verbose=False, n_batches=8)
     
- 
     # iterative fit
     print("Iterative fit Gauss")
     gauss_fitter.iterative_fit(rsq_threshold=0.0001, verbose=True)
     fit_fit_gauss_fsnative = gauss_fitter.iterative_search_params
-    
-    
     
     # determine DN model
     DN_model = Norm_Iso2DGaussianModel(stimulus=stimulus)
@@ -159,25 +138,15 @@ if 'input_fn_fsnative' in vars():
     norm_grid_bounds = [(0,1000),(0,1000)] 
     
     DN_fitter.grid_fit(surround_amplitude_grid=np.linspace(0,10,num),
-                       
-             surround_size_grid=np.linspace(1,10,num),
-             
+             surround_size_grid=np.linspace(1,10,num),             
              neural_baseline_grid=np.linspace(0,10,num),
-             
              surround_baseline_grid=np.linspace(1,10,num),
-             
              n_batches=8,
-             
              rsq_threshold=0.0001,
-             
              verbose = False,
-             
              fixed_grid_baseline=fixed_grid_baseline,
-             
              grid_bounds=norm_grid_bounds,
-             
              hrf_1_grid=np.linspace(0,10,num),
-             
              hrf_2_grid=np.linspace(0,0,1),
              # ecc_grid=eccs,
              # polar_grid=polars,

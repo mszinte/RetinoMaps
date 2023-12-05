@@ -13,7 +13,7 @@ def load_gifti_image(gii_fn):
     """
     # import 
     import nibabel as nb
-    
+    import numpy as np
     img_hemi = nb.load(gii_fn)
     data_hemi = [x.data for x in img_hemi.darrays]
     data_hemi = np.vstack(data_hemi)

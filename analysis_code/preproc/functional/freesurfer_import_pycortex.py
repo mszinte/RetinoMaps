@@ -60,8 +60,6 @@ export SUBJECTS_DIR={}\n\
 export FS_LICENSE={}\n\
 source $FREESURFER_HOME/SetUpFreeSurfer.sh\n""".format(main_dir, project_dir, fs_dir, fs_license)
 
-
-
 #define pycortex cmd
 py_cortex_cmd = "python pycortex_import.py {} {} {} {}".format(main_dir,project_dir,subject,group)
 
@@ -72,12 +70,9 @@ sh_dir = "{}/{}_freesurfer_import_pycortex.sh".format(jobs_dir, subject)
 chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
 chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
 
-
 of = open(sh_dir, 'w')
 of.write("{}{}\n{}\n{}".format(freesurfer_cmd,py_cortex_cmd,chmod_cmd,chgrp_cmd))
 of.close()
 
-
-
-#Run freesurfer and pycortex
+# Run freesurfer and pycortex
 os.system("{}".format(sh_dir))
