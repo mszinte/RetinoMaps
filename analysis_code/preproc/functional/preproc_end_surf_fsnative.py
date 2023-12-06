@@ -97,12 +97,13 @@ for session in sessions :
             surf_data_hemi =  (surf_data_hemi - np.mean(surf_data_hemi, axis=0)) / np.std(surf_data_hemi, axis=0)
         
             # Make a GIFTI image with the preproceced data
-            flt_im_hemi = make_gifti_image(surf_img_hemi, surf_data_hemi)
             
-            # Export preproceced data
             out_flt_file_hemi = "{}/{}_{}.func.gii".format(pp_data_func_dir, 
                                                            func_fn_hemi.split('/')[-1][:-9],
                                                            high_pass_type) 
+            
+            
+            flt_im_hemi = make_gifti_image(surf_img_hemi, surf_data_hemi)   
             nb.save(flt_im_hemi, out_flt_file_hemi)
 
         
@@ -156,11 +157,15 @@ for session in sessions :
             print('starting exportation')
             
             # export correlations file
-            cor_final_hemi = cor_final_hemi.astype(np.float32) 
-            corr_img_hemi = nb.gifti.GiftiImage(header=preproc_img_header_hemi, 
-                                                meta=preproc_img_meta_hemi)
-            corr_darray_hemi = nb.gifti.GiftiDataArray(data=cor_final_hemi.flatten())
-            corr_img_hemi.add_gifti_data_array(corr_darray_hemi)
+            # cor_final_hemi = cor_final_hemi.astype(np.float32) 
+            # corr_img_hemi = nb.gifti.GiftiImage(header=preproc_img_header_hemi, 
+            #                                     meta=preproc_img_meta_hemi)
+            # corr_darray_hemi = nb.gifti.GiftiDataArray(data=cor_final_hemi.flatten())
+            # corr_img_hemi.add_gifti_data_array(corr_darray_hemi)
+            # nb.save(corr_img_hemi, cor_file_hemi)
+            
+            
+            corr_img_hemi = make_gifti_image(preproc_img_hemi,cor_final_hemi)
             nb.save(corr_img_hemi, cor_file_hemi)
         
             # Averaging computation

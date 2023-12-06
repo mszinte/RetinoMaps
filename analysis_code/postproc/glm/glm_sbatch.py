@@ -58,8 +58,8 @@ memory_val = 48
 hour_proc = 5
 
 # set folders
-log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
-job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, project_dir, subject)
+log_dir = "{}/{}/derivatives/pp_data/{}/glm/log_outputs".format(main_dir, project_dir, subject)
+job_dir = "{}/{}/derivatives/pp_data/{}/glm/jobs".format(main_dir, project_dir, subject)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(job_dir, exist_ok=True)
 

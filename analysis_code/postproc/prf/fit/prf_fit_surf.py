@@ -40,40 +40,37 @@ import ipdb
 deb = ipdb.set_trace
 
 # MRI analysis imports
-# from prfpy.rf import *
-# from prfpy.timecourse import *
+
 from prfpy.stimulus import PRFStimulus2D
 from prfpy.model import Iso2DGaussianModel,Norm_Iso2DGaussianModel
 from prfpy.fit import Iso2DGaussianFitter, Norm_Iso2DGaussianFitter
 import nibabel as nb
 
+
+sys.path.append("{}/../../../utils".format(os.getcwd()))
+from gifti_utils import make_gifti_image , load_gifti_image
+
 # Get inputs
 start_time = datetime.datetime.now()
 
 subject = sys.argv[1]
+input_vd = sys.argv[2]
 
-if sys.argv[2].endswith('.nii'):
-    input_fn_HCP = sys.argv[2]
-elif sys.argv[2].endswith('.gii'):
-    input_fn_fsnative = sys.argv[2]
-
-input_vd = sys.argv[3]
-
-if sys.argv[4].endswith('.nii'):
-    fit_fn_HCP_gauss = sys.argv[4]
-    fit_fn_HCP_DN = sys.argv[5]      
-elif sys.argv[4].endswith('.gii'):
-    fit_fn_fsnative_gauss = sys.argv[4]
-    fit_fn_fsnative_DN = sys.argv[5] 
-
-if sys.argv[6].endswith('.nii'):
-    pred_fn_HCP_gauss = sys.argv[6]
-    pred_fn_HCP_DN = sys.argv[7]
-elif sys.argv[6].endswith('.gii'):
-    pred_fn_fsnative_gauss = sys.argv[6]
-    pred_fn_fsnative_DN = sys.argv[7]
-
-nb_procs = int(sys.argv[8])
+if sys.argv[3].endswith('.nii'):
+    input_fn_HCP = sys.argv[3]
+    fit_fn_HCP_DN = sys.argv[4]
+    pred_fn_HCP_DN = sys.argv[5]
+    
+    
+elif sys.argv[3].endswith('.gii'):
+    input_fn_fsnative = sys.argv[3]
+    fit_fn_fsnative_DN = sys.argv[4] 
+    pred_fn_fsnative_DN = sys.argv[5]
+    
+    
+n_jobs = 8
+n_batches = 8
+rsq_threshold = 0.0001
 
 # Analysis parameters
 with open('../../../settings.json') as f:
@@ -88,19 +85,25 @@ max_ecc_size = analysis_info['max_ecc_size']
 # Get task specific visual design matrix
 vdm = np.load(input_vd)
 
+# defind pRF parameter range
+sizes = max_ecc_size * np.linspace(0.1,1,grid_nr)**2
+eccs = max_ecc_size * np.linspace(0.25,1,grid_nr)**2
+polars = np.linspace(0, 2*np.pi, grid_nr)
+
+
+# defind dn parameters
+fixed_grid_baseline = 0
+grid_bounds = [(0,1000),(0,1000)]
+surround_size_grid = sizes
+surround_amplitude_grid = np.linspace(0, 10, grid_nr)
+surround_baseline_grid = np.linspace(0, 10, grid_nr)
+neural_baseline_grid = np.linspace(0, 10, grid_nr)
+
 # GIFTI
 if 'input_fn_fsnative' in vars(): 
-
-    # Load fsnative data 
-    data_img_fsnative, data_fsnative = load_gifti_image(input_fn_fsnative)
-    data_fsnative = data_fsnative.T
-
-    fit_mat_gauss_fsnative = np.zeros((data_fsnative.shape[0],data_fsnative.shape[1],6))
-    pred_mat_gauss_fsnative = np.zeros(data_fsnative.shape)
+    img_fsnative, data_fsnative = load_gifti_image(input_fn_fsnative)
     
-    fit_mat_DN_fsnative = np.zeros((data_fsnative.shape[0],data_fsnative.shape[1],6))
-    pred_mat_DN_fsnative = np.zeros(data_fsnative.shape)
-    
+
     # determine gauss model
     stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
                              screen_distance_cm=screen_distance_cm,
@@ -108,111 +111,96 @@ if 'input_fn_fsnative' in vars():
                              TR=TR)
     
     gauss_model = Iso2DGaussianModel(stimulus=stimulus)
-    sizes = max_ecc_size * np.linspace(0.1,1,grid_nr)**2
-    eccs = max_ecc_size * np.linspace(0.25,1,grid_nr)**2
-    polars = np.linspace(0, 2*np.pi, grid_nr)
     
-    # grid fit
-    print("Grid fit Gauss")
-    gauss_fitter = Iso2DGaussianFitter(data=data_fsnative, model=gauss_model, n_jobs=nb_procs)
-    gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, verbose=False, n_batches=8)
     
-    # iterative fit
-    print("Iterative fit Gauss")
-    gauss_fitter.iterative_fit(rsq_threshold=0.0001, verbose=True)
-    fit_fit_gauss_fsnative = gauss_fitter.iterative_search_params
+    # grid fit gauss model
+    print('gauss grid')
+    gauss_fitter = Iso2DGaussianFitter(data=data_fsnative.T, model=gauss_model, n_jobs=n_jobs)
+    gauss_fitter.grid_fit(ecc_grid=eccs, 
+                          polar_grid=polars, 
+                          size_grid=sizes, 
+                          verbose=False, 
+                          n_batches=n_batches)
     
+    # iterative fit Gauss model 
+    print('gauss iterative')
+    gauss_fitter.iterative_fit(rsq_threshold=rsq_threshold, verbose=False)
+    gauss_fit = gauss_fitter.iterative_search_params
+    
+    
+    # rearange result of Gauss model 
+    gauss_fit_mat = np.zeros((data_fsnative.shape[1],8))
+    gauss_pred_mat = np.zeros_like(data_fsnative) 
+    for est in range(len(data_fsnative.T)):
+        gauss_fit_mat[est] = gauss_fit[est]
+        gauss_pred_mat[:,est] = gauss_model.return_prediction(mu_x=gauss_fit[est][0], 
+                                                              mu_y=gauss_fit[est][1], 
+                                                              size=gauss_fit[est][2], 
+                                                              beta=gauss_fit[est][3], 
+                                                              baseline=gauss_fit[est][4])
     # determine DN model
-    DN_model = Norm_Iso2DGaussianModel(stimulus=stimulus)
-    
-    DN_fitter = Norm_Iso2DGaussianFitter(data=data_fsnative, model=DN_model, n_jobs=nb_procs,
+    dn_model = Norm_Iso2DGaussianModel(stimulus=stimulus)
+    dn_fitter = Norm_Iso2DGaussianFitter(data=data_fsnative.T, 
+                                         model=dn_model, 
+                                         n_jobs=n_jobs,
                                          use_previous_gaussian_fitter_hrf=True,
                                          previous_gaussian_fitter=gauss_fitter)
-                                         
-    
-    
-    # grid fit
-    print("Grid fit DN")
-    num = 7
-    fixed_grid_baseline=0
-    norm_grid_bounds = [(0,1000),(0,1000)] 
-    
-    DN_fitter.grid_fit(surround_amplitude_grid=np.linspace(0,10,num),
-             surround_size_grid=np.linspace(1,10,num),             
-             neural_baseline_grid=np.linspace(0,10,num),
-             surround_baseline_grid=np.linspace(1,10,num),
-             n_batches=8,
-             rsq_threshold=0.0001,
-             verbose = False,
-             fixed_grid_baseline=fixed_grid_baseline,
-             grid_bounds=norm_grid_bounds,
-             hrf_1_grid=np.linspace(0,10,num),
-             hrf_2_grid=np.linspace(0,0,1),
-             # ecc_grid=eccs,
-             # polar_grid=polars,
-             # size_grid=sizes
-             )
-    
-    
-    
-    
-     
-    # iterative fit
-    print("Iterative fit Gauss")
-    DN_fitter.iterative_fit(rsq_threshold=0.0001, verbose=False)
-    fit_fit_DN_fsnative = DN_fitter.iterative_search_params
     
 
+    # grid fit DN model  
+    print('DN grid')
+    dn_fitter.grid_fit(
+        fixed_grid_baseline=fixed_grid_baseline,
+        grid_bounds=grid_bounds,
+        surround_amplitude_grid=surround_amplitude_grid,
+        surround_size_grid=surround_size_grid,             
+        surround_baseline_grid=surround_baseline_grid,
+        neural_baseline_grid=neural_baseline_grid,
+        n_batches=n_batches,
+        rsq_threshold=rsq_threshold,
+        verbose=False)
+    
+    # iterative fit DN model 
+    print('DN grid')
+    dn_fitter.iterative_fit(rsq_threshold=rsq_threshold, verbose=False)
+    fit_fit_dn = dn_fitter.iterative_search_params
+    
+    
+    # rearange result of DN model 
+    dn_fit_mat = np.zeros((data_fsnative.shape[1],12))
+    dn_pred_mat = np.zeros_like(data_fsnative) 
+    for est in range(len(data_fsnative.T)):
+        dn_fit_mat[est] = fit_fit_dn[est]
+        dn_pred_mat[:,est] = dn_model.return_prediction(mu_x=fit_fit_dn[est][0], 
+                                                        mu_y=fit_fit_dn[est][1], 
+                                                        prf_size=fit_fit_dn[est][2], 
+                                                        prf_amplitude=fit_fit_dn[est][3], 
+                                                        bold_baseline=fit_fit_dn[est][4],
+                                                        srf_amplitude=fit_fit_dn[est][5],
+                                                        srf_size=fit_fit_dn[est][6],
+                                                        neural_baseline=fit_fit_dn[est][7],
+                                                        surround_baseline=fit_fit_dn[est][8]
+                                                   )
+        
+    
+    #export data from DN model fit
+    maps_names = ['mu_x','mu_y','prf_size','prf_amplitude','bold_baseline',
+                  'srf_amplitude','srf_size','surround_baseline ','hrf_1',
+                  'hrf_2','r_squared']
+    
+    
+    # export fit
+    img_dn_fit_mat = make_gifti_image(img_fsnative,dn_fit_mat)
+    nb.save(img_dn_fit_mat,fit_fn_fsnative_DN ) 
+    
+    # export pred
+    img_dn_pred_mat = make_gifti_image(img_fsnative,dn_pred_mat)
+    nb.save(img_dn_pred_mat,pred_fn_fsnative_DN ) 
+    
+    for map_num, mape_name in enumerate(maps_names):
+        os.system('wb_command -set-map-names {} -map {} {}'.format(fit_fn_fsnative_DN,map_num+1,mape_name))
 
-    
-    print('start re arrange gauss')
-    fit_mat_gauss_fsnative = fit_fit_gauss_fsnative
-    # Re-arrange data
-    for vert in range(len(fit_mat_gauss_fsnative)):
-        pred_mat_gauss_fsnative[vert] = gauss_model.return_prediction(  mu_x=fit_fit_gauss_fsnative[vert][0], mu_y=fit_fit_gauss_fsnative[vert][1], size=fit_fit_gauss_fsnative[vert][2], 
-                                                        beta=fit_fit_gauss_fsnative[vert][3], baseline=fit_fit_gauss_fsnative[vert][4])
-    
-    
-    fit_mat_DN_fsnative = fit_fit_gauss_fsnative
-    # Re-arrange data
-    for vert in range(len(fit_mat_DN_fsnative)):
 
-        pred_mat_DN_fsnative[vert] = gauss_model.return_prediction(  mu_x=fit_fit_DN_fsnative[vert][0], mu_y=fit_fit_DN_fsnative[vert][1], size=fit_fit_DN_fsnative[vert][2], 
-                                                        beta=fit_fit_DN_fsnative[vert][3], baseline=fit_fit_DN_fsnative[vert][4])
-    
-    
-
-    # export fsnative gauss fit 
-
-    fit_img_gauss_fsnative = nb.gifti.GiftiImage(header = header, meta = meta)
-    for data in fit_mat_gauss_fsnative:
-        darray = nb.gifti.GiftiDataArray(data)
-        fit_img_gauss_fsnative.add_gifti_data_array(darray)
-    nb.save(fit_img_gauss_fsnative, fit_fn_fsnative_gauss)
-    
-    
-    # export fsnative gauss pred 
-    pred_img_gauss_fsnative = nb.gifti.GiftiImage(header = header, meta = meta)
-    for data in pred_mat_gauss_fsnative:
-        darray = nb.gifti.GiftiDataArray(data)
-        pred_img_gauss_fsnative.add_gifti_data_array(darray)
-    nb.save(pred_img_gauss_fsnative, pred_fn_fsnative_gauss)
-
-
-    # export fsnative DN fit 
-    fit_img_DN_fsnative = nb.gifti.GiftiImage(header = header, meta = meta)
-    for data in fit_mat_DN_fsnative:
-        darray = nb.gifti.GiftiDataArray(data)
-        fit_img_DN_fsnative.add_gifti_data_array(darray)
-    nb.save(fit_img_DN_fsnative, fit_fn_fsnative_DN)
-    
-    # export fsnative DN pred
-    pred_img_DN_fsnative = nb.gifti.GiftiImage(header = header, meta = meta)
-    for data in pred_mat_DN_fsnative:
-        darray = nb.gifti.GiftiDataArray(data)
-        pred_img_DN_fsnative.add_gifti_data_array(darray)
-    nb.save(pred_img_DN_fsnative, pred_fn_fsnative_DN)
-    
 
 
 

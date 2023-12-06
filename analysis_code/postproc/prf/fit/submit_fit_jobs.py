@@ -44,6 +44,8 @@ import glob
 import nibabel as nb
 import datetime
 import ipdb
+sys.path.append("{}/../../../utils".format(os.getcwd()))
+from gifti_utils import make_gifti_image, load_gifti_image
 deb = ipdb.set_trace
 
 # Inputs
@@ -53,7 +55,7 @@ subject = sys.argv[3]
 group = sys.argv[4]
 
 # Cluster settings
-fit_per_hour = 900.0
+fit_per_hour = 10000.0
 nb_procs = 8
 
 # Define directories
@@ -67,9 +69,6 @@ os.makedirs(prf_jobs_dir, exist_ok=True)
 prf_logs_dir = "{}/{}/prf/log_outputs".format(pp_dir, subject)
 os.makedirs(prf_logs_dir, exist_ok=True)
 
-# define permission cmd
-chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
-chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
 
 # Define fns (filenames)
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
@@ -78,25 +77,28 @@ pp_avg_fns_fsnative = glob.glob("{}/{}/func/fmriprep_dct_avg/fsnative/*_task-pRF
 pp_avg_fns_concat = np.concatenate((pp_avg_fns_fsnative,pp_avg_fns_HCP,))
 
 
+# define permission cmd
+chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
+chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
+wb_command_cmd = 'export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
+
+
 for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
     
     ### fsnative    
     if pp_avg_fn.endswith('.gii'):
-        fit_fn_gauss = "{}/{}_prf-fit_gauss.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
-        pred_fn_gauss = "{}/{}_prf-pred_gauss.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
 
         fit_fn_DN = "{}/{}_prf-fit_DN.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
         pred_fn_DN = "{}/{}_prf-pred_DN.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
 
-        if os.path.isfile(fit_fn_gauss):
-            if os.path.getsize(fit_fn_gauss) != 0:
-                print("output file {} already exists: aborting analysis".format(fit_fn_gauss))
+        if os.path.isfile(fit_fn_DN):
+            if os.path.getsize(fit_fn_DN) != 0:
+                print("output file {} already exists: aborting analysis".format(fit_fn_DN))
                 exit()
         
-        input_fn_fsnative = pp_avg_fn
-        img = nb.load(input_fn_fsnative)
-        data = [x.data for x in img.darrays]
-        data = np.vstack(data)
+
+        input_fn_fsnative =pp_avg_fn
+        img,data = load_gifti_image(input_fn_fsnative)
         
         num_vert = data.shape[1]
         job_dur_obj = datetime.timedelta(hours=np.ceil(num_vert/fit_per_hour))
@@ -117,17 +119,17 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
         nb_procs=nb_procs, log_dir=prf_logs_dir, job_dur=job_dur, sub=subject, fit_num=fit_num)
     
         # define fit cmd
-        fit_cmd = "python prf_fit_surf.py {} {} {} {} {} {} {} {} ".format(
-            subject, input_fn_fsnative, vdm_fn, fit_fn_gauss, pred_fn_gauss , fit_fn_DN, pred_fn_DN , nb_procs)
+        fit_cmd = "python prf_fit_surf.py {} {} {} {} {} ".format(
+            subject, vdm_fn, input_fn_fsnative, fit_fn_DN, pred_fn_DN )
         
         # create sh
         sh_fn = "{}/jobs/{}_fsnative_prf_fit-{}.sh".format(prf_dir,subject,fit_num)
     
         of = open(sh_fn, 'w')
-        of.write("{} \n{} \n{} \n{}".format(slurm_cmd, fit_cmd, chmod_cmd, chgrp_cmd))
+        of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd, wb_command_cmd, fit_cmd, chmod_cmd, chgrp_cmd))
         of.close()
     
-        # Submit jobs
+        #Submit jobs
         print("Submitting {} to queue".format(sh_fn))
         os.system("sbatch {}".format(sh_fn))
      
