@@ -201,7 +201,7 @@ for task in tasks :
         
         
         fit_img_hemi = make_gifti_image(img_avg_bold_hemi,fit)
-        nb.save(fit_img_hemi, out_pred_name)
+        nb.save(fit_img_hemi, out_fit_name)
         
         
         pred_img_hemi = make_gifti_image(img_avg_bold_hemi,pred_hemi)
