@@ -78,6 +78,8 @@ slurm_cmd = """\
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
+wb_command_cmd = 'export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
+    
 glm_fit_cmd = "python glm_fit.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
 
@@ -91,7 +93,8 @@ sh_fn = "{}/{}_glm.sh".format(job_dir, subject)
 
 
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{}".format(slurm_cmd,glm_fit_cmd,chmod_cmd,chgrp_cmd))
+
+of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,wb_command_cmd,glm_fit_cmd,chmod_cmd,chgrp_cmd))
 of.close()
 
 
