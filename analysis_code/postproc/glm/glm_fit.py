@@ -64,7 +64,7 @@ warnings.filterwarnings("ignore")
 
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from glm_utils import eventsMatrix
-from gifti_utils import make_giti_image
+from gifti_utils import make_gifti_image
 
 
 # Get inputs
@@ -188,25 +188,32 @@ for task in tasks :
     
         
         # export fit param      
-        fit_img_hemi = nb.gifti.GiftiImage(header=img_avg_bold_hemi_header, meta=img_avg_bold_hemi_meta)
+        # fit_img_hemi = nb.gifti.GiftiImage(header=img_avg_bold_hemi_header, meta=img_avg_bold_hemi_meta)
     
-        for i in range(fit.shape[0]):
-            data = fit[i,:]
-            darray = nb.gifti.GiftiDataArray(data,datatype = 'NIFTI_TYPE_FLOAT32')
-            fit_img_hemi.add_gifti_data_array(darray)
-        nb.save(fit_img_hemi, out_fit_name)
-        print('export fit done')
+        # for i in range(fit.shape[0]):
+        #     data = fit[i,:]
+        #     darray = nb.gifti.GiftiDataArray(data,datatype = 'NIFTI_TYPE_FLOAT32')
+        #     fit_img_hemi.add_gifti_data_array(darray)
+        # nb.save(fit_img_hemi, out_fit_name)
+        # print('export fit done')
             
         # export prediction 
         
-        pred_img_hemi = make_giti_image(img_avg_bold_hemi,pred_hemi)
+        
+        fit_img_hemi = make_gifti_image(img_avg_bold_hemi,fit)
+        nb.save(fit_img_hemi, out_pred_name)
+        
+        
+        pred_img_hemi = make_gifti_image(img_avg_bold_hemi,pred_hemi)
         nb.save(pred_img_hemi, out_pred_name)
         
-        os.system('wb_command -set-map-names {} -map 1 z-map'.format(out_pred_name))
-        os.system('wb_command -set-map-names {} -map 2 z_p_map'.format(out_pred_name))
-        os.system('wb_command -set-map-names {} -map 3 fdr'.format(out_pred_name))
-        os.system('wb_command -set-map-names {} -map 4 fdr_p_map'.format(out_pred_name))
-        os.system('wb_command -set-map-names {} -map 5 rsquare_hemi'.format(out_pred_name))
+        
+        maps_names = ['z_map','z_p_map','fdr','fdr_p_map','rsquare_map']
+        
+        for map_num, mape_name in enumerate(maps_names):
+            os.system('wb_command -set-map-names {} -map {} {}'.format(out_fit_name,map_num+1,mape_name))
+            
+
         
     
         

@@ -50,7 +50,8 @@ def make_gifti_image(source_img, data_to_write) :
                                     labeltable=labeltable)
     
     # fill final image
-    for i, data in enumerate(data_to_write):
+    for i in range(data_to_write.shape[0]):
+        data = data_to_write[i,:]
         darray = nb.gifti.GiftiDataArray(data, datatype='NIFTI_TYPE_FLOAT32',
                                          intent=source_img.darrays[i].intent, 
                                          meta=source_img.darrays[i].meta, 
