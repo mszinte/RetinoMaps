@@ -56,42 +56,21 @@ from surface_utils import load_surface , make_surface_image
 deb = ipdb.set_trace
 start_time = datetime.datetime.now()
 
-# # Inputs
-# main_dir = sys.argv[1]
-# project_dir = sys.argv[2]
-# subject = sys.argv[3]
-# group = sys.argv[4]
-
-# # load settings
-# with open('../../settings.json') as f:
-#     json_s = f.read()
-#     analysis_info = json.loads(json_s)
-# TR = analysis_info['TR']
-# high_pass_threshold = analysis_info['high_pass_threshold'] 
-# high_pass_type = analysis_info['high_pass_type'] 
-# sessions = analysis_info['session']
-
-
-main_dir = '/Users/uriel/disks/meso_shared'
-project_dir = 'RetinoMaps'
-subject = 'sub-02'
-group = '327'
-TR = 1.3
-tasks = 'pRF'
-high_pass_threshold = 0.01
-high_pass_type = 'dct'
-sessions = 'ses-01'
-
+# Inputs
+main_dir = sys.argv[1]
+project_dir = sys.argv[2]
+subject = sys.argv[3]
+group = sys.argv[4]
 
 # load settings
-with open('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/settings.json') as f:
+with open('../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 TR = analysis_info['TR']
 high_pass_threshold = analysis_info['high_pass_threshold'] 
 high_pass_type = analysis_info['high_pass_type'] 
 sessions = analysis_info['session']
-tasks = analysis_info['task_names']
+
 
 
 formats = ['fsnative','170k']
