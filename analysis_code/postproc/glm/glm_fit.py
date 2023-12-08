@@ -211,6 +211,7 @@ for task in tasks :
         maps_names = ['z_map','z_p_map','fdr','fdr_p_map','rsquare_map']
         
         for map_num, mape_name in enumerate(maps_names):
+            print(mape_name)
             os.system('wb_command -set-map-names {} -map {} {}'.format(out_fit_name,map_num+1,mape_name))
             
 
