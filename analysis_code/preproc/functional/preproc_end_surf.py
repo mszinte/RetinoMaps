@@ -70,6 +70,7 @@ TR = analysis_info['TR']
 high_pass_threshold = analysis_info['high_pass_threshold'] 
 high_pass_type = analysis_info['high_pass_type'] 
 sessions = analysis_info['session']
+tasks = analysis_info['task_names']
 
 
 
@@ -96,42 +97,42 @@ for format_, extension in zip(formats,extensions):
     os.makedirs(loo_avg_dir, exist_ok=True)
 
 
-   # DCT correction
-   # -----------------------
-    for session in sessions :
+   # # DCT correction
+   # # -----------------------
+   #  for session in sessions :
 
-        fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(
-            main_dir, project_dir, subject, session)
-        fmriprep_func_fns = glob.glob("{}/*-{}*.{}".format(
-            fmriprep_dir,format_,extension)) 
+   #      fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(
+   #          main_dir, project_dir, subject, session)
+   #      fmriprep_func_fns = glob.glob("{}/*-{}*.{}".format(
+   #          fmriprep_dir,format_,extension)) 
 
     
                 
     
 
-        for func_fn in fmriprep_func_fns :
-            # make output filtered files
-            flt_data_fn = func_fn.split('/')[-1]
-            flt_data_fn =flt_data_fn.replace('bold','dct_bold')
+   #      for func_fn in fmriprep_func_fns :
+   #          # make output filtered files
+   #          flt_data_fn = func_fn.split('/')[-1]
+   #          flt_data_fn =flt_data_fn.replace('bold','dct_bold')
 
 
-            # Load data
-            surf_img, surf_data = load_surface(fn=func_fn)
+   #          # Load data
+   #          surf_img, surf_data = load_surface(fn=func_fn)
             
-            # High pass filtering 
-            n_tr = surf_data.shape[0]
-            ft = np.linspace(0.5 * TR, (n_tr + 0.5) * TR, n_tr, endpoint=False)
-            hp_set = _cosine_drift(high_pass_threshold, ft)
-            surf_data = signal.clean(surf_data, detrend=False,
-                                     standardize=False, confounds=hp_set)
+   #          # High pass filtering 
+   #          n_tr = surf_data.shape[0]
+   #          ft = np.linspace(0.5 * TR, (n_tr + 0.5) * TR, n_tr, endpoint=False)
+   #          hp_set = _cosine_drift(high_pass_threshold, ft)
+   #          surf_data = signal.clean(surf_data, detrend=False,
+   #                                   standardize=False, confounds=hp_set)
             
-            # Compute the Z-score 
-            surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
+   #          # Compute the Z-score 
+   #          surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
         
-            # Make an image with the preproceced data
+   #          # Make an image with the preproceced data
             
-            flt_img = make_surface_image(data=surf_data,source_img=surf_img)   
-            nb.save(flt_img, '{}/{}/{}'.format(flt_dir,format_,flt_data_fn))
+   #          flt_img = make_surface_image(data=surf_data,source_img=surf_img)   
+   #          nb.save(flt_img, '{}/{}/{}'.format(flt_dir,format_,flt_data_fn))
      
     
     
