@@ -22,8 +22,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 </br>
 
 ## TODO
-- [ ] in [preproc_end_surf_fsnative.py](analysis_code/preproc/functional/preproc_end_surf_fsnative.py) make gifti for one dimensional correlation
-- [ ] in [preproc_end_surf_fsnative.py](analysis_code/preproc/functional/preproc_end_surf_fsnative.py) check loading of gifti
+- 
 
 ## Data analysis
 ---
@@ -49,9 +48,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 #### Functional preprocessing
 - [ ] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
-- [ ] high-pass, z-score, average and leave-one-out average for HCP_170k verison [preproc_end_surf_HCP.py](analysis_code/preproc/functional/preproc_end_surf_HCP.py),
-- [ ] high-pass, z-score, average and leave-one-out average for fsnative verison [preproc_end_surf_fsnative.py](analysis_code/preproc/functional/preproc_end_surf_fsnative.py).
-- [ ] high-pass, z-score, average and leave-one-out average Run both : [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
+- [ ] high-pass, z-score, run correlations, average and leave-one-out average for HCP_170k and fsnative files [preproc_end_surf.py](analysis_code/preproc/functional/preproc_end_surf.py). To run on meso use : [preproc_end_surf_sbatch.py](analysis_code/preproc/functional/preproc_end_surf_sbatch.py) 
 - [ ] Load freesurfer and execute [pycortex_import.py](analysis_code/preproc/functional/pycortex_import.py): run only [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 
 ### Post-processing
