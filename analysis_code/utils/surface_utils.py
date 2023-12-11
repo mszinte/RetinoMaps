@@ -26,13 +26,14 @@ def make_gifti_image(data, source_img) :
 
     Parameters
     ----------
-    source_img : image from with new data derives
     data_to_write : data you want to write on your image 
                     numpy darray 2 dim (time x vertices)
+    source_img : image from with new data derives
+
     
     Returns
     -------
-    The gifti image of your data with the same strucure the source image 
+    The gifti image of your data with the same strucure of the source image 
     
     """
     # import 
@@ -124,11 +125,30 @@ def load_surface(fn):
     elif fn.endswith('.nii'):
         img = nb.load(fn)
         data = img.get_fdata()
+            
+    else:
+         raise ValueError("The type of fn is neither Cifti2Image nor GiftiImage")
 
     return img, data
 
 
 def make_surface_image(data, source_img):
+    """
+    write a surface image inndependently if it's CIFTI or GIFTI
+
+    Parameters
+    ----------
+    data_to_write : data you want to write on your image 
+                    numpy darray 2 dim (time x vertices)
+    source_img : image from with new data derives
+
+    
+    Returns
+    -------
+    The surface image of your data with the same strucure of the source image 
+    
+    """
+    
     import nibabel as nb
     if type(source_img) == nb.cifti2.cifti2.Cifti2Image:
         img = make_cifti_image(data=data,source_img=source_img)
@@ -140,5 +160,6 @@ def make_surface_image(data, source_img):
         
     else:
          raise ValueError("The type of source_img is neither Cifti2Image nor GiftiImage")
+         
     return img
     

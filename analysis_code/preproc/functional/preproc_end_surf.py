@@ -3,7 +3,7 @@
 preproc_end_surf.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-High-pass filter, z-score, average data and pick anat files
+High-pass filter, z-score, run correlations, average, loov average and pick anat files
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -47,12 +47,9 @@ import shutil
 from nilearn.glm.first_level.design_matrix import _cosine_drift
 import datetime
 
-
-
 sys.path.append("{}/../../utils".format(os.getcwd()))
-
-sys.path.append('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils')
 from surface_utils import load_surface , make_surface_image
+
 deb = ipdb.set_trace
 start_time = datetime.datetime.now()
 
@@ -72,11 +69,9 @@ high_pass_type = analysis_info['high_pass_type']
 sessions = analysis_info['session']
 tasks = analysis_info['task_names']
 
-
-
+# formats to work with
 formats = ['fsnative','170k']
 extensions = ['func.gii','dtseries.nii']
-
 
 for format_, extension in zip(formats,extensions):
     # make  directorys
@@ -84,55 +79,52 @@ for format_, extension in zip(formats,extensions):
         main_dir, project_dir, subject)
     os.makedirs('{}/{}'.format(flt_dir,format_), exist_ok=True)
     
-    corr_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_corr/{}".format(
-        main_dir, project_dir, subject,format_)
-    os.makedirs(corr_dir, exist_ok=True)
+    corr_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_corr".format(
+        main_dir, project_dir, subject)
+    os.makedirs('{}/{}'.format(corr_dir,format_), exist_ok=True)
     
-    avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/{}".format(
-        main_dir, project_dir, subject,format_)
-    os.makedirs(avg_dir, exist_ok=True)
+    avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg".format(
+        main_dir, project_dir, subject)
+    os.makedirs('{}/{}'.format(avg_dir,format_), exist_ok=True)
     
-    loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg/{}".format(
-        main_dir, project_dir, subject,format_)
-    os.makedirs(loo_avg_dir, exist_ok=True)
+    loo_avg_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_loo_avg".format(
+        main_dir, project_dir, subject)
+    os.makedirs('{}/{}'.format(loo_avg_dir,format_), exist_ok=True)
 
 
-   # # DCT correction
-   # # -----------------------
-   #  for session in sessions :
-
-   #      fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(
-   #          main_dir, project_dir, subject, session)
-   #      fmriprep_func_fns = glob.glob("{}/*-{}*.{}".format(
-   #          fmriprep_dir,format_,extension)) 
-
-    
-                
-    
-
-   #      for func_fn in fmriprep_func_fns :
-   #          # make output filtered files
-   #          flt_data_fn = func_fn.split('/')[-1]
-   #          flt_data_fn =flt_data_fn.replace('bold','dct_bold')
-
-
-   #          # Load data
-   #          surf_img, surf_data = load_surface(fn=func_fn)
-            
-   #          # High pass filtering 
-   #          n_tr = surf_data.shape[0]
-   #          ft = np.linspace(0.5 * TR, (n_tr + 0.5) * TR, n_tr, endpoint=False)
-   #          hp_set = _cosine_drift(high_pass_threshold, ft)
-   #          surf_data = signal.clean(surf_data, detrend=False,
-   #                                   standardize=False, confounds=hp_set)
-            
-   #          # Compute the Z-score 
-   #          surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
+    # DCT correction
+    # -----------------------
+    for session in sessions :
         
-   #          # Make an image with the preproceced data
-            
-   #          flt_img = make_surface_image(data=surf_data,source_img=surf_img)   
-   #          nb.save(flt_img, '{}/{}/{}'.format(flt_dir,format_,flt_data_fn))
+        # find outputs from fMRIprep
+        fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(
+            main_dir, project_dir, subject, session)
+        fmriprep_func_fns = glob.glob("{}/*-{}*.{}".format(
+            fmriprep_dir,format_,extension)) 
+
+        for func_fn in fmriprep_func_fns :
+            # make output filtered files
+            flt_data_fn = func_fn.split('/')[-1]
+            flt_data_fn =flt_data_fn.replace('bold','dct_bold')
+
+
+            # Load data
+            surf_img, surf_data = load_surface(fn=func_fn)
+           
+            # High pass filtering 
+            n_tr = surf_data.shape[0]
+            ft = np.linspace(0.5 * TR, (n_tr + 0.5) * TR, n_tr, endpoint=False)
+            hp_set = _cosine_drift(high_pass_threshold, ft)
+            surf_data = signal.clean(surf_data, detrend=False,
+                                      standardize=False, confounds=hp_set)
+           
+            # Compute the Z-score 
+            surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
+       
+            # Make an image with the preproceced data
+           
+            flt_img = make_surface_image(data=surf_data,source_img=surf_img)   
+            nb.save(flt_img, '{}/{}/{}'.format(flt_dir,format_,flt_data_fn))
      
     
     
@@ -160,48 +152,50 @@ for subtype in preproc_files_tot:
 preproc_files_list = [preproc_fsnative_hemi_L,preproc_fsnative_hemi_R,preproc_170k]
 
 
+
+
 # run correlations , averagin and loo averagin for each subtype 
 for preproc_files in preproc_files_list:
     for task in tasks:
-
+        preproc_files_task = []
+        preproc_files_task = [file for file in preproc_files if task in file]
         
-
         # defind output files names 
-        if preproc_files[0].find('hemi-L') != -1:
+        if preproc_files_task[0].find('hemi-L') != -1:
             hemi = 'hemi-L'
-        elif preproc_files[0].find('hemi-R') != -1:
+        elif preproc_files_task[0].find('hemi-R') != -1:
             hemi = 'hemi-R'
         else:
             hemi = None  
             
 
         if hemi:
-            cor_file = "{}/{}_task-{}_{}_fmriprep_{}_correlations_bold.func.gii".format(
+            cor_file = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_correlations_bold.func.gii".format(
                 corr_dir, subject, task, hemi, high_pass_type)
 
-            avg_file = "{}/{}_task-{}_{}_fmriprep_{}_avg_bold.func.gii".format(
+            avg_file = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_avg_bold.func.gii".format(
                 avg_dir, subject, task, hemi, high_pass_type)
 
-            loo_avg_file = "{}/{}_task-{}_{}_fmriprep_{}_avg_loo-{}_bold.func.gii".format(
+            loo_avg_files = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_avg_loo-{}_bold.func.gii".format(
                 loo_avg_dir, subject, task, hemi, high_pass_type, 'loo_num')
 
-            loo_file = "{}/{}_task-{}_{}_fmriprep_{}_loo-{}_bold.func.gii".format(
+            loo_files = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_loo-{}_bold.func.gii".format(
                 loo_avg_dir, subject, task, hemi, high_pass_type, 'loo_num')
         else:
-            cor_file = "{}/{}_task-{}_fmriprep_{}_correlations_bold.dtseries.nii".format(
+            cor_file = "{}/170k/{}_task-{}_fmriprep_{}_correlations_bold.dtseries.nii".format(
                 corr_dir, subject, task, high_pass_type)
 
-            avg_file = "{}/{}_task-{}_fmriprep_{}_avg_bold.dtseries.nii".format(
+            avg_file = "{}/170k/{}_task-{}_fmriprep_{}_avg_bold.dtseries.nii".format(
                 avg_dir, subject, task, high_pass_type)
 
-            loo_avg_file = "{}/{}_task-{}_fmriprep_{}_avg_loo-{}_bold.dtseries.nii".format(
+            loo_avg_files = "{}/170k/{}_task-{}_fmriprep_{}_avg_loo-{}_bold.dtseries.nii".format(
                 loo_avg_dir, subject, task, high_pass_type, 'loo_num')
 
-            loo_file = "{}/{}_task-{}_fmriprep_{}_loo-{}_bold.dtseries.nii".format(
+            loo_files = "{}/170k/{}_task-{}_fmriprep_{}_loo-{}_bold.dtseries.nii".format(
                 loo_avg_dir, subject, task, high_pass_type, 'loo_num')
 
         # load preproc files to have meta and header
-        preproc_img, preproc_data = load_surface(fn=preproc_files[0])
+        preproc_img, preproc_data = load_surface(fn=preproc_files_task[0])
         
     
         # Correlation computation
@@ -209,11 +203,13 @@ for preproc_files in preproc_files_list:
         print('starting correlations')
         
         # compute the combination 
-        combis = list(it.combinations(preproc_files, 2))
+        combis = []
+        combis = list(it.combinations(preproc_files_task, 2))
         
         #  load data and comute the correaltions
         cor_final = np.zeros((1,preproc_data.shape[1]))
         for combi in combis:
+            combi = combi
             task_cor = np.zeros((preproc_data.shape[1]))
     
             a_img, a_data = load_surface(fn=combi[0])
@@ -239,13 +235,13 @@ for preproc_files in preproc_files_list:
     
         data_avg = np.zeros(preproc_data.shape)
         
-        for preproc_file in preproc_files:
+        for preproc_file in preproc_files_task:
             
             # Load data
             preproc_img, preproc_data = load_surface(fn=preproc_file)
             
             # Averaging 
-            data_avg += preproc_data/len(preproc_files)
+            data_avg += preproc_data/len(preproc_files_task)
     
         # export averaging data
         avg_img = make_surface_image(data =data_avg, source_img = preproc_img)
@@ -255,8 +251,9 @@ for preproc_files in preproc_files_list:
         # Leave-one-out averages computation
         # ---------------------
         
-        if len(preproc_files):
-            combi = list(it.combinations(preproc_files, len(preproc_files)-1))
+        if len(preproc_files_task):
+            combi = []
+            combi = list(it.combinations(preproc_files_task, len(preproc_files_task)-1))
         
         for loo_num, avg_runs in enumerate(combi):
     
@@ -264,10 +261,10 @@ for preproc_files in preproc_files_list:
             print("loo_avg-{}".format(loo_num+1))
             
             # compute average between loo runs
-            loo_avg_file = loo_avg_file.replace('loo_num','{}'.format(loo_num+1))
+            loo_avg_file = loo_avg_files.replace('loo_num','{}'.format(loo_num+1))
     
             # load data and make the loo_avg object
-            preproc_img, preproc_data = load_surface(fn=preproc_files[0])
+            preproc_img, preproc_data = load_surface(fn=preproc_files_task[0])
             data_loo_avg = np.zeros(preproc_data.shape)
         
             # compute leave on out averagin
@@ -284,12 +281,13 @@ for preproc_files in preproc_files_list:
             nb.save(loo_avg_img, loo_avg_file)        
         
             # copy loo run (left one out run)
-            for loo in preproc_files:
+            for loo in preproc_files_task:
                 if loo not in avg_runs:
-                    loo_file = loo_file.replace('loo_num','{}'.format(loo_num+1))
+                    loo_file = loo_files.replace('loo_num','{}'.format(loo_num+1))
     
                     print("loo: {}".format(loo))
                     shutil.copyfile(loo, loo_file)
+                    
                         
 # rename correlations maps for fsnative
 fsnative_corr_dir  = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_corr/fsnative".format(
