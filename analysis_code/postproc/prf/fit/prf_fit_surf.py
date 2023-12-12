@@ -47,7 +47,7 @@ import nibabel as nb
 
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from gifti_utils import make_gifti_image , load_gifti_image
+from surface_utils import make_surface_image , load_surface
 
 # Get inputs
 start_time = datetime.datetime.now()
@@ -97,7 +97,7 @@ neural_baseline_grid = np.linspace(0, 10, dn_grid_nr)
 
 # GIFTI
 if 'input_fn_fsnative' in vars(): 
-    img_fsnative, data_fsnative = load_gifti_image(input_fn_fsnative)
+    img_fsnative, data_fsnative = load_surface(fn=input_fn_fsnative)
     
 
     # determine gauss model
@@ -159,7 +159,7 @@ if 'input_fn_fsnative' in vars():
     dn_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                             verbose=True,
                             xtol=xtol,
-                            ftol=ftol))
+                            ftol=ftol)
     fit_fit_dn = dn_fitter.iterative_search_params
     
     # rearange result of DN model 
@@ -185,11 +185,11 @@ if 'input_fn_fsnative' in vars():
                   'hrf_2','r_squared']
     
     # export fit
-    img_dn_fit_mat = make_gifti_image(img_fsnative,dn_fit_mat)
+    img_dn_fit_mat = make_surface_image(data=dn_fit_mat,source_img =img_fsnative)
     nb.save(img_dn_fit_mat,fit_fn_fsnative_DN ) 
     
     # export pred
-    img_dn_pred_mat = make_gifti_image(img_fsnative,dn_pred_mat)
+    img_dn_pred_mat = make_surface_image(data=dn_pred_mat,source_img=img_fsnative)
     nb.save(img_dn_pred_mat,pred_fn_fsnative_DN ) 
     
     for map_num, mape_name in enumerate(maps_names):
