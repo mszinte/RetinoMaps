@@ -98,7 +98,7 @@ neural_baseline_grid = np.linspace(0, 10, dn_grid_nr)
 # GIFTI
 if 'input_fn_fsnative' in vars(): 
     img_fsnative, data_fsnative = load_surface(fn=input_fn_fsnative)
-    
+
 
     # determine gauss model
     stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
