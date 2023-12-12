@@ -97,6 +97,7 @@ if 'input_fn_fsnative' in vars():
     # load data
     img_fsnative, data_fsnative = load_surface(fn=input_fn_fsnative)
 
+
     # determine gauss model
     stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
                              screen_distance_cm=screen_distance_cm,
