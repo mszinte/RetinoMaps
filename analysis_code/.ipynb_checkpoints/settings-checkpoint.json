@@ -13,6 +13,7 @@
     "prf_signs": ["pos"],
     "TR": 1.2,
     "TRs": 208,
+    "fit_rsq_threshold": 0.01,
     "high_pass_threshold": 0.01,
     "high_pass_type": "dct",
     "xfm_name" : "identity.fmriprep",

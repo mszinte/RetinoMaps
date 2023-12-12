@@ -63,10 +63,7 @@ elif sys.argv[3].endswith('.gii'):
     fit_fn_fsnative_DN = sys.argv[4] 
     pred_fn_fsnative_DN = sys.argv[5]
 n_jobs = 32
-n_batches = 32
-rsq_threshold = 0.01
-xtol = 1e-4
-ftol = 1e-4
+n_batches = n_jobs
 
 # Analysis parameters
 with open('../../../settings.json') as f:
@@ -78,6 +75,7 @@ TR = analysis_info['TR']
 gauss_grid_nr = analysis_info['gauss_grid_nr']
 dn_grid_nr = analysis_info['dn_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
+rsq_threshold = analysis_info['fit_rsq_threshold']
 
 # Get task specific visual design matrix
 vdm = np.load(input_vd)
@@ -90,22 +88,21 @@ polars = np.linspace(0, 2*np.pi, gauss_grid_nr)
 # defind dn parameters
 fixed_grid_baseline = 0
 grid_bounds = [(0,1000),(0,1000)]
-surround_size_grid = max_ecc_size * np.linspace(0.1,1,dn_grid_nr)**2
+surround_size_grid = max_ecc_size * np.linspace(0.1, 1, dn_grid_nr)**2
 surround_amplitude_grid = np.linspace(0, 10, dn_grid_nr)
 surround_baseline_grid = np.linspace(0, 10, dn_grid_nr)
 neural_baseline_grid = np.linspace(0, 10, dn_grid_nr)
 
 # GIFTI
 if 'input_fn_fsnative' in vars(): 
+    # load data
     img_fsnative, data_fsnative = load_surface(fn=input_fn_fsnative)
-    
 
     # determine gauss model
     stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
                              screen_distance_cm=screen_distance_cm,
                              design_matrix=vdm, 
                              TR=TR)
-    
     gauss_model = Iso2DGaussianModel(stimulus=stimulus)
     
     # grid fit gauss model
@@ -120,8 +117,8 @@ if 'input_fn_fsnative' in vars():
     # iterative fit Gauss model 
     gauss_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                                verbose=True, 
-                               xtol=xtol,
-                               ftol=ftol)
+                               xtol=1e-4,
+                               ftol=1e-4)
     gauss_fit = gauss_fitter.iterative_search_params
     
     # rearange result of Gauss model 
@@ -158,8 +155,8 @@ if 'input_fn_fsnative' in vars():
     # iterative fit DN model 
     dn_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                             verbose=True,
-                            xtol=xtol,
-                            ftol=ftol)
+                            xtol=1e-4,
+                            ftol=1e-4)
     fit_fit_dn = dn_fitter.iterative_search_params
     
     # rearange result of DN model 
@@ -178,26 +175,24 @@ if 'input_fn_fsnative' in vars():
                                                         surround_baseline=fit_fit_dn[est][8]
                                                    )
         
-    
     #export data from DN model fit
-    maps_names = ['mu_x','mu_y','prf_size','prf_amplitude','bold_baseline',
-                  'srf_amplitude','srf_size','surround_baseline ','hrf_1',
-                  'hrf_2','r_squared']
+    maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
+                  'srf_amplitude', 'srf_size', 'surround_baseline ', 'hrf_1',
+                  'hrf_2', 'r_squared']
     
     # export fit
-    img_dn_fit_mat = make_surface_image(data=dn_fit_mat,source_img =img_fsnative)
-    nb.save(img_dn_fit_mat,fit_fn_fsnative_DN ) 
+    img_dn_fit_mat = make_surface_image(data=dn_fit_mat, source_img=img_fsnative)
+    nb.save(img_dn_fit_mat,fit_fn_fsnative_DN) 
     
     # export pred
-    img_dn_pred_mat = make_surface_image(data=dn_pred_mat,source_img=img_fsnative)
-    nb.save(img_dn_pred_mat,pred_fn_fsnative_DN ) 
+    img_dn_pred_mat = make_surface_image(data=dn_pred_mat, source_img=img_fsnative)
+    nb.save(img_dn_pred_mat,pred_fn_fsnative_DN) 
     
-    for map_num, mape_name in enumerate(maps_names):
-        os.system('wb_command -set-map-names {} -map {} {}'.format(fit_fn_fsnative_DN,map_num+1,mape_name))
+    # for map_num, map_name in enumerate(maps_names):
+    #     os.system('wb_command -set-map-names {} -map {} {}'.format(fit_fn_fsnative_DN, map_num+1, map_name))
     
 
 # Print duration
 end_time = datetime.datetime.now()
 print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".format(
     start_time=start_time, end_time=end_time, dur=end_time - start_time))
-

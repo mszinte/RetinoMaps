@@ -19,13 +19,18 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 [FFmpeg](https://ffmpeg.org/);
 [FSL](https://fsl.fmrib.ox.ac.uk);
 [Inkscape](https://inkscape.org/)
+[workbench](https://humanconnectome.org/software/connectome-workbench)
 </br>
 
-## TODO
-- 
 
 ## Data analysis
 ---
+
+### Pre-processing
+- [ ] Correct wb maps in prf_fit
+- [ ] Change stucture code prf_fit
+- [ ] Add parameter jobs in submit_fit and prf_fit
+- [ ] Update help section prf_fit
 
 ### Pre-processing
 
@@ -48,7 +53,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 #### Functional preprocessing
 - [ ] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
-- [ ] high-pass, z-score, run correlations, average and leave-one-out average for HCP_170k and fsnative files [preproc_end_surf.py](analysis_code/preproc/functional/preproc_end_surf.py). To run on meso use : [preproc_end_surf_sbatch.py](analysis_code/preproc/functional/preproc_end_surf_sbatch.py) 
+- [ ] high-pass, z-score, run correlations, average and leave-one-out average for HCP_170k and fsnative files [preproc_end.py](analysis_code/preproc/functional/preproc_end.py). To run on meso use : [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [ ] Load freesurfer and execute [pycortex_import.py](analysis_code/preproc/functional/pycortex_import.py): run only [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 
 ### Post-processing

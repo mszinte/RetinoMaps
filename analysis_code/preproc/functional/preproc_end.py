@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-preproc_end_surf.py
+preproc_end.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 High-pass filter, z-score, run correlations, average, loov average and pick anat files
@@ -21,9 +21,10 @@ To run:
 python preproc_end_surf.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_surf.py /scratch/mszinte/data RetinoMaps sub-02 327
+python preproc_end.py /scratch/mszinte/data RetinoMaps sub-02 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 
@@ -70,11 +71,12 @@ sessions = analysis_info['session']
 tasks = analysis_info['task_names']
 
 # formats to work with
-formats = ['fsnative','170k']
-extensions = ['func.gii','dtseries.nii']
+formats = ['fsnative', '170k']
+extensions = ['func.gii', 'dtseries.nii']
 
-for format_, extension in zip(formats,extensions):
-    # make  directorys
+for format_, extension in zip(formats, extensions):
+    
+    # make directories
     flt_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(
         main_dir, project_dir, subject)
     os.makedirs('{}/{}'.format(flt_dir,format_), exist_ok=True)
@@ -93,20 +95,20 @@ for format_, extension in zip(formats,extensions):
 
 
     # DCT correction
-    # -----------------------
+    # --------------
     for session in sessions :
         
         # find outputs from fMRIprep
         fmriprep_dir = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/".format(
             main_dir, project_dir, subject, session)
-        fmriprep_func_fns = glob.glob("{}/*-{}*.{}".format(
-            fmriprep_dir,format_,extension)) 
+        fmriprep_func_fns = glob.glob("{}/*{}*.{}".format(
+            fmriprep_dir, format_, extension)) 
 
         for func_fn in fmriprep_func_fns :
+            
             # make output filtered files
             flt_data_fn = func_fn.split('/')[-1]
-            flt_data_fn =flt_data_fn.replace('bold','dct_bold')
-
+            flt_data_fn = flt_data_fn.replace('bold', 'dct_bold')
 
             # Load data
             surf_img, surf_data = load_surface(fn=func_fn)
@@ -122,18 +124,15 @@ for format_, extension in zip(formats,extensions):
             surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
        
             # Make an image with the preproceced data
-           
-            flt_img = make_surface_image(data=surf_data,source_img=surf_img)   
-            nb.save(flt_img, '{}/{}/{}'.format(flt_dir,format_,flt_data_fn))
+            flt_img = make_surface_image(data=surf_data, source_img=surf_img)
+            nb.save(flt_img, '{}/{}/{}'.format(flt_dir, format_, flt_data_fn))
      
-    
-    
+
 # find all the filtered files 
 preproc_files_tot = glob.glob("{}/{}/*_*.{}".format(
     flt_dir,formats[0], extensions[0])) + glob.glob("{}/{}/*_*.{}".format(
         flt_dir,formats[1], extensions[1]))
-        
-        
+                
 # split filtered files  deppending of their nature 
 preproc_fsnative_hemi_L = []
 preproc_fsnative_hemi_R = []
@@ -150,9 +149,6 @@ for subtype in preproc_files_tot:
         preproc_170k.append(subtype)
         
 preproc_files_list = [preproc_fsnative_hemi_L,preproc_fsnative_hemi_R,preproc_170k]
-
-
-
 
 # run correlations , averagin and loo averagin for each subtype 
 for preproc_files in preproc_files_list:
