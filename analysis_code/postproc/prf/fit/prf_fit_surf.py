@@ -134,6 +134,7 @@ if 'input_fn_fsnative' in vars():
                                                               size=gauss_fit[est][2], 
                                                               beta=gauss_fit[est][3], 
                                                               baseline=gauss_fit[est][4])
+        
     # determine DN model
     dn_model = Norm_Iso2DGaussianModel(stimulus=stimulus)
     dn_fitter = Norm_Iso2DGaussianFitter(data=data_fsnative.T, 
