@@ -56,7 +56,7 @@ group = sys.argv[4]
 
 # Cluster settings
 fit_per_hour = 10000.0
-nb_procs = 8
+nb_procs = 32
 
 # Define directories
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
@@ -132,7 +132,7 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
         #Submit jobs
         print("Submitting {} to queue".format(sh_fn))
         os.system("sbatch {}".format(sh_fn))
-     
+        fff
     
 
 
