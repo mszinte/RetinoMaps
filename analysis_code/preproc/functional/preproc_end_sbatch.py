@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-preproc_end_surf_sbatch..py
+preproc_end_sbatch..py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Run preproc end on mesocenter 
@@ -18,13 +18,14 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 2. run python command
->> python preproc_end_surf_sbatch.py [main directory] [project name] [subject num] [group] 
+>> python preproc_end_sbatch.py [main directory] [project name] [subject num] [group] 
     [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_surf_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 
@@ -80,7 +81,7 @@ slurm_cmd = """\
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
 
-preproc_end_surf_cmd = "python preproc_end_surf.py {} {} {} {}".format(main_dir, project_dir, subject, group)
+preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
 wb_command_cmd = 'export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
 
