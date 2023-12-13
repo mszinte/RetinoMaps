@@ -24,6 +24,7 @@ Exemple:
 python glm_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 
@@ -52,7 +53,7 @@ server_project = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name  = analysis_info['cluster_name']
-proj_name = analysis_info['project_name']
+
 nb_procs = 8
 memory_val = 48
 hour_proc = 5
