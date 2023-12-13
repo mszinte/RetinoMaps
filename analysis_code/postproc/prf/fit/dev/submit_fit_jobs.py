@@ -88,8 +88,8 @@ for fit_num, pp_avg_fn in enumerate(pp_avg_fns_concat):
     ### fsnative    
     if pp_avg_fn.endswith('.gii'):
 
-        fit_fn_DN = "{}/{}_prf-fit_DN.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
-        pred_fn_DN = "{}/{}_prf-pred_DN.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
+        fit_fn_DN = "{}/{}_prf-fit_DN2.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
+        pred_fn_DN = "{}/{}_prf-pred_DN2.func.gii".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-9])
 
         if os.path.isfile(fit_fn_DN):
             if os.path.getsize(fit_fn_DN) != 0:

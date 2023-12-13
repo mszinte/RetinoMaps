@@ -87,7 +87,6 @@ polars = np.linspace(0, 2*np.pi, gauss_grid_nr)
 
 # defind dn parameters
 fixed_grid_baseline = 0
-grid_bounds = [(0,1000),(0,1000)]
 surround_size_grid = max_ecc_size * np.linspace(0.1, 1, dn_grid_nr)**2
 surround_amplitude_grid = np.linspace(0, 10, dn_grid_nr)
 surround_baseline_grid = np.linspace(0, 10, dn_grid_nr)
@@ -144,7 +143,6 @@ if 'input_fn_fsnative' in vars():
     # grid fit DN model  
     dn_fitter.grid_fit(
         fixed_grid_baseline=fixed_grid_baseline,
-        grid_bounds=grid_bounds,
         surround_amplitude_grid=surround_amplitude_grid,
         surround_size_grid=surround_size_grid,             
         surround_baseline_grid=surround_baseline_grid,
@@ -183,11 +181,11 @@ if 'input_fn_fsnative' in vars():
     
     # export fit
     img_dn_fit_mat = make_surface_image(data=dn_fit_mat, source_img=img_fsnative)
-    nb.save(img_dn_fit_mat,fit_fn_fsnative_DN) 
+    nb.save(img_dn_fit_mat, fit_fn_fsnative_DN) 
     
     # export pred
     img_dn_pred_mat = make_surface_image(data=dn_pred_mat, source_img=img_fsnative)
-    nb.save(img_dn_pred_mat,pred_fn_fsnative_DN) 
+    nb.save(img_dn_pred_mat, pred_fn_fsnative_DN) 
     
     # for map_num, map_name in enumerate(maps_names):
     #     os.system('wb_command -set-map-names {} -map {} {}'.format(fit_fn_fsnative_DN, map_num+1, map_name))
