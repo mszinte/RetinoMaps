@@ -43,8 +43,8 @@ deb = ipdb.set_trace
 
 # MRI analysis imports
 from prfpy.stimulus import PRFStimulus2D
-from prfpy.model import Iso2DGaussianModel,Norm_Iso2DGaussianModel
-from prfpy.fit import Iso2DGaussianFitter, Norm_Iso2DGaussianFitter
+from prfpy.model import Iso2DGaussianModel, CSS_Iso2DGaussianModel
+from prfpy.fit import Iso2DGaussianFitter, CSS_Iso2DGaussianFitter
 import nibabel as nb
 
 # Personal imports
@@ -75,18 +75,14 @@ screen_size_cm = analysis_info['screen_size_cm']
 screen_distance_cm = analysis_info['screen_distance_cm']
 TR = analysis_info['TR']
 gauss_grid_nr = analysis_info['gauss_grid_nr']
-dn_grid_nr = analysis_info['dn_grid_nr']
+css_grid_nr = analysis_info['css_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
 rsq_threshold = analysis_info['fit_rsq_threshold']
 
 # Define directories
-
-
 prf_fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(
     main_dir,project_dir,subject)
 os.makedirs(prf_fit_dir, exist_ok=True)
-
-
 
 fit_fn_DN = input_fn.split('/')[-1]
 fit_fn_DN = fit_fn_DN.replace('bold', 'prf-fit')
@@ -94,101 +90,67 @@ fit_fn_DN = fit_fn_DN.replace('bold', 'prf-fit')
 pred_fn_DN = input_fn.split('/')[-1]
 pred_fn_DN = pred_fn_DN.replace('bold', 'prf-pred')
 
-
-
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
 
 # Get task specific visual design matrix
 vdm = np.load(vdm_fn)
 
-# defind pRF parameter range
+# defind model parameter grid range
 sizes = max_ecc_size * np.linspace(0.1,1,gauss_grid_nr)**2
-eccs = max_ecc_size * np.linspace(0.25,1,gauss_grid_nr)**2
+eccs = max_ecc_size * np.linspace(0.1,1,gauss_grid_nr)**2
 polars = np.linspace(0, 2*np.pi, gauss_grid_nr)
-
-# defind dn parameters
+exponents = np.linspace(0.01, 3, css_grid_nr)
 fixed_grid_baseline = 0
 
-gauss_grid_bounds = [(0,1000)] #only prf amplitudes between 0 and 1000
-dn_grid_bounds = [(0,1000),(0,1000)] #only prf amplitudes between 0 and 1000, only neural baseline values between 0 and 1000
 
-surround_size_grid = max_ecc_size * np.linspace(0.1, 1, dn_grid_nr)**2
-surround_amplitude_grid = np.linspace(0, 10, dn_grid_nr)
-surround_baseline_grid = np.linspace(0, 10, dn_grid_nr)
-neural_baseline_grid = np.linspace(0, 10, dn_grid_nr)
-
-
-
-
-
+# define model iterative fit bounds
 gauss_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
                 (-1.5*max_ecc_size, 1.5*max_ecc_size),  # y
-                (0.1, 1.5*max_ecc_size),# prf size
+                (0, 1.5*max_ecc_size),# prf size
                 (0, 1000),  # prf amplitude
-                (0, 1000),# bold baseline
-                (0,10),(0,0)]  #hrf bounds
+                (-4, 4),  # bold baseline
+                (0, 10), (0, 10)]  #hrf bounds
 
-
-norm_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
-                (-1.5*max_ecc_size, 1.5*max_ecc_size),  # y
-                (0.01, 1.5*max_ecc_size),  # prf size
-                (0, 1000),  # prf amplitude
-                (0, 1000),  # bold baseline
-                (0, 1000),  # surround amplitude
-                (0.1, 3*max_ecc_size),  # surround size
-                (0, 1000),  # neural baseline
-                (1e-6, 1000),# surround baseline
-                (0,10),(0,0)]  #hrf bounds
-
-
-
-
-
-
-
-
+css_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
+              (-1.5*max_ecc_size, 1.5*max_ecc_size),  # y
+              (0, 1.5*max_ecc_size),# prf size
+              (0, 1000),  # prf amplitude
+              (-4, 4),  # bold baseline
+              (0, 4), # CSS exponent
+              (0, 10), (0, 10)]  #hrf bounds 
+    
 # load data
 img, data = load_surface(fn=input_fn)
 #data = data[:,0:100] ## subsample
 
-
-# determine gauss model
+# determine stimulus
 stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
                          screen_distance_cm=screen_distance_cm,
                          design_matrix=vdm, 
                          TR=TR)
+
+
+# determine gaussian model
 gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 
-
-
-print('start grid gauss')
 # grid fit gauss model
-gauss_fitter = Iso2DGaussianFitter(data=data.T, model=gauss_model, n_jobs=n_jobs)
-
+gauss_fitter = Iso2DGaussianFitter(data=data.T, 
+                                   model=gauss_model, 
+                                   n_jobs=n_jobs)
 
 gauss_fitter.grid_fit(ecc_grid=eccs, 
                       polar_grid=polars, 
                       size_grid=sizes, 
-                      grid_bounds=gauss_grid_bounds,
                       verbose=verbose, 
                       n_batches=n_batches)
-
-
-print('grid gauss ended')
-
-
 
 # iterative fit Gauss model 
 gauss_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                            verbose=verbose,
-                           bounds = gauss_bounds,
+                           # bounds = gauss_bounds,
                            xtol=1e-4,
                            ftol=1e-4)
 gauss_fit = gauss_fitter.iterative_search_params
-
-print('iterativ gauss ended')
-
-
 
 
 # rearange result of Gauss model 
@@ -200,77 +162,63 @@ for est in range(len(data.T)):
                                                           mu_y=gauss_fit[est][1], 
                                                           size=gauss_fit[est][2], 
                                                           beta=gauss_fit[est][3], 
-                                                          baseline=gauss_fit[est][4])
+                                                          baseline=gauss_fit[est][4]
+                                                          hrf_1=gauss_fit[est][5],
+                                                          hrf_2=gauss_fit[est][6]
+                                                         )
 
-print('start grid dn')    
-# determine DN model
-dn_model = Norm_Iso2DGaussianModel(stimulus=stimulus)
-dn_fitter = Norm_Iso2DGaussianFitter(data=data.T, 
-                                     model=dn_model, 
+# determine CSS model
+css_model = CSS_Iso2DGaussianModel(stimulus=stimulus)
+
+# grid fit CSS model
+css_fitter = CSS_Iso2DGaussianFitter(data=data.T, 
+                                     model=css_model, 
                                      n_jobs=n_jobs,
-                                     use_previous_gaussian_fitter_hrf=verbose,
+                                     use_previous_gaussian_fitter_hrf=False,
                                      previous_gaussian_fitter=gauss_fitter)
 
-# grid fit DN model  
-dn_fitter.grid_fit(
-    fixed_grid_baseline=fixed_grid_baseline,
-    grid_bounds=dn_grid_bounds,
-    surround_amplitude_grid=surround_amplitude_grid,
-    surround_size_grid=surround_size_grid,             
-    surround_baseline_grid=surround_baseline_grid,
-    neural_baseline_grid=neural_baseline_grid,
-    n_batches=n_batches,
-    rsq_threshold=rsq_threshold,
-    verbose=verbose)
 
-print('grid DN ended')
+css_fitter.grid_fit(exponent_grid=exponents,
+                    verbose=verbose,
+                    n_batches=n_batches,
+                    fixed_grid_baseline=fixed_grid_baseline,
+               )
 
+# iterative CSS model
+css_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
+                         verbose=True,
+                         #bounds=css_bounds,
+                         xtol=xtol,
+                         ftol=ftol)
+fit_fit_css = css_fitter.iterative_search_params
 
-print('start iterative dn')   
-# iterative fit DN model 
-dn_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
-                        verbose=verbose,
-                        bounds = norm_bounds,
-                        xtol=1e-4,
-                        ftol=1e-4)
-fit_fit_dn = dn_fitter.iterative_search_params
-print('iterativ DN ended')
-
-# rearange result of DN model 
-dn_fit_mat = np.zeros((data.shape[1],12))
-dn_pred_mat = np.zeros_like(data) 
+# rearange result of CSS model 
+css_fit_mat = np.zeros((data.shape[1],9))
+css_pred_mat = np.zeros_like(data) 
 for est in range(len(data.T)):
-    dn_fit_mat[est] = fit_fit_dn[est]
-    dn_pred_mat[:,est] = dn_model.return_prediction(mu_x=fit_fit_dn[est][0], 
-                                                    mu_y=fit_fit_dn[est][1], 
-                                                    prf_size=fit_fit_dn[est][2], 
-                                                    prf_amplitude=fit_fit_dn[est][3], 
-                                                    bold_baseline=fit_fit_dn[est][4],
-                                                    srf_amplitude=fit_fit_dn[est][5],
-                                                    srf_size=fit_fit_dn[est][6],
-                                                    neural_baseline=fit_fit_dn[est][7],
-                                                    surround_baseline=fit_fit_dn[est][8]
-                                               )
+    css_fit_mat[est] = fit_fit_css[est]
+    css_pred_mat[:,est] = css_model.return_prediction(mu_x=fit_fit_css[est][0], 
+                                                      mu_y=fit_fit_css[est][1], 
+                                                      size=fit_fit_css[est][2], 
+                                                      beta=fit_fit_css[est][3], 
+                                                      baseline=fit_fit_css[est][4],
+                                                      n=fit_fit_css[est][5],
+                                                      hrf_1=fit_fit_css[est][6],
+                                                      hrf_2=fit_fit_css[est][7],
+                                                   )
 
-
-
-print('start exportation')
 #export data from DN model fit
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
-              'srf_amplitude', 'srf_size','neural_baseline', 'surround_baseline',
-              'hrf_1','hrf_2', 'r_squared']
+              'n', 'hrf_1','hrf_2', 'r_squared']
               
 
-
-
 # export fit
-img_dn_fit_mat = make_surface_image(data=dn_fit_mat.T, source_img=img)
-nb.save(img_dn_fit_mat,'{}/{}'.format(prf_fit_dir,fit_fn_DN)) 
+img_css_fit_mat = make_surface_image(data=css_fit_mat.T, source_img=img)
+nb.save(img_css_fit_mat,'{}/{}'.format(prf_fit_dir, fit_fn_css)) 
 
 # export pred
-img_dn_pred_mat = make_surface_image(data=dn_pred_mat, source_img=img)
-nb.save(img_dn_pred_mat,'{}/{}'.format(prf_fit_dir,pred_fn_DN)) 
-
+img_css_pred_mat = make_surface_image(data=css_pred_mat, source_img=img)
+nb.save(img_css_pred_mat,'{}/{}'.format(prf_fit_dir, pred_fn_css)) 
 
 print('start rename maps')
 for map_num, map_name in enumerate(maps_names):
