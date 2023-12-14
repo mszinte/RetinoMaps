@@ -16,12 +16,12 @@ Combined estimate nifti file and pRF derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/prf/postfit/
+>> cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 2. run python command
 >> python compute_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_derivatives.py /scratch/mszinte/data amblyo_prf sub-01 327
+python compute_derivatives.py /scratch/mszinte/data RetinoMaps sub-02 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -41,6 +41,7 @@ import os
 import sys
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from prf_utils import fit2deriv
+from surface_utils import make_surface_image , load_surface
 deb = ipdb.set_trace
 
 # Define analysis parameters
@@ -60,14 +61,32 @@ pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 prf_fit_dir = "{}/{}/prf/fit".format(pp_dir, subject)
 
 # Get timeseries filenames
-pp_avg_fns = glob.glob("{}/{}/func/fmriprep_dct_avg/*avg*.nii.gz".format(pp_dir,subject))
+dct_avg_nii_fns = "{}/{}/func/fmriprep_dct_avg/HCP_170k/*_task-pRF_*avg*.dtseries.nii".format(pp_dir,subject)
+dct_loo_avg_nii_fns = "{}/{}/func/fmriprep_dct_loo_avg/HCP_170k/*_task-pRF_*avg_loo*.dtseries.nii".format(pp_dir,subject)
+
+dct_avg_gii_fns = "{}/{}/func/fmriprep_dct_avg/fsnative/*_task-pRF_*avg*.func.gii".format(pp_dir,subject)
+dct_loo_avg_gii_fns = "{}/{}/func/fmriprep_dct_loo_avg/fsnative/*_task-pRF_*avg_loo*.func.gii".format(pp_dir,subject)
+
+pp_avg_fns= glob.glob(dct_avg_nii_fns) + glob.glob(dct_loo_avg_nii_fns) + glob.glob(dct_avg_gii_fns) + glob.glob(dct_loo_avg_gii_fns)
+
+
+
+
 
 # Compute derivatives
 for pp_avg_fn in pp_avg_fns:
     
-    fit_fn = "{}/{}_prf-fit.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
-    pred_fn = "{}/{}_prf-pred.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+    # fit_fn = "{}/{}_prf-fit.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+    # pred_fn = "{}/{}_prf-pred.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
     deriv_fn = "{}/{}_prf-deriv.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
+    
+    fit_fn = glob.glob('{}/*_prf-fit.*'.format(pp_avg_fn))
+    pred_fn = glob.glob('{}/*_prf-pred.*'.format(pp_avg_fn))
+    
+    deriv_fn = pp_avg_fn.split('/')[-1]
+    deriv_fn = deriv_fn.replace('bold', 'prf-fit')
+
+
     
     if os.path.isfile(fit_fn) == False:
         sys.exit('Missing files, analysis stopped : {}'.format(fit_fn))
