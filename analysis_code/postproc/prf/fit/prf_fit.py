@@ -62,7 +62,7 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 input_fn = sys.argv[4]
-n_jobs = sys.argv[5]
+n_jobs = int(sys.argv[5])
 n_batches = n_jobs
 verbose = True
 
@@ -92,7 +92,7 @@ fit_fn_DN = input_fn.split('/')[-1]
 fit_fn_DN = fit_fn_DN.replace('bold', 'prf-fit')
 
 pred_fn_DN = input_fn.split('/')[-1]
-pred_fn_DN = fit_fn_DN.replace('bold', 'prf-pred')
+pred_fn_DN = pred_fn_DN.replace('bold', 'prf-pred')
 
 
 
@@ -108,7 +108,10 @@ polars = np.linspace(0, 2*np.pi, gauss_grid_nr)
 
 # defind dn parameters
 fixed_grid_baseline = 0
-grid_bounds = [(0,1000),(0,1000)]
+
+gauss_grid_bounds = [(0,1000)] #only prf amplitudes between 0 and 1000
+dn_grid_bounds = [(0,1000),(0,1000)] #only prf amplitudes between 0 and 1000, only neural baseline values between 0 and 1000
+
 surround_size_grid = max_ecc_size * np.linspace(0.1, 1, dn_grid_nr)**2
 surround_amplitude_grid = np.linspace(0, 10, dn_grid_nr)
 surround_baseline_grid = np.linspace(0, 10, dn_grid_nr)
@@ -120,15 +123,15 @@ neural_baseline_grid = np.linspace(0, 10, dn_grid_nr)
 
 gauss_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
                 (-1.5*max_ecc_size, 1.5*max_ecc_size),  # y
-                (0.1, 1.5*max_ecc_size),
+                (0.1, 1.5*max_ecc_size),# prf size
                 (0, 1000),  # prf amplitude
-                (0, 1000),# prf size
+                (0, 1000),# bold baseline
                 (0,10),(0,0)]  #hrf bounds
 
 
 norm_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
                 (-1.5*max_ecc_size, 1.5*max_ecc_size),  # y
-                (0.1, 1.5*max_ecc_size),  # prf size
+                (0.01, 1.5*max_ecc_size),  # prf size
                 (0, 1000),  # prf amplitude
                 (0, 1000),  # bold baseline
                 (0, 1000),  # surround amplitude
@@ -146,7 +149,7 @@ norm_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size),  # x
 
 # load data
 img, data = load_surface(fn=input_fn)
-data = data[:,0:100] ## subsample
+#data = data[:,0:100] ## subsample
 
 
 # determine gauss model
@@ -161,9 +164,12 @@ gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 print('start grid gauss')
 # grid fit gauss model
 gauss_fitter = Iso2DGaussianFitter(data=data.T, model=gauss_model, n_jobs=n_jobs)
+
+
 gauss_fitter.grid_fit(ecc_grid=eccs, 
                       polar_grid=polars, 
                       size_grid=sizes, 
+                      grid_bounds=gauss_grid_bounds,
                       verbose=verbose, 
                       n_batches=n_batches)
 
@@ -175,7 +181,7 @@ print('grid gauss ended')
 # iterative fit Gauss model 
 gauss_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                            verbose=verbose,
-                          bounds = gauss_bounds,
+                           bounds = gauss_bounds,
                            xtol=1e-4,
                            ftol=1e-4)
 gauss_fit = gauss_fitter.iterative_search_params
@@ -208,7 +214,7 @@ dn_fitter = Norm_Iso2DGaussianFitter(data=data.T,
 # grid fit DN model  
 dn_fitter.grid_fit(
     fixed_grid_baseline=fixed_grid_baseline,
-    grid_bounds=grid_bounds,
+    grid_bounds=dn_grid_bounds,
     surround_amplitude_grid=surround_amplitude_grid,
     surround_size_grid=surround_size_grid,             
     surround_baseline_grid=surround_baseline_grid,
@@ -220,7 +226,7 @@ dn_fitter.grid_fit(
 print('grid DN ended')
 
 
-
+print('start iterative dn')   
 # iterative fit DN model 
 dn_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                         verbose=verbose,
@@ -228,6 +234,7 @@ dn_fitter.iterative_fit(rsq_threshold=rsq_threshold,
                         xtol=1e-4,
                         ftol=1e-4)
 fit_fit_dn = dn_fitter.iterative_search_params
+print('iterativ DN ended')
 
 # rearange result of DN model 
 dn_fit_mat = np.zeros((data.shape[1],12))
@@ -245,8 +252,9 @@ for est in range(len(data.T)):
                                                     surround_baseline=fit_fit_dn[est][8]
                                                )
 
-print('iterativ DN ended')
 
+
+print('start exportation')
 #export data from DN model fit
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
               'srf_amplitude', 'srf_size','neural_baseline', 'surround_baseline',
@@ -256,15 +264,15 @@ maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
 
 
 # export fit
-img_dn_fit_mat = make_surface_image(data=dn_fit_mat, source_img=img)
+img_dn_fit_mat = make_surface_image(data=dn_fit_mat.T, source_img=img)
 nb.save(img_dn_fit_mat,'{}/{}'.format(prf_fit_dir,fit_fn_DN)) 
 
 # export pred
 img_dn_pred_mat = make_surface_image(data=dn_pred_mat, source_img=img)
-nb.save(img_dn_fit_mat,'{}/{}'.format(prf_fit_dir,pred_fn_DN)) 
+nb.save(img_dn_pred_mat,'{}/{}'.format(prf_fit_dir,pred_fn_DN)) 
 
 
-
+print('start rename maps')
 for map_num, map_name in enumerate(maps_names):
     os.system('wb_command -set-map-names {}/{} -map {} {}'.format(prf_fit_dir,fit_fn_DN, map_num+1, map_name))
 

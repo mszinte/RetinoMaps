@@ -7,7 +7,7 @@
     "cluster_name": "skylake",
     "TR": 1.2,
     "TRs": 208,
-    "fit_rsq_threshold": 0.05,
+    "fit_rsq_threshold": 0.01,
     "high_pass_threshold": 0.01,
     "high_pass_type": "dct",
     "screen_size_pix": [1080,1080],
@@ -31,6 +31,6 @@
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
     "alpha_range":[-0.2,0.2],
-    "nb_procs_fit_prf": 32,
+    "nb_procs_fit_prf": 16,
     "fit_per_hour_prf": 10000.0
 }
