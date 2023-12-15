@@ -118,8 +118,6 @@ stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1],
                          design_matrix=vdm, 
                          TR=TR)
 
-
-
 # Load fsnative data 
 data_img_fsnative, data_fsnative = load_surface(input_fn_fsnative)
 
@@ -128,10 +126,19 @@ roi_verts = cortex.get_roi_verts(subject=subject,
                                  roi=rois, 
                                  mask=True)
 
-vert_mask = roi_verts['occ'] + roi_verts['par'] + roi_verts['frt']
-vert_mask = vert_mask[0:data_fsnative.shape[1]] # roi only drawn for left hemi
-data = data_fsnative[:, vert_mask].T
-#data = data[0:1000,:]
+vert_mask_occ = roi_verts['occ']
+vert_mask_occ = vert_mask_occ[0:data_fsnative.shape[1]]
+data_occ = data_fsnative[:, vert_mask_occ].T
+
+vert_mask_par = roi_verts['par']
+vert_mask_par = vert_mask_par[0:data_fsnative.shape[1]]
+data_par = data_fsnative[:, vert_mask_par].T
+
+vert_mask_frt = roi_verts['frt']
+vert_mask_frt = vert_mask_frt[0:data_fsnative.shape[1]]
+data_frt = data_fsnative[:, vert_mask_frt].T
+
+data = np.concatenate((data_occ, data_par, data_frt))
 
 # Gaussian model
 # --------------
@@ -147,7 +154,7 @@ gauss_fitter = Iso2DGaussianFitter(data=data,
 # fit parameters
 gauss_params_num = 8
 gauss_iterative_bound = True
-gauss_iterative_repeat = 10
+gauss_iterative_repeat = 4
 
 
 # gaussian grid fit
@@ -206,10 +213,10 @@ gauss_iterative_dict = dict(rsq_threshold=rsq_iterative_th,
 gauss_bounds = [(-1.5*max_ecc_size, 1.5*max_ecc_size), # x
                 (-1.5*max_ecc_size, 1.5*max_ecc_size), # y
                 (0.001, 1.5*max_ecc_size), # prf size
-                (0.001, 2.0), # prf amplitude
-                (-1.0, 1.0), # bold baseline
+                (0.001, 10.0), # prf amplitude
+                (-2.0, 2.0), # bold baseline
                 (0.001, 10.0), # hrf_1 bounds
-                (0.001, 5.0)] # hrf_2 bounds  
+                (0.001, 5.0)] # hrf_2 bounds
 
 # run iterative fit through repetitions
 for repeat_num in np.arange(0,gauss_iterative_repeat+1,1):

@@ -27,10 +27,12 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 ---
 
 ### Pre-processing
-- [ ] Correct wb maps in prf_fit
-- [ ] Change stucture code prf_fit
-- [ ] Add parameter jobs in submit_fit and prf_fit
 - [ ] Update help section prf_fit
+- [ ] In plots.ipynb add boxplot across rois and type of fit
+- [ ] Test with prf_fit_test.py grid fit with 100 steps of guassian grid vs iterative no bound vs iterative boudn 5 repeat
+- [ ] Code prf_fit_grid: gaussian fit with large grid (100 steps?) and only _avg data (SEE prf_fit_test codes)
+- [ ] Plot retinotopy data, and get ROIs with grid fit
+- [ ] Code prf_fit_final which takes gaussian grid and run better model (dn or css) only on ROIs vertices
 
 ### Pre-processing
 
