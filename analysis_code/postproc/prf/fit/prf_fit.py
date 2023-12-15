@@ -84,11 +84,11 @@ prf_fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(
     main_dir,project_dir,subject)
 os.makedirs(prf_fit_dir, exist_ok=True)
 
-fit_fn_DN = input_fn.split('/')[-1]
-fit_fn_DN = fit_fn_DN.replace('bold', 'prf-fit')
+fit_fn_css = input_fn.split('/')[-1]
+fit_fn_css = fit_fn_css.replace('bold', 'prf-fit')
 
-pred_fn_DN = input_fn.split('/')[-1]
-pred_fn_DN = pred_fn_DN.replace('bold', 'prf-pred')
+pred_fn_css = input_fn.split('/')[-1]
+pred_fn_css = pred_fn_css.replace('bold', 'prf-pred')
 
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
 
@@ -162,10 +162,10 @@ for est in range(len(data.T)):
                                                           mu_y=gauss_fit[est][1], 
                                                           size=gauss_fit[est][2], 
                                                           beta=gauss_fit[est][3], 
-                                                          baseline=gauss_fit[est][4]
+                                                          baseline=gauss_fit[est][4],
                                                           hrf_1=gauss_fit[est][5],
-                                                          hrf_2=gauss_fit[est][6]
-                                                         )
+                                                          hrf_2=gauss_fit[est][6])
+                                
 
 # determine CSS model
 css_model = CSS_Iso2DGaussianModel(stimulus=stimulus)
@@ -188,8 +188,8 @@ css_fitter.grid_fit(exponent_grid=exponents,
 css_fitter.iterative_fit(rsq_threshold=rsq_threshold, 
                          verbose=True,
                          #bounds=css_bounds,
-                         xtol=xtol,
-                         ftol=ftol)
+                         xtol=1e-4,
+                         ftol=1e-4)
 fit_fit_css = css_fitter.iterative_search_params
 
 # rearange result of CSS model 
@@ -222,7 +222,7 @@ nb.save(img_css_pred_mat,'{}/{}'.format(prf_fit_dir, pred_fn_css))
 
 print('start rename maps')
 for map_num, map_name in enumerate(maps_names):
-    os.system('wb_command -set-map-names {}/{} -map {} {}'.format(prf_fit_dir,fit_fn_DN, map_num+1, map_name))
+    os.system('wb_command -set-map-names {}/{} -map {} {}'.format(prf_fit_dir,fit_fn_css, map_num+1, map_name))
 
 
 # Print duration
