@@ -30,6 +30,7 @@
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
     "alpha_range":[-0.2,0.2],
-    "nb_procs_fit_prf": 16,
+    "rsq_iterative_th": 0.01,
+    "nb_procs_fit_prf": 32,
     "fit_per_hour_prf": 10000.0
 }
