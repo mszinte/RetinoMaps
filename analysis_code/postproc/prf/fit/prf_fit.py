@@ -3,7 +3,7 @@
 prf_fit.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-High-pass filter, z-score, run correlations, average, loov average and pick anat files
+Fit prf 
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
