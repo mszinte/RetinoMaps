@@ -20,7 +20,7 @@
     "screen_height_px": 1080,
     "eye_mov_height_dva":30,
     "pix_ratio":0.125,
-    "gauss_grid_nr":20,
+    "gauss_grid_nr":50,
     "css_grid_nr":10,
     "max_ecc_size":20,
     "stim_width": 20.0,

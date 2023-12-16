@@ -154,7 +154,7 @@ gauss_fitter = Iso2DGaussianFitter(data=data,
 # fit parameters
 gauss_params_num = 8
 gauss_iterative_bound = True
-gauss_iterative_repeat = 4
+gauss_iterative_repeat = 10
 
 
 # gaussian grid fit
