@@ -36,19 +36,20 @@ import glob
 import ipdb
 import json
 import nibabel as nb
-import numpy as np
 import os
 import sys
+
+
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 deb = ipdb.set_trace
 
-# Define analysis parameters
-with open('../../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-task = analysis_info['task']
+#os.system('export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64')
+
+os.environ['PATH'] += ':/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
+
+
 
 # Inputs
 main_dir = sys.argv[1]
@@ -56,65 +57,52 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
+
 # Define directories
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 prf_fit_dir = "{}/{}/prf/fit".format(pp_dir, subject)
+prf_deriv_dir = "{}/{}/prf/prf_derivatives".format(pp_dir, subject)
+os.makedirs(prf_deriv_dir, exist_ok=True)
 
-# Get timeseries filenames
-dct_avg_nii_fns = "{}/{}/func/fmriprep_dct_avg/HCP_170k/*_task-pRF_*avg*.dtseries.nii".format(pp_dir,subject)
-dct_loo_avg_nii_fns = "{}/{}/func/fmriprep_dct_loo_avg/HCP_170k/*_task-pRF_*avg_loo*.dtseries.nii".format(pp_dir,subject)
-
-dct_avg_gii_fns = "{}/{}/func/fmriprep_dct_avg/fsnative/*_task-pRF_*avg*.func.gii".format(pp_dir,subject)
-dct_loo_avg_gii_fns = "{}/{}/func/fmriprep_dct_loo_avg/fsnative/*_task-pRF_*avg_loo*.func.gii".format(pp_dir,subject)
-
-pp_avg_fns= glob.glob(dct_avg_nii_fns) + glob.glob(dct_loo_avg_nii_fns) + glob.glob(dct_avg_gii_fns) + glob.glob(dct_loo_avg_gii_fns)
-
-
+# Get prf fit filenames
+fit_fns= glob.glob("{}/{}/prf/fit/*prf-fit*".format(pp_dir,subject))
 
 
 
 # Compute derivatives
-for pp_avg_fn in pp_avg_fns:
+for fit_fn in fit_fns:
     
-    # fit_fn = "{}/{}_prf-fit.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
-    # pred_fn = "{}/{}_prf-pred.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
-    deriv_fn = "{}/{}_prf-deriv.nii.gz".format(prf_fit_dir, os.path.basename(pp_avg_fn)[:-7])
-    
-    fit_fn = glob.glob('{}/*_prf-fit.*'.format(pp_avg_fn))
-    pred_fn = glob.glob('{}/*_prf-pred.*'.format(pp_avg_fn))
-    
-    deriv_fn = pp_avg_fn.split('/')[-1]
-    deriv_fn = deriv_fn.replace('bold', 'prf-fit')
+    deriv_fn = fit_fn.split('/')[-1]
+    deriv_fn = deriv_fn.replace('prf-fit', 'prf-deriv')
 
 
-    
     if os.path.isfile(fit_fn) == False:
         sys.exit('Missing files, analysis stopped : {}'.format(fit_fn))
     else:
         print('Computing derivatives: {}'.format(deriv_fn))
         
         # get arrays
-        fit_img = nb.load(fit_fn)
-        fit_array = fit_img.get_fdata()
-        data_array = nb.load(pp_avg_fn).get_fdata()
-        pred_array = nb.load(pred_fn).get_fdata()
-        
+        fit_img, fit_data = load_surface(fit_fn)
+
+ 
         # compute and save derivatives array
-        deriv_array = fit2deriv(fit_array=fit_array, data_array=data_array, pred_array=pred_array)
-        deriv_img = nb.Nifti1Image(dataobj=deriv_array, affine=fit_img.affine, header=fit_img.header)
-        deriv_img.to_filename(deriv_fn)
+        deriv_array = fit2deriv(fit_array=fit_data,model='gauss')
+        deriv_img = make_surface_image(data=deriv_array, source_img=fit_img)
+        nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,deriv_fn))
 
-# compute average loo derivatives
-loo_deriv_avg_fn = "{}/{}_task-{}_fmriprep_dct_bold_loo_avg_prf-deriv.nii.gz".format(prf_fit_dir, subject, task)
-print('Computing derivatives: {}'.format(loo_deriv_avg_fn))
 
-loo_deriv_fns = glob.glob("{}/*loo*{}-deriv.nii.gz".format(prf_fit_dir, task))
-loo_deriv_array = np.zeros_like(deriv_array)
-for loo_deriv_fn in loo_deriv_fns:
-    loo_deriv_array += nb.load(loo_deriv_fn).get_fdata()/len(loo_deriv_fns)
-loo_deriv_img = nb.Nifti1Image(dataobj=loo_deriv_array, affine=fit_img.affine, header=fit_img.header)
-loo_deriv_img.to_filename(loo_deriv_avg_fn)
+    maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
+                  'amplitude','baseline', 'x','y','hrf_1','hrf_2']
+    
+    
+    
+    
+    for map_num, map_name in enumerate(maps_names):
+        os.system('wb_command -set-map-names {}/{} -map {} {}'.format(prf_deriv_dir,deriv_fn, map_num+1, map_name))
+    
+
 
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
 os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+

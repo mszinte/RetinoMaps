@@ -51,14 +51,24 @@ def make_gifti_image(data, source_img) :
                                     labeltable=labeltable)
     
     # fill final image
+
     for i in range(data.shape[0]):
         time_point = data[i,:]
-        darray = nb.gifti.GiftiDataArray(time_point, datatype='NIFTI_TYPE_FLOAT32',
-                                         intent=source_img.darrays[i].intent, 
-                                         meta=source_img.darrays[i].meta, 
-                                         coordsys=source_img.darrays[i].coordsys)
+        darray = nb.gifti.GiftiDataArray(time_point, datatype='NIFTI_TYPE_FLOAT32')
+
+
         final_img.add_gifti_data_array(darray)
     
+
+
+    # for i in range(data.shape[0]):
+    #     time_point = data[i,:]
+    #     darray = nb.gifti.GiftiDataArray(time_point, datatype='NIFTI_TYPE_FLOAT32',
+    #                                      intent=source_img.darrays[i].intent, 
+    #                                      meta=source_img.darrays[i].meta, 
+    #                                      coordsys=source_img.darrays[i].coordsys)
+    #     final_img.add_gifti_data_array(darray)
+        
     return final_img
 
 def make_cifti_image(data, source_img):
