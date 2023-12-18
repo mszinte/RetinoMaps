@@ -26,7 +26,7 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 ## Data analysis
 ---
 
-### Pre-processing
+### To Do 
 - [ ] Update help section prf_fit
 - [ ] In plots.ipynb add boxplot across rois and type of fit
 - [ ] Test with prf_fit_test.py grid fit with 100 steps of guassian grid vs iterative no bound vs iterative boudn 5 repeat

@@ -20,7 +20,7 @@
     "screen_height_px": 1080,
     "eye_mov_height_dva":30,
     "pix_ratio":0.125,
-    "gauss_grid_nr":50,
+    "gauss_grid_nr":20,
     "css_grid_nr":10,
     "max_ecc_size":20,
     "stim_width": 20.0,
@@ -29,7 +29,7 @@
     "ecc_th": [0.1,15.0],
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
-    "alpha_range":[-0.2,0.2],
+    "alpha_range":[0,0.4],
     "rsq_iterative_th": 0.01,
     "nb_procs_fit_prf": 32,
     "fit_per_hour_prf": 10000.0

@@ -1,4 +1,4 @@
-def fit2deriv(fit_array, data_array, pred_array):
+def fit2deriv(fit_array, data_array, pred_array,model):
     """
     Compute pRF derivatives out of fitting output and predictions
 
@@ -7,6 +7,7 @@ def fit2deriv(fit_array, data_array, pred_array):
     fit_array: fit parameters 2D array
     data_array: data timeseries 2D array
     pred_array: prediction timeseries 2D array
+    model: model use for the fit ('gauss','dn','css')
     
     Returns
     -------
@@ -30,7 +31,25 @@ def fit2deriv(fit_array, data_array, pred_array):
     # Compute derived measures from prfs/pmfs
     # ---------------------------------------
     # get data index
-    x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
+    
+    if model == 'dn':
+        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, \
+        hrf_1_idx, hrf_2_idx, rsq_idx  = 0, 1, 2, 3, 4, 5, 6, 7
+    
+    elif model == 'dn':
+        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, srf_amplitude_idx, \
+        srf_size_idx, neural_baseline_idx, surround_baseline_idx, hrf_1_idx, \
+        hrf_2_idx,rsq_idx  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 
+    
+    elif model == 'css':
+        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, n, hrf_2_idx,rsq_idx \
+        = 0, 1, 2, 3, 4, 5, 6, 7, 8
+
+
+
+
+
+
 
     # change to nan empty voxels
     fit_array[fit_array[...,rsq_idx]==0] = np.nan
@@ -63,6 +82,28 @@ def fit2deriv(fit_array, data_array, pred_array):
     # y
     y = fit_array[...,y_idx]
     
+    # srf_amplitude
+    srf_amplitude = fit_array[...,srf_amplitude_idx]
+    
+    # srf_size
+    srf_size = fit_array[...,srf_size_idx]
+    
+    # neural_baseline 
+    neural_baseline = fit_array[...,neural_baseline_idx]
+    
+    # surround_baseline
+    surround_baseline = fit_array[...,surround_baseline_idx]
+    
+    # hrf_1
+    hrf_1 = fit_array[...,hrf_1_idx]
+    
+    # hrf_2
+    hrf_2 = fit_array[...,hrf_2_idx]
+    
+    
+    
+
+    
     # r-square between data and model prediction
     num_elmt = data_array.shape[0]*data_array.shape[1]*data_array.shape[2]
     data_array_flat = data_array.reshape((num_elmt,data_array.shape[-1]))
@@ -87,6 +128,15 @@ def fit2deriv(fit_array, data_array, pred_array):
     deriv_array[...,7] = baseline
     deriv_array[...,8] = x
     deriv_array[...,9] = y
+    deriv_array[...,10] = srf_amplitude
+    deriv_array[...,11] = srf_size
+    deriv_array[...,12] = neural_baseline
+    deriv_array[...,13] = surround_baseline
+    deriv_array[...,14] = hrf_1
+    deriv_array[...,15] = hrf_2
+    
+    
+    
 
     deriv_array = deriv_array.astype(np.float32)
 
