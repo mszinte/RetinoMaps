@@ -1,9 +1,10 @@
+
 """
 -----------------------------------------------------------------------------------------
 preproc_end.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-High-pass filter, z-score, run correlations, average, loov average and pick anat files
+High-pass filter, z-score, average, loo average and pick anat files
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -28,17 +29,17 @@ Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 
-# Stop warnings
-# -------------
+# stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
+# general imports
 import json
 import sys
 import os
 import glob
 import ipdb
+deb = ipdb.set_trace
 import numpy as np
 import nibabel as nb
 import itertools as it
@@ -48,10 +49,11 @@ import shutil
 from nilearn.glm.first_level.design_matrix import _cosine_drift
 import datetime
 
+# personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from surface_utils import load_surface , make_surface_image
 
-deb = ipdb.set_trace
+# time
 start_time = datetime.datetime.now()
 
 # Inputs
@@ -66,20 +68,18 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 TR = analysis_info['TR']
 high_pass_threshold = analysis_info['high_pass_threshold'] 
-high_pass_type = analysis_info['high_pass_type'] 
-sessions = analysis_info['session']
+sessions = analysis_info['sessions']
 tasks = analysis_info['task_names']
+formats = analysis_info['formats']
+extensions = analysis_info['extensions']
 
-# formats to work with
-formats = ['fsnative', '170k']
-extensions = ['func.gii', 'dtseries.nii']
-
+# DCT correction
 for format_, extension in zip(formats, extensions):
     
     # make directories
-    flt_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(
+    fmriprep_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct".format(
         main_dir, project_dir, subject)
-    os.makedirs('{}/{}'.format(flt_dir,format_), exist_ok=True)
+    os.makedirs('{}/{}'.format(fmriprep_dir,format_), exist_ok=True)
     
     corr_dir = "{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_corr".format(
         main_dir, project_dir, subject)
@@ -93,9 +93,6 @@ for format_, extension in zip(formats, extensions):
         main_dir, project_dir, subject)
     os.makedirs('{}/{}'.format(loo_avg_dir,format_), exist_ok=True)
 
-
-    # DCT correction
-    # --------------
     for session in sessions :
         
         # find outputs from fMRIprep
@@ -125,13 +122,13 @@ for format_, extension in zip(formats, extensions):
        
             # Make an image with the preproceced data
             flt_img = make_surface_image(data=surf_data, source_img=surf_img)
-            nb.save(flt_img, '{}/{}/{}'.format(flt_dir, format_, flt_data_fn))
+            nb.save(flt_img, '{}/{}/{}'.format(fmriprep_dir, format_, flt_data_fn))
      
 
 # find all the filtered files 
 preproc_files_tot = glob.glob("{}/{}/*_*.{}".format(
-    flt_dir,formats[0], extensions[0])) + glob.glob("{}/{}/*_*.{}".format(
-        flt_dir,formats[1], extensions[1]))
+    fmriprep_dir,formats[0], extensions[0])) + glob.glob("{}/{}/*_*.{}".format(
+        fmriprep_dir,formats[1], extensions[1]))
                 
 # split filtered files  deppending of their nature 
 preproc_fsnative_hemi_L = []
@@ -166,29 +163,29 @@ for preproc_files in preproc_files_list:
             
 
         if hemi:
-            cor_file = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_correlations_bold.func.gii".format(
-                corr_dir, subject, task, hemi, high_pass_type)
+            cor_file = "{}/fsnative/{}_task-{}_{}_fmriprep_dct_correlations_bold.func.gii".format(
+                corr_dir, subject, task, hemi)
 
-            avg_file = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_avg_bold.func.gii".format(
-                avg_dir, subject, task, hemi, high_pass_type)
+            avg_file = "{}/fsnative/{}_task-{}_{}_fmriprep_dct_avg_bold.func.gii".format(
+                avg_dir, subject, task, hemi)
 
-            loo_avg_files = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_avg_loo-{}_bold.func.gii".format(
-                loo_avg_dir, subject, task, hemi, high_pass_type, 'loo_num')
+            loo_avg_files = "{}/fsnative/{}_task-{}_{}_fmriprep_dct_avg_loo-{}_bold.func.gii".format(
+                loo_avg_dir, subject, task, hemi, 'loo_num')
 
-            loo_files = "{}/fsnative/{}_task-{}_{}_fmriprep_{}_loo-{}_bold.func.gii".format(
-                loo_avg_dir, subject, task, hemi, high_pass_type, 'loo_num')
+            loo_files = "{}/fsnative/{}_task-{}_{}_fmriprep_dct_loo-{}_bold.func.gii".format(
+                loo_avg_dir, subject, task, hemi, 'loo_num')
         else:
-            cor_file = "{}/170k/{}_task-{}_fmriprep_{}_correlations_bold.dtseries.nii".format(
-                corr_dir, subject, task, high_pass_type)
+            cor_file = "{}/170k/{}_task-{}_fmriprep_dct_correlations_bold.dtseries.nii".format(
+                corr_dir, subject, task)
 
-            avg_file = "{}/170k/{}_task-{}_fmriprep_{}_avg_bold.dtseries.nii".format(
-                avg_dir, subject, task, high_pass_type)
+            avg_file = "{}/170k/{}_task-{}_fmriprep_dct_avg_bold.dtseries.nii".format(
+                avg_dir, subject, task)
 
-            loo_avg_files = "{}/170k/{}_task-{}_fmriprep_{}_avg_loo-{}_bold.dtseries.nii".format(
-                loo_avg_dir, subject, task, high_pass_type, 'loo_num')
+            loo_avg_files = "{}/170k/{}_task-{}_fmriprep_dct_avg_loo-{}_bold.dtseries.nii".format(
+                loo_avg_dir, subject, task, 'loo_num')
 
-            loo_files = "{}/170k/{}_task-{}_fmriprep_{}_loo-{}_bold.dtseries.nii".format(
-                loo_avg_dir, subject, task, high_pass_type, 'loo_num')
+            loo_files = "{}/170k/{}_task-{}_fmriprep_dct_loo-{}_bold.dtseries.nii".format(
+                loo_avg_dir, subject, task, 'loo_num')
 
         # load preproc files to have meta and header
         preproc_img, preproc_data = load_surface(fn=preproc_files_task[0])
