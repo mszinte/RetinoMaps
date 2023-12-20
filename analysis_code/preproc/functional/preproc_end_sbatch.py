@@ -80,10 +80,8 @@ slurm_cmd = """\
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
-
 preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
-
-wb_command_cmd = 'export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
+wb_command_cmd = "export PATH=$PATH: {}/{}/code/workbench/bin_rh_linux64".format(main_dir,project_dir)
 
 # Define permission cmd
 chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
@@ -92,9 +90,12 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 # create sh fn
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
-
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd,wb_command_cmd,preproc_end_surf_cmd,chmod_cmd,chgrp_cmd))
+of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd, 
+                                         wb_command_cmd, 
+                                         preproc_end_surf_cmd,
+                                         chmod_cmd,
+                                         chgrp_cmd))
 of.close()
 
 
