@@ -72,8 +72,8 @@ except ValueError:
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(main_dir, project_dir, subject)
 prf_deriv_dir = "{}/{}/derivatives/pp_data/{}/prf/prf_derivatives".format(main_dir,project_dir, subject)
-flatmaps_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/flatmaps_avg'.format(main_dir, project_dir, subject)
-datasets_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/datasets_avg'.format(main_dir, project_dir, subject)
+flatmaps_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/flatmaps_avg_gauss_gridfit'.format(main_dir, project_dir, subject)
+datasets_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/datasets_avg_gauss_gridfit'.format(main_dir, project_dir, subject)
 
 os.makedirs(flatmaps_avg_dir, exist_ok=True)
 os.makedirs(datasets_avg_dir, exist_ok=True)
