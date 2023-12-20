@@ -34,8 +34,7 @@ warnings.filterwarnings("ignore")
 # imports
 import os
 import sys
-print("Interpréteur Python:", sys.executable)
-print("Préfixe d'installation:", sys.prefix)
+
 
 import json
 import glob
@@ -55,6 +54,9 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+
+
+
 
 # define directories and get fns
 fmriprep_dir = "{}/{}/derivatives/fmriprep".format(main_dir, project_dir)
