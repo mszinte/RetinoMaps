@@ -54,9 +54,10 @@ Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 - [x] flatten the cut brains [flatten_sbatch.py](analysis_code/preproc/anatomical/flatten_sbatch.py)
 
 #### Functional preprocessing
-- [ ] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
-- [ ] high-pass, z-score, run correlations, average and leave-one-out average for HCP_170k and fsnative files [preproc_end.py](analysis_code/preproc/functional/preproc_end.py). To run on meso use : [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
-- [ ] Load freesurfer and execute [pycortex_import.py](analysis_code/preproc/functional/pycortex_import.py): run only [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
+- [x] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
+- [x] Load freesurfer and import subject in pycortex db [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
+- [x] high-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
+- [ ] timeseries inter-run correlation [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
 
 ### Post-processing
 
