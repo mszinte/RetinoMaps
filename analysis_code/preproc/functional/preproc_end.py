@@ -19,7 +19,7 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/preproc/functional/
 2. run python command
-python preproc_end_surf.py [main directory] [project name] [subject name] [group]
+python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
 python preproc_end.py /scratch/mszinte/data RetinoMaps sub-02 327
@@ -87,7 +87,7 @@ for format_, extension in zip(formats, extensions):
 
 # high pass filtering
 for format_, extension in zip(formats, extensions):
-    print('high pass filtering : {}'.format(format_)
+    print('high pass filtering : {}'.format(format_))
     for session in sessions:
         # find outputs from fMRIprep
         fmriprep_func_fns = glob.glob("{}/{}/derivatives/fmriprep/fmriprep/{}/{}/func/*{}*.{}".format(main_dir, 
@@ -110,9 +110,9 @@ for format_, extension in zip(formats, extensions):
             ft = np.linspace(0.5 * TR, (nb_tr + 0.5) * TR, nb_tr, endpoint=False)
             high_pass_set = _cosine_drift(high_pass_threshold, ft)
             surf_data = signal.clean(surf_data, 
-                                     detrend=False,
-                                     standardize=False, 
-                                     confounds=high_pass_set)
+                                      detrend=False,
+                                      standardize=False, 
+                                      confounds=high_pass_set)
            
             # Compute the Z-score 
             surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
@@ -194,7 +194,7 @@ for preproc_files in preproc_files_list:
                 
             # export leave one out file 
             if hemi:
-                loo_avg_fn = "{}/{}/derivatives/pp_data/{}/fsnative/corr/fmriprep_dct_loo_avg/{}_task-{}_{}_fmriprep_dct_avg_loo-{}_bold.func.gii".format(
+                loo_avg_fn = "{}/{}/derivatives/pp_data/{}/fsnative/func/fmriprep_dct_loo_avg/{}_task-{}_{}_fmriprep_dct_avg_loo-{}_bold.func.gii".format(
                     main_dir, project_dir, subject, subject, task, hemi, loo_num+1)
                 loo_fn = "{}/{}/derivatives/pp_data/{}/fsnative/func/fmriprep_dct_loo_avg/{}_task-{}_{}_fmriprep_dct_loo-{}_bold.func.gii".format(
                     main_dir, project_dir, subject, subject, task, hemi, loo_num+1)
@@ -256,68 +256,51 @@ for preproc_files in preproc_files_list:
                 cor_fn, 1, 'runs_correlations'))
 
 # Anatomy
-for format, pycortex_subject in zip(formats, [subject, 'sub-170k']):
+for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # define folders
-    orig_dir_anat = "{}/{}/derivatives/fmriprep/fmriprep/{}/{}/anat".format(
-        main_dir, project_dir, pycortex_subject, anat_session)
     pycortex_flat_dir = '{}/{}/derivatives/pp_data/cortex/db/{}/surfaces'.format(
         main_dir, project_dir, pycortex_subject)
-
-    anat_files = glob.glob("{}/*.surf.gii".format(orig_dir_anat))
     dest_dir_anat = "{}/{}/derivatives/pp_data/{}/{}/anat".format(
-        main_dir, project_dir, subject, format)
+        main_dir, project_dir, subject, format_)
     os.makedirs(dest_dir_anat, exist_ok=True)
 
     # import surface anat data
-    print("Copying anatomy {}".format(format))
-    for orig_file in anat_files:
-        file_name = os.path.basename(orig_file)
-        dest_file = os.path.join(dest_dir_anat, file_name)
-        shutil.copyfile(orig_file, dest_file)
+    print("Copying anatomy {}".format(format_))
+    for hemi in ['lh', 'rh']:
+        if hemi == 'lh':
+            anatomical_structure_primary = 'CortexLeft'
+            save_hemi = 'hemi-L'
+        elif hemi == 'rh':
+            anatomical_structure_primary = 'CortexRight'
+            save_hemi = 'hemi-R'
 
-    # particular case of 170k
-    if format == '170k':
-        # pial
-        pial_img_lh = nb.load('{}/pia_lh.gii'.format(pycortex_flat_dir))
-        pial_img_lh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexLeft'
-        pial_img_lh.darrays[0].meta['AnatomicalStructureSecondary'] = 'Pial'
-        pial_img_lh.darrays[0].meta['GeometricType'] = 'Anatomical'
-        nb.save(pial_img_lh, '{}/{}_hemi-L_pial.surf.gii'.format(
-                dest_dir_anat, subject))
-
-        pial_img_rh = nb.load('{}/pia_rh.gii'.format(pycortex_flat_dir))
-        pial_img_rh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexRight'
-        pial_img_rh.darrays[0].meta['AnatomicalStructureSecondary'] = 'Pial'
-        pial_img_rh.darrays[0].meta['GeometricType'] = 'Anatomical'
-        nb.save(pial_img_rh, '{}/{}_hemi-R_pial.surf.gii'.format(
-                dest_dir_anat, subject))
-
-        # inflated
-        inflated_img_rh = nb.load('{}/inflated_rh.gii'.format(pycortex_flat_dir))
-        inflated_img_rh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexLeft'
-        inflated_img_rh.darrays[0].meta['GeometricType'] = 'Inflated'
-        nb.save(inflated_img_rh, '{}/{}_hemi-L_inflated.surf.gii'.format(
-                dest_dir_anat, subject))
-
-        inflated_img_rh = nb.load('{}/pia_rh.gii'.format(pycortex_flat_dir))
-        inflated_img_rh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexRight'
-        inflated_img_rh.darrays[0].meta['GeometricType'] = 'Inflated'
-        nb.save(inflated_img_rh, '{}/{}_hemi-R_inflated.surf.gii'.format(
-                dest_dir_anat, subject))
-
-    # flatmap anatomy
-    flat_img_lh = nb.load('{}/flat_lh.gii'.format(pycortex_flat_dir))
-    flat_img_lh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexLeft'
-    flat_img_lh.darrays[0].meta['GeometricType']= 'Flat'
-    nb.save(flat_img_lh,'{}/{}_hemi-L_flat.surf.gii'.format(
-        dest_dir_anat, subject))
-
-    flat_img_rh = nb.load('{}/flat_rh.gii'.format(pycortex_flat_dir))
-    flat_img_rh.darrays[0].meta['AnatomicalStructurePrimary'] = 'CortexRight'
-    flat_img_rh.darrays[0].meta['GeometricType']= 'Flat'
-    nb.save(flat_img_rh,'{}/{}_hemi-R_flat.surf.gii'.format(
-        dest_dir_anat, subject))
-
+        for surf in ['pia', 'inflated', 'wm', 'flat']:
+            if surf == 'pia':
+                save_surf = 'pial'
+                geometric_type = 'Anatomical'
+                anatomical_structure_secondary = 'Pial'
+            elif surf == 'wm':
+                save_surf = 'smoothwm'
+                geometric_type = 'Anatomical'
+                anatomical_structure_secondary = 'GrayWhite'
+            elif surf == 'inflated':
+                save_surf = 'smoothwm'
+                geometric_type = 'Inflated'
+                anatomical_structure_secondary = None
+            elif surf == 'flat':
+                save_surf = 'flat'
+                geometric_type = 'Flat'
+                anatomical_structure_secondary = None
+                
+            img = nb.load('{}/{}_{}.gii'.format(pycortex_flat_dir, surf, hemi))
+            img.darrays[0].meta['AnatomicalStructurePrimary'] = anatomical_structure_primary
+            if anatomical_structure_secondary is not None:
+                img.darrays[0].meta['AnatomicalStructureSecondary'] = anatomical_structure_secondary
+            img.darrays[0].meta['GeometricType'] = geometric_type
+            img.darrays[1].datatype = 'NIFTI_TYPE_FLOAT32'
+            nb.save(img, '{}/{}_{}_{}.surf.gii'.format(
+                dest_dir_anat, subject, save_hemi, save_surf))
+            
 # time
 end_time = datetime.datetime.now()
 print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".format(

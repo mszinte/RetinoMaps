@@ -41,6 +41,7 @@ import nibabel as nb
 import numpy as np
 import os
 import sys
+import hcp_utils as hcp
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file
 from surface_utils import make_surface_image , load_surface
@@ -50,6 +51,8 @@ deb = ipdb.set_trace
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
+formats = analysis_info['formats']
+extensions = analysis_info['extensions']
 
 task = 'prf'
 
@@ -67,141 +70,155 @@ try:
         raise ValueError
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
-    
-# Define directories and fn
+  
+
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
-fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(main_dir, project_dir, subject)
-prf_deriv_dir = "{}/{}/derivatives/pp_data/{}/prf/prf_derivatives".format(main_dir,project_dir, subject)
-flatmaps_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/flatmaps_avg_gauss_gridfit'.format(main_dir, project_dir, subject)
-datasets_avg_dir = '{}/{}/derivatives/pp_data/{}/prf/pycortex/datasets_avg_gauss_gridfit'.format(main_dir, project_dir, subject)
-
-os.makedirs(flatmaps_avg_dir, exist_ok=True)
-os.makedirs(datasets_avg_dir, exist_ok=True)
-
-deriv_avg_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
-deriv_avg_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
-
-
-
-
-
-
-# Set pycortex db and colormaps
-set_pycortex_config_file(cortex_dir)
-importlib.reload(cortex)
-
-# Maps settings
-rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8
     
+for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
+    # Define directories and fn
     
-
+    prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, subject,format_)
+    fit_dir = "{}/fit".format(prf_dir)
+    prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
+    flatmaps_avg_dir = '{}/pycortex/flatmaps_avg_gauss_gridfit'.format(prf_dir)
+    datasets_avg_dir = '{}/pycortex/datasets_avg_gauss_gridfit'.format(prf_dir)
+    
+    os.makedirs(flatmaps_avg_dir, exist_ok=True)
+    os.makedirs(datasets_avg_dir, exist_ok=True)
+    
+    if format_ == 'fsnative':
+        
+        deriv_avg_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
+        deriv_avg_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
+        
+        # load data
+        deriv_img_L, deriv_mat_L = load_surface(deriv_avg_fn_L)
+        deriv_img_R, deriv_mat_R = load_surface(deriv_avg_fn_R)
+        
+        deriv_mat = np.concatenate((deriv_mat_L,deriv_mat_R),axis=1)
 
     
-cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
-col_offset = 1.0/14.0
-cmap_steps = 255
-
-# plot scales
-rsq_scale = [0, 1]
-ecc_scale = [0, 10]
-size_scale = [0, 10]
-
-print('Creating flatmaps...')
-
-
+    elif format_ == '170k':
+        deriv_avg_fn = '{}/{}_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'.format(prf_deriv_dir, subject)
+        deriv_img, deriv_mat = load_surface(deriv_avg_fn)
+        deriv_mat = deriv_mat[:, hcp.struct.cortex]
+        save_svg = False
+    
+    
+    
+    
+        
+    description_end = 'avg gridfit'
+    deriv_fn_label = 'avg-gridfit'
+    flatmaps_dir = flatmaps_avg_dir
+    datasets_dir = datasets_avg_dir
+    
+    # Set pycortex db and colormaps
+    set_pycortex_config_file(cortex_dir)
+    importlib.reload(cortex)
+    
+    # Maps settings
+    rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
+        amp_idx, baseline_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8
+          
+    cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
+    col_offset = 1.0/14.0
+    cmap_steps = 255
+    
+    # plot scales
+    rsq_scale = [0, 1]
+    ecc_scale = [0, 10]
+    size_scale = [0, 10]
+    
+    print('Creating flatmaps...')
+    
+    
+     
     
 
+    
+    maps_names = []
+    
 
-description_end = 'avg gridfit'
-deriv_fn_label = 'avg-gridfit'
-flatmaps_dir = flatmaps_avg_dir
-datasets_dir = datasets_avg_dir
-
-maps_names = []
-
-# load data
-deriv_img_L, deriv_mat_L = load_surface(deriv_avg_fn_L)
-deriv_img_R, deriv_mat_R = load_surface(deriv_avg_fn_R)
-
-deriv_mat = np.concatenate((deriv_mat_L,deriv_mat_R),axis=1)
-
-
-# threshold data
-deriv_mat_th = deriv_mat
-amp_down =  deriv_mat_th[amp_idx,...] > 0
-rsqr_th_down = deriv_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
-rsqr_th_up = deriv_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
-size_th_down = deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
-size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
-ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
-ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
-all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
-deriv_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
-
-# r-square
-rsq_data = deriv_mat[rsq_idx,...]
-alpha_range = analysis_info["alpha_range"]
-alpha = (rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
-alpha[alpha>1]=1
-param_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
-             'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
-             'cortex_type': 'VertexRGB','description': '{} rsquare'.format(task),
-             'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
-             'cbar_label': 'pRF R2', 'with_labels': True}
-maps_names.append('rsq')
-
-# polar angle
-pol_comp_num = deriv_mat[polar_real_idx,...] + 1j * deriv_mat[polar_imag_idx,...]
-polar_ang = np.angle(pol_comp_num)
-ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
-ang_norm = np.fmod(ang_norm + col_offset,1)
-param_polar = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
-               'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
-               'cbar': 'polar', 'col_offset': col_offset, 
-               'description': '{} polar:{:3.0f} steps{}'.format(task, cmap_steps, description_end), 
-               'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
-               'with_labels': True}
-exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
-exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
-
-# eccentricity
-ecc_data = deriv_mat[ecc_idx,...]
-param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
-             'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
-             'description': '{} eccentricity{}'.format(task,description_end), 'curv_brightness': 1,
-             'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
-
-maps_names.append('ecc')
-
-# size
-size_data = deriv_mat[size_idx,...]
-param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-              'vmin': size_scale[0], 'vmax': size_scale[1], 'cbar': 'discrete', 
-              'cortex_type': 'VertexRGB', 'description': '{} size{}'.format(task, description_end), 
-              'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size',
-              'with_labels': True}
-maps_names.append('size')
-
-# draw flatmaps
-volumes = {}
-for maps_name in maps_names:
-
-    # create flatmap
-    roi_name = '{}_{}'.format(task, maps_name)
-    roi_param = {'subject': subject, 'xfmname': None, 'roi_name': roi_name}
-    print(roi_name)
-    exec('param_{}.update(roi_param)'.format(maps_name))
-    exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name = maps_name))
-    exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(flatmaps_dir, subject, task,  maps_name, deriv_fn_label))
-    plt.close()
-
-    # save flatmap as dataset
-    exec('vol_description = param_{}["description"]'.format(maps_name))
-    exec('volume = volume_{}'.format(maps_name))
-    volumes.update({vol_description:volume})
-
-# save dataset
-dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, task, deriv_fn_label)
-dataset = cortex.Dataset(data=volumes)
-dataset.save(dataset_file)
+    
+    
+    # threshold data
+    deriv_mat_th = deriv_mat
+    amp_down =  deriv_mat_th[amp_idx,...] > 0
+    rsqr_th_down = deriv_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
+    rsqr_th_up = deriv_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+    size_th_down = deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
+    size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
+    ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
+    ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
+    all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
+    deriv_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
+    
+    # r-square
+    rsq_data = deriv_mat[rsq_idx,...]
+    alpha_range = analysis_info["alpha_range"]
+    alpha = (rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
+    alpha[alpha>1]=1
+    param_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
+                 'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
+                 'cortex_type': 'VertexRGB','description': '{} rsquare'.format(task),
+                 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
+                 'cbar_label': 'pRF R2', 'with_labels': True}
+    maps_names.append('rsq')
+    
+    # polar angle
+    pol_comp_num = deriv_mat[polar_real_idx,...] + 1j * deriv_mat[polar_imag_idx,...]
+    polar_ang = np.angle(pol_comp_num)
+    ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
+    ang_norm = np.fmod(ang_norm + col_offset,1)
+    param_polar = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
+                   'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
+                   'cbar': 'polar', 'col_offset': col_offset, 
+                   'description': '{} polar:{:3.0f} steps{}'.format(task, cmap_steps, description_end), 
+                   'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
+                   'with_labels': True}
+    exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
+    exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
+    
+    # eccentricity
+    ecc_data = deriv_mat[ecc_idx,...]
+    param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
+                 'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
+                 'description': '{} eccentricity{}'.format(task,description_end), 'curv_brightness': 1,
+                 'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
+    
+    maps_names.append('ecc')
+    
+    # size
+    size_data = deriv_mat[size_idx,...]
+    param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+                  'vmin': size_scale[0], 'vmax': size_scale[1], 'cbar': 'discrete', 
+                  'cortex_type': 'VertexRGB', 'description': '{} size{}'.format(task, description_end), 
+                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size',
+                  'with_labels': True}
+    maps_names.append('size')
+    
+    # draw flatmaps
+    volumes = {}
+    for maps_name in maps_names:
+    
+        # create flatmap
+        roi_name = '{}_{}'.format(task, maps_name)
+        roi_param = {'subject': pycortex_subject, 'xfmname': None, 'roi_name': roi_name}
+        print(roi_name)
+        exec('param_{}.update(roi_param)'.format(maps_name))
+        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name = maps_name))
+        exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(flatmaps_dir, subject, task,  maps_name, deriv_fn_label))
+        plt.close()
+    
+        # save flatmap as dataset
+        exec('vol_description = param_{}["description"]'.format(maps_name))
+        exec('volume = volume_{}'.format(maps_name))
+        volumes.update({vol_description:volume})
+    
+    # save dataset
+    dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, task, deriv_fn_label)
+    dataset = cortex.Dataset(data=volumes)
+    dataset.save(dataset_file)
+    
+    
