@@ -1,5 +1,38 @@
 import numpy as np
 
+def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None):
+    """
+    load a surface image inndependently if it's CIFTI or GIFTI, and return 
+    concatenated data from the left and right cortex
+
+    Parameters
+    ----------
+    L_fn : gifti left hemisphere filename
+    R_fn : gifti right hemisphere filename
+    brain_fn : brain data in cifti format
+    
+    Returns
+    -------
+    data_concat : numpy stacked data of the two hemisphere. 
+                2 dim (time x vertices)    
+    """
+    
+    from surface_utils import load_surface
+    from cifti_utils import decompose_cifti
+    
+    if L_fn and R_fn: 
+        img_L, data_L = load_surface(L_fn)
+        img_R, data_R = load_surface(R_fn)
+        data_concat = np.concatenate((data_L, data_R), axis=1)
+    
+    elif brain_fn:
+        img, mat = load_surface(brain_fn)
+        vol, data_L, data_R = decompose_cifti(img)
+        data_concat = np.concatenate((data_L, data_R), axis=1)
+    
+    return data_concat
+    
+
 def set_pycortex_config_file(cortex_folder):
 
     # Import necessary modules

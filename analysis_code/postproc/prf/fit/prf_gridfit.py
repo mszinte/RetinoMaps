@@ -153,17 +153,13 @@ maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
               
 
 # export fit
-img_gauss_gridfit_fit_mat = make_surface_image(data=gauss_fit_mat.T, source_img=img)
+img_gauss_gridfit_fit_mat = make_surface_image(data=gauss_fit_mat.T, source_img=img, maps_names=maps_names)
 nb.save(img_gauss_gridfit_fit_mat,'{}/{}'.format(prf_fit_dir, fit_fn_gauss_gridfit)) 
 
 # export pred
 img_gauss_gridfit_pred_mat = make_surface_image(data=gauss_pred_mat, source_img=img)
 nb.save(img_gauss_gridfit_pred_mat,'{}/{}'.format(prf_fit_dir, pred_fn_gauss_gridfit)) 
 
-print('start rename maps')
-for map_num, map_name in enumerate(maps_names):
-    os.system('wb_command -set-map-names {}/{} -map {} {}'.format(
-        prf_fit_dir,fit_fn_gauss_gridfit , map_num+1, map_name))
 
 
 # Print duration
