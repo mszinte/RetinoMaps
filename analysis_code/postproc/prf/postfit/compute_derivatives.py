@@ -45,9 +45,9 @@ from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 deb = ipdb.set_trace
 
-#os.system('export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64')
 
-os.environ['PATH'] += ':/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
+
+
 
 
 
@@ -60,8 +60,8 @@ group = sys.argv[4]
 
 # Define directories
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
-prf_fit_dir = "{}/{}/prf/fit".format(pp_dir, subject)
-prf_deriv_dir = "{}/{}/prf/prf_derivatives".format(pp_dir, subject)
+prf_fit_dir = "/fsnative/{}/{}/prf/fit".format(pp_dir, subject)
+prf_deriv_dir = "/fsnative/{}/{}/prf/prf_derivatives".format(pp_dir, subject)
 os.makedirs(prf_deriv_dir, exist_ok=True)
 
 # Get prf fit filenames
@@ -86,21 +86,19 @@ for fit_fn in fit_fns:
 
  
         # compute and save derivatives array
+        maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
+                      'amplitude','baseline', 'x','y','hrf_1','hrf_2']
+        
         deriv_array = fit2deriv(fit_array=fit_data,model='gauss')
-        deriv_img = make_surface_image(data=deriv_array, source_img=fit_img)
+        deriv_img = make_surface_image(data=deriv_array, source_img=fit_img, maps_names=maps_names)
         nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,deriv_fn))
 
 
-    maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
-                  'amplitude','baseline', 'x','y','hrf_1','hrf_2']
-    
-    
-    
-    
-    for map_num, map_name in enumerate(maps_names):
-        os.system('wb_command -set-map-names {}/{} -map {} {}'.format(prf_deriv_dir,deriv_fn, map_num+1, map_name))
-    
 
+    
+    
+    
+ 
 
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))

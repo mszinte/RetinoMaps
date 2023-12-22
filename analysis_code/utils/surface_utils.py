@@ -20,7 +20,7 @@ def load_gifti_image(gii_fn):
 
     return img_hemi, data_hemi
 
-def make_gifti_image(data, source_img) : 
+def make_gifti_image(data, source_img, maps_names=None) : 
     """
     make a gifti image with data
 
@@ -29,7 +29,7 @@ def make_gifti_image(data, source_img) :
     data_to_write : data you want to write on your image 
                     numpy darray 2 dim (time x vertices)
     source_img : image from with new data derives
-
+    maps_names : list of the names if first dimension is not time (ex: ['runs_correlations'])
     
     Returns
     -------
@@ -61,13 +61,11 @@ def make_gifti_image(data, source_img) :
     
 
 
-    # for i in range(data.shape[0]):
-    #     time_point = data[i,:]
-    #     darray = nb.gifti.GiftiDataArray(time_point, datatype='NIFTI_TYPE_FLOAT32',
-    #                                      intent=source_img.darrays[i].intent, 
-    #                                      meta=source_img.darrays[i].meta, 
-    #                                      coordsys=source_img.darrays[i].coordsys)
-    #     final_img.add_gifti_data_array(darray)
+    if maps_names : 
+        for map_num, map_name in enumerate(maps_names):
+            final_img.darrays[map_num+1].meta['Name'] = map_name
+            
+
         
     return final_img
 
