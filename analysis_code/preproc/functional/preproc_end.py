@@ -250,10 +250,9 @@ for preproc_files in preproc_files_list:
                     main_dir, project_dir, subject, subject, task)
 
         print("corr save: {}".format(cor_fn))
-        corr_img = make_surface_image(data=cor_final, source_img=preproc_img)
+        corr_img = make_surface_image(data=cor_final, source_img=preproc_img, maps_names=['runs_correlations'])
         nb.save(corr_img, cor_fn)
-        os.system('wb_command -set-map-names {} -map {} {}'.format(
-                cor_fn, 1, 'runs_correlations'))
+
 
 # Anatomy
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
