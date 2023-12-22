@@ -61,9 +61,11 @@ def make_gifti_image(data, source_img, maps_names=None) :
     
 
 
-    if maps_names : 
-        for map_num, map_name in enumerate(maps_names):
-            final_img.darrays[map_num+1].meta['Name'] = map_name
+    if maps_names :
+        if len(maps_names) == len(final_img.darrays):
+            for map_num, map_name in enumerate(maps_names):
+                final_img.darrays[map_num].meta['Name'] = map_name
+        else : raise ValueError("maps_names doesn't have the same length as the first dimension of the data.")
             
 
         
@@ -141,7 +143,7 @@ def load_surface(fn):
 
     return img, data
 
-def make_surface_image(data, source_img):
+def make_surface_image(data, source_img,maps_names=None):
     """
     write a surface image inndependently if it's CIFTI or GIFTI
 
@@ -165,7 +167,7 @@ def make_surface_image(data, source_img):
         
 
     elif type(source_img) == nb.gifti.gifti.GiftiImage:
-        img = make_gifti_image(data=data, source_img=source_img)
+        img = make_gifti_image(data=data, source_img=source_img,maps_names=maps_names)
         
     else:
          raise ValueError("The type of source_img is neither Cifti2Image nor GiftiImage")

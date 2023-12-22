@@ -41,6 +41,8 @@ import sys
 
 
 sys.path.append("{}/../../../utils".format(os.getcwd()))
+
+#sys.path.append('/Users/uriel/disks/meso_H/projects/RetinoMaps/analysis_code/utils')
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 deb = ipdb.set_trace
@@ -57,15 +59,18 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
+# main_dir = '/Users/uriel/disks/meso_shared'
+# project_dir = 'RetinoMaps'
+# subject = 'sub-02'
 
 # Define directories
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
-prf_fit_dir = "/fsnative/{}/{}/prf/fit".format(pp_dir, subject)
-prf_deriv_dir = "/fsnative/{}/{}/prf/prf_derivatives".format(pp_dir, subject)
+prf_fit_dir = "{}/{}/fsnative/prf/fit".format(pp_dir, subject)
+prf_deriv_dir = "{}/{}/fsnative/prf/prf_derivatives".format(pp_dir, subject)
 os.makedirs(prf_deriv_dir, exist_ok=True)
 
 # Get prf fit filenames
-fit_fns= glob.glob("{}/{}/prf/fit/*prf-fit*".format(pp_dir,subject))
+fit_fns= glob.glob("{}/{}/fsnative/prf/fit/*prf-fit*".format(pp_dir,subject))
 
 
 
