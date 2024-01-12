@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-compute_derivatives.py
+compute_gauss_gridfit_derivatives.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Compute pRF derivatives
+Compute pRF derivatives from the pRF grid gauss fit
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -18,10 +18,10 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 2. run python command
->> python compute_derivatives.py [main directory] [project name] [subject num] [group]
+>> python compute_gauss_gridfit_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_derivatives.py /scratch/mszinte/data RetinoMaps sub-02 327
+python compute_gauss_gridfit_derivatives.py /scratch/mszinte/data RetinoMaps sub-02 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
