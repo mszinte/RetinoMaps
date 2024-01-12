@@ -1,8 +1,64 @@
 import numpy as np
 
-def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None):
+
+def get_roi_verts_hemi(fn,subject,rois):
     """
-    load a surface image inndependently if it's CIFTI or GIFTI, and return 
+    load an surface image, and return ROIS only from the corresponding 
+    hemisphere
+
+    Parameters
+    ----------
+    fn : surface filename
+    subject : subject 
+    rois : list of rois you want extract 
+    
+    Returns
+    -------
+    img : the image load from fn   
+    data_roi : numpy rois data 
+              2 dim (time x vertices from all the rois)  
+              
+    roi_idx : indices of the rois vertices 
+    
+    
+    data_hemi : numpy stacked data
+                2 dim (time x vertices)    
+    """
+    
+    import cortex
+    from surface_utils import load_surface
+
+    
+    
+    # import data 
+    img, data = load_surface(fn=fn)
+    len_data = data.shape[1]
+    
+    # export masks 
+    roi_verts = cortex.get_roi_verts(subject=subject, 
+                                     roi= rois, 
+                                     mask=True
+                                    )
+    # create a brain mask  
+    mask = np.any(list(roi_verts.values()), axis=0)
+    
+    # create a hemi mask  
+    if 'hemi-L' in fn:
+        mask = mask[:len_data]
+        
+    elif 'hemi-R' in fn: 
+        mask = mask[-len_data:]
+        
+    roi_idx = np.where(mask)[0]
+    
+    data_roi = data[:,mask]
+
+        
+    return img, data_roi, roi_idx
+
+def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, return_hemi_len=None):
+    """
+    Load a surface image independently if it's CIFTI or GIFTI, and return 
     concatenated data from the left and right cortex
 
     Parameters
@@ -10,11 +66,18 @@ def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None):
     L_fn : gifti left hemisphere filename
     R_fn : gifti right hemisphere filename
     brain_fn : brain data in cifti format
+    return_img : whether to include img in the return
+    return_hemi_len : whether to include hemisphere lengths in the return
     
     Returns
     -------
-    data_concat : numpy stacked data of the two hemisphere. 
-                2 dim (time x vertices)    
+    result : numpy array or list
+        data_concat : numpy stacked data of the two hemisphere. 
+                      2 dim (time x vertices)
+        (optional) img_L : surface image data for the left hemisphere
+        (optional) img_R : surface image data for the right hemisphere
+        (optional) len_L : length of the left hemisphere data
+        (optional) len_R : length of the right hemisphere data
     """
     
     from surface_utils import load_surface
@@ -22,15 +85,30 @@ def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None):
     
     if L_fn and R_fn: 
         img_L, data_L = load_surface(L_fn)
+        len_L = np.shape(data_L)[1]
         img_R, data_R = load_surface(R_fn)
+        len_R = np.shape(data_R)[1]
         data_concat = np.concatenate((data_L, data_R), axis=1)
-    
+        
     elif brain_fn:
         img, mat = load_surface(brain_fn)
         vol, data_L, data_R = decompose_cifti(img)
         data_concat = np.concatenate((data_L, data_R), axis=1)
-    
-    return data_concat
+
+    if return_img is None and return_hemi_len is None:
+        return data_concat
+
+    result = [data_concat]
+
+    if return_img:
+        result.append(img_L)
+        result.append(img_R)
+
+    if return_hemi_len:
+        result.append(len_L)
+        result.append(len_R)
+
+    return result
     
 
 def set_pycortex_config_file(cortex_folder):

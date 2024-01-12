@@ -80,9 +80,19 @@ max_ecc_size = analysis_info['max_ecc_size']
 
 
 # Define directories
-prf_fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(
-    main_dir,project_dir,subject)
-os.makedirs(prf_fit_dir, exist_ok=True)
+if input_fn.endswith('.nii'):
+    prf_fit_dir = "{}/{}/derivatives/pp_data/170k/{}/prf/fit".format(
+        main_dir,project_dir,subject)
+    os.makedirs(prf_fit_dir, exist_ok=True)
+
+elif input_fn.endswith('.gii'):
+    prf_fit_dir = "{}/{}/derivatives/pp_data/fsnative/{}/prf/fit".format(
+        main_dir,project_dir,subject)
+    os.makedirs(prf_fit_dir, exist_ok=True)
+
+
+
+
 
 fit_fn_gauss_gridfit = input_fn.split('/')[-1]
 fit_fn_gauss_gridfit = fit_fn_gauss_gridfit.replace('bold', 'prf-fit_gauss_gridfit')
@@ -147,7 +157,7 @@ for est in range(len(data.T)):
 
 
 
-#export data from DN model fit
+#export data from gauss model fit
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline', 
               'hrf_1','hrf_2', 'r_squared']
               
