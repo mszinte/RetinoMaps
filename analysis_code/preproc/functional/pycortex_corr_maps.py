@@ -108,12 +108,12 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         print(task)
         
         if format_ == 'fsnative':
-            corr_fn_L = "{}/{}_task-{}_hemi-L_fmriprep_dct_correlations_bold.func.gii".format(corr_dir, subject, task)
-            corr_fn_R = "{}/{}_task-{}_hemi-R_fmriprep_dct_correlations_bold.func.gii".format(corr_dir, subject, task)
+            corr_fn_L = "{}/{}_task-{}_hemi-L_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
+            corr_fn_R = "{}/{}_task-{}_hemi-R_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             corr_data = load_surface_pycortex(L_fn=corr_fn_L, R_fn=corr_fn_R)
             
         elif format_ == '170k':
-            cor_fn = '{}/{}_task-{}_fmriprep_dct_correlations_bold.dtseries.nii'.format(corr_dir, subject, task)
+            cor_fn = '{}/{}_task-{}_fmriprep_dct_corr_bold.dtseries.nii'.format(corr_dir, subject, task)
             corr_data = load_surface_pycortex(brain_fn=cor_fn)
             save_svg = False
 

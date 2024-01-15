@@ -23,7 +23,7 @@ python prf_cssfit.py [main directory] [project name] [subject name]
 [inout file name] [number of jobs]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-02/fsnative/func/fmriprep_dct_avg/sub-02_task-pRF_hemi-L_fmriprep_dct_avg_bold.func.gii 32  
+python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-02/fsnative/func/fmriprep_dct_loo_avg/sub-02_task-pRF_hemi-L_fmriprep_dct_avg_loo-4_bold.func.gii 32  
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -106,9 +106,9 @@ pred_fn_css = pred_fn_css.replace('bold', 'prf-pred_css')
 vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
 pycortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 
-# Set pycortex db and colormaps
-set_pycortex_config_file(pycortex_dir)
-importlib.reload(cortex)
+# # Set pycortex db and colormaps
+# set_pycortex_config_file(pycortex_dir)
+# importlib.reload(cortex)
 
 # Get task specific visual design matrix
 vdm = np.load(vdm_fn)
@@ -121,11 +121,13 @@ exponent_css_grid = np.linspace(0, 4, css_grid_nr)
 
 
 # load data
-img, data_roi, roi_idx = get_roi_verts_hemi(fn=input_fn,subject=subject,rois=rois)
+img, data, data_roi, roi_idx = get_roi_verts_hemi(fn=input_fn,subject=subject,rois=rois)
 
-#test !!! 
-data_roi = data_roi[:,1:3] # to be remove 
-roi_idx =[0,1] # to be remove 
+print('roi extraction done')
+
+
+
+
 
 # determine visual design
 stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
@@ -187,8 +189,8 @@ css_fitter.iterative_fit(rsq_threshold=rsq_iterative_th,
 css_fit = css_fitter.iterative_search_params
 
 # rearange result of CSS model 
-css_fit_mat = np.zeros((data_roi.shape[1],9))
-css_pred_mat = np.zeros_like(data_roi) 
+css_fit_mat = np.zeros((data.shape[1],9))
+css_pred_mat = np.zeros_like(data) 
 for est,vert in enumerate(roi_idx):
 
     css_fit_mat[vert] = css_fit[est]
