@@ -53,8 +53,6 @@ with open('../../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 
-
-
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
@@ -70,9 +68,7 @@ try:
         raise ValueError
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
-    
-    
-    
+       
 # Maps settings
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
     amp_idx, baseline_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8
@@ -89,20 +85,13 @@ rsq_scale = [0, 1]
 ecc_scale = [0, 10]
 size_scale = [0, 10]
 
-
-
-  
-
-cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
-
 # Set pycortex db and colormaps
+cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
  
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
-    
     # Define directories and fn
-    
     prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, subject,format_)
     fit_dir = "{}/fit".format(prf_dir)
     prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
@@ -124,10 +113,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
     print('Creating flatmaps...')
     
-    
     maps_names = []
     
-
     # threshold data
     deriv_mat_th = deriv_mat
     amp_down =  deriv_mat_th[amp_idx,...] > 0

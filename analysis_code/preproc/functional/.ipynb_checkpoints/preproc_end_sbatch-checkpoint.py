@@ -22,7 +22,7 @@ To run:
     [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -57,7 +57,7 @@ cluster_name  = analysis_info['cluster_name']
 proj_name = analysis_info['project_name']
 nb_procs = 8
 memory_val = 48
-hour_proc = 10
+hour_proc = 15
 
 # set folders
 log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
@@ -81,7 +81,8 @@ slurm_cmd = """\
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
 preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
-wb_command_cmd = "export PATH=$PATH: {}/{}/code/workbench/bin_rh_linux64".format(main_dir,project_dir)
+
+wb_command_cmd = "export PATH=$PATH:{}/{}/code/workbench/bin_rh_linux64".format(main_dir,project_dir)
 
 # Define permission cmd
 chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)

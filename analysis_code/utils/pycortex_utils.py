@@ -40,21 +40,21 @@ def get_roi_verts_hemi(fn,subject,rois):
                                      mask=True
                                     )
     # create a brain mask  
-    mask = np.any(list(roi_verts.values()), axis=0)
+    brain_mask = np.any(list(roi_verts.values()), axis=0)
     
     # create a hemi mask  
     if 'hemi-L' in fn:
-        mask = mask[:len_data]
+        hemi_mask = brain_mask[:len_data]
         
     elif 'hemi-R' in fn: 
-        mask = mask[-len_data:]
+        hemi_mask = brain_mask[-len_data:]
         
-    roi_idx = np.where(mask)[0]
+    roi_idx = np.where(hemi_mask)[0]
     
-    data_roi = data[:,mask]
+    data_roi = data[:,hemi_mask]
 
         
-    return img, data_roi, roi_idx
+    return img, data, data_roi, roi_idx
 
 def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, return_hemi_len=None):
     """

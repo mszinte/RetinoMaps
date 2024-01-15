@@ -32,12 +32,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # General imports
+import os
+import re
+import sys
 import glob
 import ipdb
 import json
+import numpy as np
 import nibabel as nb
-import os
-import sys
 
 
 sys.path.append("{}/../../../utils".format(os.getcwd()))
@@ -62,16 +64,15 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
-
+pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 for format_, extension in zip(formats, extensions):
     # Define directories
-    pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
     prf_fit_dir = "{}/{}/{}/prf/fit".format(pp_dir, subject, format_)
     prf_deriv_dir = "{}/{}/{}/prf/prf_derivatives".format(pp_dir, subject, format_)
     os.makedirs(prf_deriv_dir, exist_ok=True)
     
     # Get prf fit filenames
-    fit_fns= glob.glob("{}/{}/{}/prf/fit/*prf-fit_gauss_gridfit*".format(pp_dir,subject,format_))
+    fit_fns= glob.glob("{}/{}/{}/prf/fit/*prf-fit_css*".format(pp_dir,subject,format_))
     
     # Compute derivatives
     for fit_fn in fit_fns:
@@ -96,8 +97,31 @@ for format_, extension in zip(formats, extensions):
             deriv_array = fit2deriv(fit_array=fit_data,model='gauss')
             deriv_img = make_surface_image(data=deriv_array, source_img=fit_img, maps_names=maps_names)
             nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,deriv_fn))
+
+
+# compute prf derivatives average of loo 
+
+for format_, extension in zip(formats, extensions):  
+    prf_fit_dir = "{}/{}/{}/prf/fit".format(pp_dir, subject, format_)
+    prf_deriv_dir = "{}/{}/{}/prf/prf_derivatives".format(pp_dir, subject, format_)
     
+    loo_deriv_fns = glob.glob("{}/*loo*-deriv.{}".format(prf_fit_dir,extension))
+    loo_deriv_array = np.zeros_like(deriv_array)
+    
+    for loo_deriv_fn in loo_deriv_fns:
         
+        loo_deriv_avg_fn = fit_fn.split('/')[-1]
+        
+        loo_deriv_avg_fn = re.sub(r'avg_loo-\d+_prf-deriv', 'prf-deriv-loo-avg', loo_deriv_avg_fn)
+
+        
+        loo_img, loo_data = load_surface(loo_deriv_fn)
+        loo_deriv_array += loo_data/len(loo_deriv_fns)
+        
+        loo_deriv_img = make_surface_image(data=loo_deriv_array, source_img=loo_img, maps_names=maps_names)
+        nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,loo_deriv_avg_fn))
+        
+            
 
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))

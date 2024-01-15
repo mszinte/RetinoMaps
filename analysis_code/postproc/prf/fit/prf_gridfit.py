@@ -81,12 +81,12 @@ max_ecc_size = analysis_info['max_ecc_size']
 
 # Define directories
 if input_fn.endswith('.nii'):
-    prf_fit_dir = "{}/{}/derivatives/pp_data/170k/{}/prf/fit".format(
+    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/170k/prf/fit".format(
         main_dir,project_dir,subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
 
 elif input_fn.endswith('.gii'):
-    prf_fit_dir = "{}/{}/derivatives/pp_data/fsnative/{}/prf/fit".format(
+    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/fsnative/prf/fit".format(
         main_dir,project_dir,subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
 
