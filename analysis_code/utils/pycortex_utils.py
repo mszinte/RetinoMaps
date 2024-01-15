@@ -48,6 +48,8 @@ def get_roi_verts_hemi(fn,subject,rois):
         
     elif 'hemi-R' in fn: 
         hemi_mask = brain_mask[-len_data:]
+    else: 
+        hemi_mask = brain_mask
         
     roi_idx = np.where(hemi_mask)[0]
     

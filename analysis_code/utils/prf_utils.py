@@ -38,23 +38,23 @@ def fit2deriv(fit_array, model):
         hrf_2_idx,rsq_idx  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 
         
         # srf_amplitude
-        srf_amplitude = fit_array[...,srf_amplitude_idx]
+        srf_amplitude = fit_array[srf_amplitude_idx,...]
         
         # srf_size
-        srf_size = fit_array[...,srf_size_idx]
+        srf_size = fit_array[srf_size_idx,...]
         
         # neural_baseline 
-        neural_baseline = fit_array[...,neural_baseline_idx]
+        neural_baseline = fit_array[neural_baseline_idx,...]
         
         # surround_baseline
-        surround_baseline = fit_array[...,surround_baseline_idx]
+        surround_baseline = fit_array[surround_baseline_idx,...]
         
         n_params = 12
     
     elif model == 'css':
-        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, n_idx, hrf_2_idx, hrf_2_idx,rsq_idx \
+        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, n_idx, hrf_1_idx, hrf_2_idx,rsq_idx \
         = 0, 1, 2, 3, 4, 5, 6, 7, 8
-        n = fit_array[...,n_idx]
+        n = fit_array[n_idx,...]
         
         # exponentiel param 
         n_params = 9
