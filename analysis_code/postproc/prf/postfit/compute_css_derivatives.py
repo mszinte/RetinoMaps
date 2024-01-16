@@ -68,18 +68,17 @@ group = sys.argv[4]
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 
 # Define directories
-prf_fit_dir = "{}/{}/fsnative/prf/fit".format(pp_dir, subject)
 prf_deriv_dir = "{}/{}/fsnative/prf/prf_derivatives".format(pp_dir, subject)
 os.makedirs(prf_deriv_dir, exist_ok=True)
 
 # Get prf fit filenames
 fit_fns= glob.glob("{}/{}/fsnative/prf/fit/*prf-fit_css*".format(pp_dir,subject))
 
+
 # Compute derivatives
 for fit_fn in fit_fns:
     
-    deriv_fn = fit_fn.split('/')[-1]
-    deriv_fn = deriv_fn.replace('prf-fit', 'prf-deriv')
+    deriv_fn = fit_fn.split('/')[-1].replace('prf-fit', 'prf-deriv')
 
 
     if os.path.isfile(fit_fn) == False:
@@ -89,14 +88,15 @@ for fit_fn in fit_fns:
         
         # get arrays
         fit_img, fit_data = load_surface(fit_fn)
+
         
 
  
         # compute and save derivatives array
         maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
-                      'amplitude','baseline', 'x','y','hrf_1','hrf_2','n']
+                      'amplitude','baseline', 'x','y','hrf_1','hrf_2','n','loo_r2']
         
-        deriv_array = fit2deriv(fit_array=fit_data,model='css')
+        deriv_array = fit2deriv(fit_array=fit_data,model='css',is_loo_r2=True)
         deriv_img = make_surface_image(data=deriv_array, source_img=fit_img, maps_names=maps_names)
         nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,deriv_fn))
 
@@ -137,9 +137,12 @@ for loo_deriv_fns in loo_deriv_fns_list:
     for loo_deriv_fn in loo_deriv_fns:
         loo_deriv_avg_fn = loo_deriv_fn.split('/')[-1]
         loo_deriv_avg_fn = re.sub(r'avg_loo-\d+_prf-deriv', 'prf-deriv-loo-avg', loo_deriv_avg_fn)
-
         
+        # load data 
         loo_deriv_img, loo_deriv_data = load_surface(fn=loo_deriv_fn)
+        
+        
+        # Averagin
         loo_deriv_data_avg += loo_deriv_data/len(loo_deriv_fns)
 
     # export averaged data
