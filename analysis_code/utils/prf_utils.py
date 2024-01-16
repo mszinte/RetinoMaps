@@ -1,10 +1,10 @@
-def fit2deriv(fit_array, model):
+def fit2deriv(fit_array, model,is_loo_r2=False):
     """
     Compute pRF derivatives out of fitting output and predictions
 
     Parameters
     ----------
-    fit_array: fit parameters 2D array
+    fit_array: fit parameters 2D array (fit parameter, vertex)
     model: model use for the fit ('gauss','dn','css')
     
     Returns
@@ -58,8 +58,12 @@ def fit2deriv(fit_array, model):
         
         # exponentiel param 
         n_params = 9
-
-
+    
+    if is_loo_r2 :
+        loo_r2_idx = -1
+        n_params += 1
+        loo_r2 = fit_array[loo_r2_idx,...]
+            
 
     # change to nan empty voxels
     fit_array[fit_array[...,rsq_idx]==0,...] = np.nan
@@ -123,6 +127,10 @@ def fit2deriv(fit_array, model):
     
     if model == 'css':
         deriv_array[11,...] = n
+        
+    # Include leave-one-out R2 if requested
+    if is_loo_r2:
+        deriv_array[-1, ...] = loo_r2
 
     
     
@@ -130,6 +138,37 @@ def fit2deriv(fit_array, model):
     deriv_array = deriv_array.astype(np.float32)
 
     return deriv_array
+
+
+
+def r2_score_surf(bold_signal, model_prediction):
+    """
+    Compute r2 between bold signal and model 
+
+    Parameters
+    ----------
+    bold_signal: bold signal in 2-dimensional np.array (time, vertex)
+    model_prediction: model prediction in 2-dimensional np.array (time, vertex)
+    
+    Returns
+    -------
+    r2_scores: the R2 score for each vertex
+    """
+    import numpy as np
+    from sklearn.metrics import r2_score
+    
+    # Check for NaN values in bold_signal
+    nan_mask = np.isnan(bold_signal).any(axis=0)
+    
+    # Set R2 scores for vertices with NaN values to NaN
+    r2_scores = np.full_like(nan_mask, np.nan, dtype=float)
+    
+    # Compute R2 scores for vertices without NaN values
+    valid_vertices = ~nan_mask
+    r2_scores[valid_vertices] = r2_score(bold_signal[:, valid_vertices], model_prediction[:, valid_vertices], multioutput='raw_values')
+    
+    return r2_scores
+
 
 
 

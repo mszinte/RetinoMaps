@@ -71,7 +71,7 @@ except ValueError:
        
 # Maps settings
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8
+    amp_idx, baseline_idx, x_idx, y_idx, n_idx, loo_rsq_idx = 0,1,2,3,4,5,6,7,8,11, 12
 
 
 cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
@@ -85,6 +85,8 @@ deriv_fn_label = 'avg-css'
 rsq_scale = [0, 1]
 ecc_scale = [0, 10]
 size_scale = [0, 10]
+n_scale = [0,2]
+
 
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
@@ -124,49 +126,71 @@ ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
 all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
 deriv_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
 
+# loo r-square
+loo_rsq_data = deriv_mat[loo_rsq_idx,...]
+alpha_range = analysis_info["alpha_range"]
+alpha = (loo_rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
+alpha[alpha>1]=1
+
+param_loo_rsq_css = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': loo_rsq_data, 
+                     'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
+                     'cortex_type': 'VertexRGB','description': 'pRF loo rsquare',
+                     'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
+                     'cbar_label': 'pRF loo R2', 'with_labels': True}
+maps_names.append('loo_rsq_css')
+
+
+
 # r-square
 rsq_data = deriv_mat[rsq_idx,...]
-alpha_range = analysis_info["alpha_range"]
-alpha = (rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
-alpha[alpha>1]=1
-param_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
-             'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
-             'cortex_type': 'VertexRGB','description': 'pRF rsquare',
-             'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
-             'cbar_label': 'pRF R2', 'with_labels': True}
-maps_names.append('rsq')
+param_rsq_css = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
+              'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
+              'cortex_type': 'VertexRGB','description': 'pRF rsquare',
+              'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
+              'cbar_label': 'pRF R2', 'with_labels': True}
+maps_names.append('rsq_css')
 
 # polar angle
 pol_comp_num = deriv_mat[polar_real_idx,...] + 1j * deriv_mat[polar_imag_idx,...]
 polar_ang = np.angle(pol_comp_num)
 ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
 ang_norm = np.fmod(ang_norm + col_offset,1)
-param_polar = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
-               'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
-               'cbar': 'polar', 'col_offset': col_offset, 
-               'description': 'pRF polar:{:3.0f} steps{}'.format(cmap_steps, description_end), 
-               'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
-               'with_labels': True}
-exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
-exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
+param_polar_css = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
+                'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
+                'cbar': 'polar', 'col_offset': col_offset, 
+                'description': 'pRF polar:{:3.0f} steps{}'.format(cmap_steps, description_end), 
+                'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
+                'with_labels': True}
+exec('param_polar_{cmap_steps}_css = param_polar_css'.format(cmap_steps = int(cmap_steps)))
+exec('maps_names.append("polar_{cmap_steps}_css")'.format(cmap_steps = int(cmap_steps)))
 
 # eccentricity
 ecc_data = deriv_mat[ecc_idx,...]
-param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
-             'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
-             'description': 'pRF eccentricity{}'.format(description_end), 'curv_brightness': 1,
-             'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
+param_ecc_css = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
+              'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
+              'description': 'pRF eccentricity{}'.format(description_end), 'curv_brightness': 1,
+              'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
 
-maps_names.append('ecc')
+maps_names.append('ecc_css')
 
 # size
 size_data = deriv_mat[size_idx,...]
-param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+param_size_css = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
               'vmin': size_scale[0], 'vmax': size_scale[1], 'cbar': 'discrete', 
               'cortex_type': 'VertexRGB', 'description': 'pRF size{}'.format(description_end), 
               'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size',
               'with_labels': True}
-maps_names.append('size')
+maps_names.append('size_css')
+
+
+# n
+n_data = deriv_mat[n_idx,...]
+param_n_css = {'data': n_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+              'vmin': n_scale[0], 'vmax': n_scale[1], 'cbar': 'discrete', 
+              'cortex_type': 'VertexRGB', 'description': 'css n{}'.format(description_end), 
+              'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'css n',
+              'with_labels': True}
+maps_names.append('n_css')
 
 # draw flatmaps
 volumes = {}

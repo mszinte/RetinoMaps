@@ -55,8 +55,9 @@ import cortex
 
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from surface_utils import make_surface_image
+from surface_utils import load_surface ,make_surface_image
 from pycortex_utils import set_pycortex_config_file, get_roi_verts_hemi
+from prf_utils import r2_score_surf
 
 # Get inputs
 start_time = datetime.datetime.now()
@@ -206,9 +207,20 @@ for est,vert in enumerate(roi_idx):
 css_fit_mat = np.where(css_fit_mat == 0, np.nan, css_fit_mat)
 css_pred_mat = np.where(css_pred_mat == 0, np.nan, css_pred_mat)
 
+
+# compute loo r2
+loo_bold_fn = input_fn.replace('dct_avg_loo','dct_loo')
+loo_bold = load_surface(loo_bold_fn)
+loo_r2 = r2_score_surf(bold_signal=loo_bold, model_prediction=css_pred_mat)
+
+# add loo r2 css_fit_mat
+np.column_stack((css_fit_mat, loo_r2))
+
+
+
 # export data
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
-              'n', 'hrf_1','hrf_2', 'r_squared']
+              'n', 'hrf_1','hrf_2', 'r_squared','loo_r2']
 
 
 # export fit

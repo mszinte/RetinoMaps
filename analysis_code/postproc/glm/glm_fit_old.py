@@ -64,10 +64,11 @@ warnings.filterwarnings("ignore")
 
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from glm_utils import eventsMatrix
-from surface_utils import load_surface, make_surface_image
+from gifti_utils import make_gifti_image
 
 
 # Get inputs
+
 start_time = datetime.datetime.now()
 deb = ipdb.set_trace
 
@@ -84,27 +85,55 @@ with open('../../settings.json') as f:
 TR = analysis_info['TR']
 TRs = analysis_info['TRs']
 glm_alpha = analysis_info['glm_alpha']
+high_pass_type = analysis_info['high_pass_type'] 
 tasks = analysis_info['task_glm']
-func_session = analysis_info['func_session'][0]
-formats = analysis_info['formats']
-extensions = analysis_info['extensions']
+func_session = analysis_info['func_session']
+
+session = 'ses-02'
+
+hemis = ['L','R']
 
 
+tasks = ["pMF","PurLoc","SacLoc","PurVELoc","SacVELoc"]
+    
 
- 
+for task in tasks : 
+    print(task)
+    for hemi in hemis : 
+            
 
 
-for format_, extension in zip(formats, extensions):
-    # make folders
-    glm_dir = '/{}/{}/derivatives/pp_data/{}/{}/glm'.format(main_dir, 
-                                                            project_dir, 
-                                                            subject, 
-                                                            format_)
-    os.makedirs(glm_dir, exist_ok=True)
-
-    for task in tasks : 
         
-        # contrast 
+        # 
+        event_dir = '{}/{}/{}/{}/func/'.format(main_dir,project_dir,subject,session)
+        event_file = glob.glob("{}/{}_{}_task-{}_run-*_events.tsv".format(event_dir,subject,session,task))
+        avg_dir = '{}/{}/derivatives/pp_data/{}/func/fmriprep_dct_avg/fsnative'.format(main_dir,project_dir,subject)
+        
+        glm_dir = '/{}/{}/derivatives/pp_data/{}/glm'.format(main_dir,project_dir,subject)
+        os.makedirs(glm_dir, exist_ok=True)
+        
+        
+        out_pred_name = '{}/{}_hemi-{}_{}_glm_pred.func.gii'.format(glm_dir,subject,hemi,task)
+        out_fit_name = '{}/{}_hemi-{}_{}_glm_fit.func.gii'.format(glm_dir,subject,hemi,task)
+        
+        img_avg_bold_hemi = nb.load('{}/{}_task-{}_hemi-{}_fmriprep_dct_avg_bold.func.gii'.format(avg_dir,subject,task,hemi))
+        img_avg_bold_hemi_header = img_avg_bold_hemi.header
+        img_avg_bold_hemi_meta = img_avg_bold_hemi.meta
+        
+        print('data load')
+        data_avg_bold_hemi = [x.data for x in img_avg_bold_hemi.darrays]
+        data_avg_bold_hemi = np.vstack(data_avg_bold_hemi) 
+        
+        print(TR)
+        events = eventsMatrix(design_file=event_file[1], task=task, tr=TR)
+        
+        frame_times = np.arange(TRs) * TR
+        design_matrix = make_first_level_design_matrix(frame_times,
+                                                   events=events,
+                                                   hrf_model='spm',
+                                                   drift_model=None
+                                                   )
+        
         if task == 'SacLoc':
             cond1_label, cond2_label = ['Sac'], ['Fix']
             comp_num = 1
@@ -120,62 +149,14 @@ for format_, extension in zip(formats, extensions):
         elif task == 'pMF':
             cond1_label, cond2_label = ['PurSac'], ['Fix']
             comp_num = 1
-        
-        # find the events files 
-        event_dir = '{}/{}/{}/{}/func/'.format(main_dir, 
-                                               project_dir, 
-                                               subject, 
-                                               func_session)
-        
-        event_file = glob.glob("{}/{}_{}_task-{}_run-*_events.tsv".format(event_dir, 
-                                                                          subject, 
-                                                                          func_session, 
-                                                                          task))
-        
-        # make the designe matrixe  
-        events = eventsMatrix(design_file=event_file[1], task=task, tr=TR)
-        
-        frame_times = np.arange(TRs) * TR
-        design_matrix = make_first_level_design_matrix(frame_times,
-                                                   events=events,
-                                                   hrf_model='spm',
-                                                   drift_model=None)
-        
-        
-        # prepoc files name
-        preproc_fns = glob.glob(
-            '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_avg/*dct_avg*.{}'.format(main_dir,
-                                                                                        project_dir,
-                                                                                        subject,
-                                                                                        format_,
-                                                                                        extension))
-        
-        for preproc_fn in preproc_fns :
-            # make glm output filenames
-            glm_pred_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-pred') #out_pred_name
-            glm_fit_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-fit') #out_fit_name
-
-            # Load data
-            preproc_img, preproc_data = load_surface(fn=preproc_fn)
-            
-            labels_hemi, estimates_hemi = run_glm(preproc_data, design_matrix.values,noise_model="ols")
-            
-        
-
-
-        
-
-        
-
             
     
-        
+        labels_hemi, estimates_hemi = run_glm(data_avg_bold_hemi, design_matrix.values,noise_model="ols")
         
         print('glm done')
         
         pred_hemi = np.zeros(data_avg_bold_hemi.shape)
         rsquare_hemi = np.zeros_like(labels_hemi)
-        
         for label_ in estimates_hemi:
             label_mask = labels_hemi == label_
             reg = estimates_hemi[label_]
@@ -208,7 +189,17 @@ for format_, extension in zip(formats, extensions):
         
     
         
-
+        # export fit param      
+        # fit_img_hemi = nb.gifti.GiftiImage(header=img_avg_bold_hemi_header, meta=img_avg_bold_hemi_meta)
+    
+        # for i in range(fit.shape[0]):
+        #     data = fit[i,:]
+        #     darray = nb.gifti.GiftiDataArray(data,datatype = 'NIFTI_TYPE_FLOAT32')
+        #     fit_img_hemi.add_gifti_data_array(darray)
+        # nb.save(fit_img_hemi, out_fit_name)
+        # print('export fit done')
+            
+        # export prediction 
         
         
         fit_img_hemi = make_gifti_image(img_avg_bold_hemi,fit)
@@ -236,5 +227,6 @@ print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".for
         dur=end_time - start_time))
 
         
-
-
+        
+    
+            
