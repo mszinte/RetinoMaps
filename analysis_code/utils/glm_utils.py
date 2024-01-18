@@ -1,3 +1,45 @@
+def extract_predictions_r2 (labels,estimate,source_data):
+    """
+    extract prediction and correponding r2 from Nilearn run_glm outputs
+    
+    Parameters
+    ----------
+    labels : labels outptuts from Nilearn run_glm
+    estimate : estimate outptuts from Nilearn run_glm
+    source_data : data uses for run_glm
+    
+    Returns
+    -------
+    predictions : the predictions from the glm 
+    rsquare : the rsqare of the predictions 
+    
+    """
+    
+    import numpy as np
+    cl_names = np.unique(labels)
+
+    n_cl = cl_names.size
+    list_cl = []
+
+    idx_in_cl = np.zeros_like(labels, dtype=int)
+
+    for i in range(n_cl):
+        list_idx = np.argwhere(labels==cl_names[i]).flatten()
+        list_cl += [list_idx]
+        for i_cnt, idx in enumerate(list_idx):
+            idx_in_cl[idx] = i_cnt
+
+    # acces to predictions and r2 for left hemisphere 
+    predictions = np.zeros(source_data.shape, dtype=float)
+    rsquare = np.zeros_like(labels, dtype=float)
+    N = rsquare.size
+    for idx,labels_ in enumerate(labels) :    
+        label_mask = labels[idx]
+        predictions[:,idx] = estimate[label_mask].predicted[:,idx_in_cl[idx]]
+        rsquare[idx] = estimate[label_mask].r_square[idx_in_cl[idx]]
+        
+    return predictions, rsquare
+
 def eventsMatrix(design_file, task, tr):
     """
     Returns the events matrix for the GLM. Works for the Sac/Pur Localisers and Sac/Pur Visual/Endogenous Localisers

@@ -23,7 +23,7 @@ python prf_gridfit.py [main directory] [project name] [subject name]
 [inout file name] [number of jobs]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_gridfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-02/func/fmriprep_dct_avg/fsnative/sub-02_task-pRF_hemi-L_fmriprep_dct_avg_bold.func.gii 32  
+python prf_gridfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-03/fsnative/func/fmriprep_dct_avg/sub-03_task-pRF_hemi-L_fmriprep_dct_avg_bold.func.gii 32  
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -75,6 +75,8 @@ with open('../../../settings.json') as f:
 screen_size_cm = analysis_info['screen_size_cm']
 screen_distance_cm = analysis_info['screen_distance_cm']
 TR = analysis_info['TR']
+vdm_width = analysis_info['vdm_size_pix'][0] 
+vdm_height = analysis_info['vdm_size_pix'][1]
 gauss_grid_nr = analysis_info['gauss_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
 
@@ -100,7 +102,7 @@ fit_fn_gauss_gridfit = fit_fn_gauss_gridfit.replace('bold', 'prf-fit_gauss_gridf
 pred_fn_gauss_gridfit = input_fn.split('/')[-1]
 pred_fn_gauss_gridfit = pred_fn_gauss_gridfit.replace('bold', 'prf-pred_gauss_gridfit')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
+vdm_fn = "{}/{}/derivatives/vdm/vdm_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
 
 # Get task specific visual design matrix
 vdm = np.load(vdm_fn)
@@ -112,7 +114,12 @@ polars = np.linspace(0, 2*np.pi, gauss_grid_nr)
 
 
 # load data
-img, data = load_surface(fn=input_fn)
+img, raw_data = load_surface(fn=input_fn)
+
+# exlude nan voxel from the analysis 
+valid_vertices = ~np.isnan(raw_data).any(axis=0)
+valid_vertices_idx = np.where(valid_vertices)[0]
+data = raw_data[:,valid_vertices]
 
 
 # determine stimulus
@@ -140,14 +147,12 @@ gauss_fitter.grid_fit(ecc_grid=eccs,
 
 # rearange result of Gauss model 
 gauss_fit = gauss_fitter.gridsearch_params
-gauss_fit_mat = np.zeros((data.shape[1],gauss_params_num))
-gauss_pred_mat = np.zeros_like(data) 
+gauss_fit_mat = np.zeros((raw_data.shape[1],gauss_params_num))
+gauss_pred_mat = np.zeros_like(raw_data) 
 
-
-
-for est in range(len(data.T)):
-    gauss_fit_mat[est] = gauss_fit[est]
-    gauss_pred_mat[:,est] = gauss_model.return_prediction(mu_x=gauss_fit[est][0], 
+for est,vert in enumerate(valid_vertices_idx):
+    gauss_fit_mat[vert] = gauss_fit[est]
+    gauss_pred_mat[:,vert] = gauss_model.return_prediction(mu_x=gauss_fit[est][0], 
                                                           mu_y=gauss_fit[est][1], 
                                                           size=gauss_fit[est][2], 
                                                           beta=gauss_fit[est][3], 
@@ -155,6 +160,8 @@ for est in range(len(data.T)):
                                                           hrf_1=gauss_fit[est][5],
                                                           hrf_2=gauss_fit[est][6])
 
+gauss_fit_mat = np.where(gauss_fit_mat == 0, np.nan, gauss_fit_mat)
+gauss_pred_mat = np.where(gauss_pred_mat == 0, np.nan, gauss_pred_mat)
 
 
 #export data from gauss model fit

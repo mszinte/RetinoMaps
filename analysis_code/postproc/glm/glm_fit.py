@@ -28,48 +28,37 @@ Written by Martin Szinte (mail@martinszinte.net)
 """
 
 # Stop warnings
-# -------------
 import warnings
 warnings.filterwarnings("ignore")
+
+# debug input
+import ipdb 
+deb = ipdb.set_trace
 
 # General imports
-# ---------------
-import nibabel as nb
-
-import numpy as np
-
-
+import os
+import sys
 import json
 import glob
-import ipdb
-
-
-import sys
-import os
-import importlib
 import datetime
-
-# nilearn import
-
-from nilearn.glm import fdr_threshold
-
-from nilearn.glm.first_level import make_first_level_design_matrix,run_glm
-from nilearn.glm.contrasts import compute_contrast
+import numpy as np
+import nibabel as nb
 import scipy.stats as stats
 
+# nilearn import
+from nilearn.glm import fdr_threshold
+from nilearn.glm.contrasts import compute_contrast
+from nilearn.glm.first_level import make_first_level_design_matrix,run_glm
 
-import warnings
-warnings.filterwarnings("ignore")
-
-
+# Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from glm_utils import eventsMatrix
+from glm_utils import eventsMatrix, extract_predictions_r2
 from surface_utils import load_surface, make_surface_image
 
 
-# Get inputs
+# Start counting the elapsed time for code execution
 start_time = datetime.datetime.now()
-deb = ipdb.set_trace
+
 
 # Inputs
 main_dir = sys.argv[1]
@@ -90,10 +79,6 @@ formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 
 
-
- 
-
-
 for format_, extension in zip(formats, extensions):
     # make folders
     glm_dir = '/{}/{}/derivatives/pp_data/{}/{}/glm'.format(main_dir, 
@@ -107,20 +92,15 @@ for format_, extension in zip(formats, extensions):
         # contrast 
         if task == 'SacLoc':
             cond1_label, cond2_label = ['Sac'], ['Fix']
-            comp_num = 1
         elif task == 'PurLoc':
             cond1_label, cond2_label = ['Pur'], ['Fix']
-            comp_num = 1
         elif task == 'SacVELoc':
             cond1_label, cond2_label = ['SacExo','SacExo','SacEndo'], ['SacEndo','Fix','Fix']
-            comp_num = 3
         elif task == 'PurVELoc':
             cond1_label, cond2_label = ['PurExo','PurExo','PurEndo'], ['PurEndo','Fix','Fix']
-            comp_num = 3
         elif task == 'pMF':
             cond1_label, cond2_label = ['PurSac'], ['Fix']
-            comp_num = 1
-        
+
         # find the events files 
         event_dir = '{}/{}/{}/{}/func/'.format(main_dir, 
                                                project_dir, 
@@ -144,90 +124,80 @@ for format_, extension in zip(formats, extensions):
         
         # prepoc files name
         preproc_fns = glob.glob(
-            '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_avg/*dct_avg*.{}'.format(main_dir,
-                                                                                        project_dir,
-                                                                                        subject,
-                                                                                        format_,
-                                                                                        extension))
+            '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_avg/*task-{}*dct_avg*.{}'.format(main_dir, 
+                                                                                                project_dir, 
+                                                                                                subject, 
+                                                                                                format_, 
+                                                                                                task,
+                                                                                                extension))
         
         for preproc_fn in preproc_fns :
+            print(preproc_fn)
             # make glm output filenames
-            glm_pred_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-pred') #out_pred_name
-            glm_fit_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-fit') #out_fit_name
+            glm_pred_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-pred') 
+            glm_fit_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-fit') 
 
             # Load data
             preproc_img, preproc_data = load_surface(fn=preproc_fn)
+
+            # Run the glm
+            labels, estimates = run_glm(preproc_data, design_matrix.values,noise_model="ols")
             
-            labels_hemi, estimates_hemi = run_glm(preproc_data, design_matrix.values,noise_model="ols")
-            
+            # extract glm predictions and r2       
+            glm_pred, glm_r2 = extract_predictions_r2 (labels=labels,
+                                                       estimate=estimates,
+                                                       source_data=preproc_data)
         
+            
+            # Compute the contrasts 
+            for contrast_num, contrast in enumerate(zip(cond1_label,cond2_label)):
+                # make contrasts
+                contrast_values = (design_matrix.columns == contrast[0]) * 1.0 -(design_matrix.columns == contrast[1])
+                # compute contrasts
+                eff = compute_contrast(labels, estimates, contrast_values,contrast_type='t')
+            
+                
+                # compute the derivatives
+                z_map = eff.z_score()
+                z_p_map = eff.p_value()
+                z_opp_p_map = eff.one_minus_pvalue()
+                fdr_th = fdr_threshold(z_map, glm_alpha)
+                fdr = z_map
+                fdr *= (z_map > fdr_th)
+                fdr_p_map = 2*(1 - stats.norm.cdf(abs(fdr)))
+                
+                if contrast_num:
+                    fit = np.vstack((fit,z_map,z_p_map,z_opp_p_map,fdr,fdr_p_map))
+                else:                 
+                    fit = np.vstack((z_map,z_p_map,z_opp_p_map,fdr,fdr_p_map,glm_r2))
+                    
+
+               
+                
+
+            
+            # export fit
+            if 'VE' in task :
+                maps_names = None
+            else :    
+                maps_names = ['z_map','z_p_map','z_opp_p_map','fdr','fdr_p_map','rsquare_map']
+
+            fit_img = make_surface_image(data=fit, 
+                                         source_img=preproc_img, 
+                                         maps_names=maps_names)
+
+            
+            nb.save(fit_img,'{}/{}'.format(glm_dir,glm_fit_fn)) 
+            
+            # export pred
+            pred_img = make_surface_image(data=glm_pred, 
+                                          source_img=preproc_img)
+
+            nb.save(pred_img,'{}/{}'.format(glm_dir,glm_pred_fn)) 
+            
+            print('{} is done'.format(task))
 
 
-        
-
-        
-
-            
-    
-        
-        
-        print('glm done')
-        
-        pred_hemi = np.zeros(data_avg_bold_hemi.shape)
-        rsquare_hemi = np.zeros_like(labels_hemi)
-        
-        for label_ in estimates_hemi:
-            label_mask = labels_hemi == label_
-            reg = estimates_hemi[label_]
-            pred_hemi[:,label_mask] = reg.predicted
-            rsquare_hemi[label_mask] = reg.r_square
-        
-        for contrast_num, contrast in enumerate(zip(cond1_label,cond2_label)):
-            print(contrast_num)
-            
-            contrast_values = (design_matrix.columns == contrast[0]) * 1.0 -(design_matrix.columns == contrast[1])
-            eff = compute_contrast(labels_hemi, estimates_hemi, contrast_values,contrast_type='t')
-        
-        
-            z_map = eff.z_score()
-            z_p_map = 2*(1 - stats.norm.cdf(abs(z_map)))
-            fdr_th = fdr_threshold(z_map, glm_alpha)
-            fdr = z_map
-            fdr *= (z_map > fdr_th)
-            fdr_p_map = 2*(1 - stats.norm.cdf(abs(fdr)))
-            
-            
-            
-            if contrast_num:
-                fit = np.vstack((fit,z_map,z_p_map,fdr,fdr_p_map))
-            else:                 
-                fit = np.vstack((z_map,z_p_map,fdr,fdr_p_map,rsquare_hemi))
-            
-        print(fit.shape)        
-    
-        
-    
-        
-
-        
-        
-        fit_img_hemi = make_gifti_image(img_avg_bold_hemi,fit)
-        nb.save(fit_img_hemi, out_fit_name)
-        
-        
-        pred_img_hemi = make_gifti_image(img_avg_bold_hemi,pred_hemi)
-        nb.save(pred_img_hemi, out_pred_name)
-        
-        
-        maps_names = ['z_map','z_p_map','fdr','fdr_p_map','rsquare_map']
-        
-        for map_num, mape_name in enumerate(maps_names):
-            print(mape_name)
-            os.system('wb_command -set-map-names {} -map {} {}'.format(out_fit_name,map_num+1,mape_name))
-            
-
-        
-    
         
 end_time = datetime.datetime.now()
 print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".format(
