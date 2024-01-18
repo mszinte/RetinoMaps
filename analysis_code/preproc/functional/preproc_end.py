@@ -283,7 +283,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                 geometric_type = 'Anatomical'
                 anatomical_structure_secondary = 'GrayWhite'
             elif surf == 'inflated':
-                save_surf = 'smoothwm'
+                save_surf = 'inflated'
                 geometric_type = 'Inflated'
                 anatomical_structure_secondary = None
             elif surf == 'flat':

@@ -1,10 +1,11 @@
 {
     "account":"mszinte@login.mesocentre.univ-amu.fr",
     "project_name": "RetinoMaps",
-    "task_list": ["pRF","pMF"],
     "sessions" : ["ses-01", "ses-02"], 
     "anat_session": ["ses-01"], 
+    "func_session": ["ses-02"], 
     "task_names": ["rest","pMF","pRF","PurLoc","SacLoc","PurVELoc","SacVELoc"],
+    "task_glm": ["pMF","PurLoc","SacLoc","PurVELoc","SacVELoc"],
     "cluster_name": "skylake",
     "TR": 1.2,
     "TRs": 208,
@@ -31,9 +32,10 @@
     "ecc_th": [0.1,15.0],
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
-    "alpha_range":[0,0.4],
+    "alpha_range":[0,1],
     "rsq_iterative_th": 0.01,
     "nb_procs_fit_prf_gauss": 8,
     "nb_procs_fit_prf_css": 32,
-    "fit_per_hour_prf": 10000.0
+    "fit_per_hour_prf": 10000.0,
+    "glm_alpha": 0.01
 }

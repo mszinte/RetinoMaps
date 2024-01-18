@@ -70,7 +70,7 @@ input_fn = sys.argv[4]
 n_jobs = int(sys.argv[5])
 n_batches = n_jobs
 verbose = True
-gauss_params_num = 8
+css_params_num = 9
 
 
 # Analysis parameters
@@ -79,6 +79,8 @@ with open('../../../settings.json') as f:
     analysis_info = json.loads(json_s)
 screen_size_cm = analysis_info['screen_size_cm']
 screen_distance_cm = analysis_info['screen_distance_cm']
+vdm_width = analysis_info['vdm_size_pix'][0] 
+vdm_height = analysis_info['vdm_size_pix'][1]
 TR = analysis_info['TR']
 gauss_grid_nr = analysis_info['gauss_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
@@ -104,7 +106,7 @@ fit_fn_css = fit_fn_css.replace('bold', 'prf-fit_css')
 pred_fn_css = input_fn.split('/')[-1]
 pred_fn_css = pred_fn_css.replace('bold', 'prf-pred_css')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm.npy".format(main_dir, project_dir)
+vdm_fn = "{}/{}/derivatives/vdm/vdm_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
 pycortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 
 # # Set pycortex db and colormaps
@@ -190,7 +192,7 @@ css_fitter.iterative_fit(rsq_threshold=rsq_iterative_th,
 css_fit = css_fitter.iterative_search_params
 
 # rearange result of CSS model 
-css_fit_mat = np.zeros((data.shape[1],9))
+css_fit_mat = np.zeros((data.shape[1],css_params_num))
 css_pred_mat = np.zeros_like(data) 
 for est,vert in enumerate(roi_idx):
 

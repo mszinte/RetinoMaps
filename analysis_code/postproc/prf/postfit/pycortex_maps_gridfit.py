@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_gridfit.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-02 y
+python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-03 y
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ deriv_fn_label = 'avg-gridfit'
 
 # plot scales
 rsq_scale = [0, 1]
-ecc_scale = [0, 10]
-size_scale = [0, 10]
+ecc_scale = [0, 7.5]
+size_scale = [0, 7.5]
 
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
