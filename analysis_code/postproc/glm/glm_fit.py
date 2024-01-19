@@ -48,7 +48,7 @@ import scipy.stats as stats
 # nilearn import
 from nilearn.glm import fdr_threshold
 from nilearn.glm.contrasts import compute_contrast
-from nilearn.glm.first_level import make_first_level_design_matrix,run_glm
+from nilearn.glm.first_level import make_first_level_design_matrix, run_glm
 
 # Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
@@ -94,13 +94,7 @@ for format_, extension in zip(formats, extensions):
             cond1_label, cond2_label = ['Sac'], ['Fix']
         elif task == 'PurLoc':
             cond1_label, cond2_label = ['Pur'], ['Fix']
-        elif task == 'SacVELoc':
-            cond1_label, cond2_label = ['SacExo','SacExo','SacEndo'], ['SacEndo','Fix','Fix']
-        elif task == 'PurVELoc':
-            cond1_label, cond2_label = ['PurExo','PurExo','PurEndo'], ['PurEndo','Fix','Fix']
-        elif task == 'pMF':
-            cond1_label, cond2_label = ['PurSac'], ['Fix']
-
+        
         # find the events files 
         event_dir = '{}/{}/{}/{}/func/'.format(main_dir, 
                                                project_dir, 
@@ -141,7 +135,7 @@ for format_, extension in zip(formats, extensions):
             preproc_img, preproc_data = load_surface(fn=preproc_fn)
 
             # Run the glm
-            labels, estimates = run_glm(preproc_data, design_matrix.values,noise_model="ols")
+            labels, estimates = run_glm(preproc_data, design_matrix.values, noise_model="ols")
             
             # extract glm predictions and r2       
             glm_pred, glm_r2 = extract_predictions_r2 (labels=labels,
