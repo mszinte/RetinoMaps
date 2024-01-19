@@ -1,6 +1,4 @@
 import numpy as np
-
-
 def get_roi_verts_hemi(fn,subject,rois):
     """
     load an surface image, and return ROIS only from the corresponding 
