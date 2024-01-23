@@ -39,15 +39,15 @@ import sys
 import glob
 import ipdb
 import json
+import pandas as pd
 import numpy as np
 import nibabel as nb
 
 
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-
-
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
+from pycortex_utils import get_roi_masks_hemi
 deb = ipdb.set_trace
 
 
@@ -57,6 +57,7 @@ with open('../../../settings.json') as f:
     analysis_info = json.loads(json_s)
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
+rois = analysis_info['rois']
 
 
 # Inputs
@@ -70,6 +71,9 @@ pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 # Define directories
 prf_deriv_dir = "{}/{}/fsnative/prf/prf_derivatives".format(pp_dir, subject)
 os.makedirs(prf_deriv_dir, exist_ok=True)
+
+prf_tsv_dir = "{}/{}/fsnative/prf/tsv".format(pp_dir, subject)
+os.makedirs(prf_tsv_dir, exist_ok=True)
 
 # Get prf fit filenames
 fit_fns= glob.glob("{}/{}/fsnative/prf/fit/*prf-fit_css*".format(pp_dir,subject))
@@ -106,8 +110,6 @@ for fit_fn in fit_fns:
 # find all the filtered files 
 derives_fns = glob.glob("{}/*loo-*_prf-deriv_css.func.gii".format(prf_deriv_dir))
             
-
-
 # split filtered files  depending of their nature
 deriv_fsnative_hemi_L, deriv_fsnative_hemi_R = [], []
 for subtype in derives_fns:
@@ -122,14 +124,9 @@ loo_deriv_fns_list = [deriv_fsnative_hemi_L,
 
 
 
+df_rois_brain = pd.DataFrame()
 # Averaging
 for loo_deriv_fns in loo_deriv_fns_list:
-
-    # defind output files names 
-
-    if loo_deriv_fns[0].find('hemi-L') != -1: hemi = 'hemi-L'
-    elif loo_deriv_fns[0].find('hemi-R') != -1: hemi = 'hemi-R'
-
 
     # Averaging computation
     deriv_img, deriv_data = load_surface(fn=loo_deriv_fns[0])
@@ -144,10 +141,38 @@ for loo_deriv_fns in loo_deriv_fns_list:
         
         # Averagin
         loo_deriv_data_avg += loo_deriv_data/len(loo_deriv_fns)
-
-    # export averaged data
+    
+    
+    # export averaged data in surface format 
     loo_deriv_img = make_surface_image(data=loo_deriv_data_avg, source_img=loo_deriv_img, maps_names=maps_names)
     nb.save(loo_deriv_img,'{}/{}'.format(prf_deriv_dir,loo_deriv_avg_fn))
+    
+    
+    # make an final df for tsv exportation
+    roi_verts, hemi = get_roi_masks_hemi(fn=loo_deriv_fns[0], 
+                                     subject=subject,
+                                     rois=rois)
+    
+    df_rois_hemi = pd.DataFrame()
+    for roi in roi_verts.keys():
+        # make a dictionaire with data for each rois 
+        data_dict = {col: loo_deriv_data_avg[col_idx, roi_verts[roi]] for col_idx, col in enumerate(maps_names)}
+        data_dict['rois'] = [roi] * loo_deriv_data_avg[:, roi_verts[roi]].shape[1]
+        data_dict['subject'] = [subject] * loo_deriv_data_avg[:, roi_verts[roi]].shape[1]
+        data_dict['hemi'] = [hemi] * loo_deriv_data_avg[:, roi_verts[roi]].shape[1]
+    
+        
+        # make the final dataframe for one hemi
+        df_roi = pd.DataFrame(data_dict)
+        df_rois_hemi = pd.concat([df_rois_hemi, df_roi], ignore_index=True)
+
+    # make the final dataframe for the brain 
+    df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
+    
+    
+    
+# export averaged data in tsv 
+df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(subject,prf_tsv_dir), sep="\t", na_rep='NaN',index=False)
           
 
 

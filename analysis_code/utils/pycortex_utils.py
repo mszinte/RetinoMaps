@@ -1,7 +1,7 @@
 import numpy as np
 def get_roi_verts_hemi(fn,subject,rois):
     """
-    load an surface image, and return ROIS only from the corresponding 
+    load an surface image, and return vertex from ROIs only from the corresponding 
     hemisphere
 
     Parameters
@@ -55,6 +55,47 @@ def get_roi_verts_hemi(fn,subject,rois):
 
         
     return img, data, data_roi, roi_idx
+
+def get_roi_masks_hemi(fn,subject,rois):
+    """
+    Acces to a single hemisphere rois masks 
+
+    Parameters
+    ----------
+    fn : surface filename
+    subject : subject 
+    rois : list of rois you want extract 
+    
+    Returns
+    -------
+    rois_masks : A dictionary where the keys represent the ROIs 
+    and the values correspond to the respective masks for each hemisphere.
+             
+    hemi : The correponding hemisphere. 
+  
+    """
+    import cortex
+    from surface_utils import load_surface
+
+    # import data 
+    img, data = load_surface(fn=fn)
+    len_data = data.shape[1]  
+    
+    # export masks 
+    roi_verts = cortex.get_roi_verts(subject=subject, 
+                                     roi= rois, 
+                                     mask=True
+                                    )
+    # create a hemi mask  
+    if 'hemi-L' in fn:
+        hemi = 'hemi-L'
+        rois_masks = {roi: data[:len_data] for roi, data in roi_verts.items()}
+        
+    elif 'hemi-R' in fn:
+        hemi = 'hemi-R'
+        rois_masks = {roi: data[-len_data:] for roi, data in roi_verts.items()}
+          
+    return rois_masks, hemi
 
 def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, return_hemi_len=None):
     """

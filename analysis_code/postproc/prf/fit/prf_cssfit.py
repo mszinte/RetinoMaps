@@ -192,8 +192,10 @@ css_fitter.iterative_fit(rsq_threshold=rsq_iterative_th,
 css_fit = css_fitter.iterative_search_params
 
 # rearange result of CSS model 
-css_fit_mat = np.zeros((data.shape[1],css_params_num))
-css_pred_mat = np.zeros_like(data) 
+css_fit_mat = np.full((data.shape[1], css_params_num), np.nan, dtype=float)
+css_pred_mat = np.full_like(data, np.nan, dtype=float) 
+
+
 for est,vert in enumerate(roi_idx):
 
     css_fit_mat[vert] = css_fit[est]
@@ -206,23 +208,23 @@ for est,vert in enumerate(roi_idx):
                                                       hrf_1=css_fit[est][6],
                                                       hrf_2=css_fit[est][7])
         
-css_fit_mat = np.where(css_fit_mat == 0, np.nan, css_fit_mat)
-css_pred_mat = np.where(css_pred_mat == 0, np.nan, css_pred_mat)
 
 
 # compute loo r2
 loo_bold_fn = input_fn.replace('dct_avg_loo','dct_loo')
-loo_bold = load_surface(loo_bold_fn)
+loo_img, loo_bold = load_surface(fn=loo_bold_fn)
+
 loo_r2 = r2_score_surf(bold_signal=loo_bold, model_prediction=css_pred_mat)
 
 # add loo r2 css_fit_mat
-np.column_stack((css_fit_mat, loo_r2))
+css_fit_mat = np.column_stack((css_fit_mat, loo_r2))
 
 
 
 # export data
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
               'n', 'hrf_1','hrf_2', 'r_squared','loo_r2']
+
 
 
 # export fit
