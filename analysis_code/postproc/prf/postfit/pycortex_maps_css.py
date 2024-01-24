@@ -71,7 +71,7 @@ except ValueError:
        
 # Maps settings
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx, n_idx, loo_rsq_idx = 0,1,2,3,4,5,6,7,8,11, 12
+    amp_idx, baseline_idx, x_idx, y_idx, n_idx, loo_rsq_idx = 0,1,2,3,4,5,6,7,8,11,12
 
 
 cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
@@ -83,8 +83,8 @@ deriv_fn_label = 'avg-css'
 
 # plot scales
 rsq_scale = [0, 1]
-ecc_scale = [0, 10]
-size_scale = [0, 10]
+ecc_scale = [0, 7.5]
+size_scale = [0, 7.5]
 n_scale = [0,2]
 
 
@@ -119,12 +119,21 @@ deriv_mat_th = deriv_mat
 amp_down =  deriv_mat_th[amp_idx,...] > 0
 rsqr_th_down = deriv_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
 rsqr_th_up = deriv_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+
+loo_rsqr_th_down = deriv_mat_th[loo_rsq_idx,...] >= analysis_info['rsqr_th'][0]
+loo_rsqr_th_up = deriv_mat_th[loo_rsq_idx,...] <= analysis_info['rsqr_th'][1]
+
+
+
 size_th_down = deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
 size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
 ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
 ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
-all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
-deriv_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
+
+
+
+all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,loo_rsqr_th_down,loo_rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
+deriv_mat[loo_rsq_idx,np.logical_and.reduce(all_th)==False]=0
 
 # loo r-square
 loo_rsq_data = deriv_mat[loo_rsq_idx,...]

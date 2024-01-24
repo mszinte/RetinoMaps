@@ -37,7 +37,6 @@ import importlib
 import ipdb
 import json
 import matplotlib.pyplot as plt
-import nibabel as nb
 import numpy as np
 import os
 import sys
