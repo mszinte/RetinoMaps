@@ -141,34 +141,7 @@ def fit2deriv(fit_array, model,is_loo_r2=False):
 
 
 
-def r2_score_surf(bold_signal, model_prediction):
-    """
-    Compute r2 between bold signal and model. The gestion of nan values 
-    is down with created a non nan mask on the model prediction 
 
-    Parameters
-    ----------
-    bold_signal: bold signal in 2-dimensional np.array (time, vertex)
-    model_prediction: model prediction in 2-dimensional np.array (time, vertex)
-    
-    Returns
-    -------
-    r2_scores: the R2 score for each vertex
-    """
-    import numpy as np
-    from sklearn.metrics import r2_score
-    
-    # Check for NaN values in bold_signal
-    nan_mask = np.isnan(model_prediction).any(axis=0)
-    valid_vertices = ~nan_mask
-    
-    # Set R2 scores for vertices with NaN values to NaN
-    r2_scores = np.full_like(nan_mask, np.nan, dtype=float)
-    
-    # Compute R2 scores for vertices without NaN values
-    r2_scores[valid_vertices] = r2_score(bold_signal[:, valid_vertices], model_prediction[:, valid_vertices], multioutput='raw_values')
-    
-    return r2_scores
 
 
 

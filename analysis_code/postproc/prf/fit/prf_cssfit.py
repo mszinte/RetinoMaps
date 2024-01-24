@@ -57,7 +57,7 @@ import cortex
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from surface_utils import load_surface ,make_surface_image
 from pycortex_utils import set_pycortex_config_file, get_roi_verts_hemi
-from prf_utils import r2_score_surf
+from maths_utils import r2_score_surf
 
 # Get inputs
 start_time = datetime.datetime.now()

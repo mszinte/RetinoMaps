@@ -97,8 +97,8 @@ for fit_fn in fit_fns:
 
  
         # compute and save derivatives array
-        maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
-                      'amplitude','baseline', 'x','y','hrf_1','hrf_2','n','loo_r2']
+        maps_names = ['prf_rsq', 'prf_ecc', 'polar_real', 'polar_imag', 'prf_size',
+                      'amplitude','baseline', 'prf_x','prf_y','hrf_1','hrf_2','prf_n','prf_loo_r2']
         
         deriv_array = fit2deriv(fit_array=fit_data,model='css',is_loo_r2=True)
         deriv_img = make_surface_image(data=deriv_array, source_img=fit_img, maps_names=maps_names)
@@ -172,7 +172,7 @@ for loo_deriv_fns in loo_deriv_fns_list:
     
     
 # export averaged data in tsv 
-df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(subject,prf_tsv_dir), sep="\t", na_rep='NaN',index=False)
+df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
           
 
 
