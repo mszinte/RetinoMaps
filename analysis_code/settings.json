@@ -1,7 +1,7 @@
 {
     "account":"mszinte@login.mesocentre.univ-amu.fr",
     "project_name": "RetinoMaps",
-    "sessions" : ["ses-01", "ses-02"], 
+    "sessions" : ["ses-01", "ses-02","ses-03"], 
     "anat_session": ["ses-01"], 
     "func_session": ["ses-02"], 
     "task_names": ["rest","pMF","pRF","PurLoc","SacLoc","PurVELoc","SacVELoc"],
@@ -33,6 +33,7 @@
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
     "alpha_range":[0,1],
+    "alpha_range_corr":[0,0.4],
     "rsq_iterative_th": 0.01,
     "nb_procs_fit_prf_gauss": 8,
     "nb_procs_fit_prf_css": 32,

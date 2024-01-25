@@ -22,7 +22,7 @@ To run:
 >> python pycortex_corr_maps.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-02 n
+python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -54,6 +54,7 @@ with open('../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 tasks = analysis_info['task_names']
+alpha_range = analysis_info["alpha_range_corr"]
 
 
 
@@ -130,7 +131,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         print('data are load')
         # correlation
     
-        alpha_range = analysis_info["alpha_range"]
+
         alpha = (corr_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
         alpha[alpha>1]=1
         alpha = alpha.astype(np.uint8)

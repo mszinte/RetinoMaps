@@ -74,7 +74,9 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [ ] Make pRF derivatives maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
 #### GLM analysis
-- [ ] Run Glm for the differents tasks [glm_sbatch.py](analysis_code/postproc/glm/glm_sbatch.py)
+- [ ] Run Glm for the differents tasks [glm_fit.py](analysis_code/postproc/glm/glm_fit.py)
+- [ ] Compute Glm derivatives [compute_glm_derivatives.py](analysis_code/postproc/glm/compute_glm_derivatives.py)
+- [ ] Make GLM derivatives maps with pycortex [pycortex_maps_glm_final.py](analysis_code/postproc/glm/pycortex_maps_glm_final.py)
 
 #### On working
 - [ ] compute population cortical magnification [compute_pcm.py](analysis_code/postproc/prf/postfit/compute_pcm.py)
