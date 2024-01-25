@@ -21,7 +21,7 @@ To run:
 >> python compute_gauss_gridfit_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_gauss_gridfit_derivatives.py /scratch/mszinte/data RetinoMaps sub-02 327
+python compute_gauss_gridfit_derivatives.py /scratch/mszinte/data RetinoMaps sub-04 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ for format_, extension in zip(formats, extensions):
     os.makedirs(prf_deriv_dir, exist_ok=True)
     
     # Get prf fit filenames
-    fit_fns= glob.glob("{}/{}/{}/prf/fit/*prf-fit*".format(pp_dir,subject,format_))
+    fit_fns= glob.glob("{}/{}/{}/prf/fit/*prf-fit_gauss_gridfit*".format(pp_dir,subject,format_))
     
     # Compute derivatives
     for fit_fn in fit_fns:
