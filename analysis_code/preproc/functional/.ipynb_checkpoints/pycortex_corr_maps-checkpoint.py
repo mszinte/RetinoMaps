@@ -22,7 +22,7 @@ To run:
 >> python pycortex_corr_maps.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-05 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------

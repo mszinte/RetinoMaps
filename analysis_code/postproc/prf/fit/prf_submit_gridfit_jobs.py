@@ -25,7 +25,7 @@ Exemple:
 python prf_submit_gridfit_jobs.py [main directory] [project name] [subject num] [group] [server project] [memory]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_submit_gridfit_jobs.py /scratch/mszinte/data RetinoMaps sub-01 327 b327 100
+python prf_submit_gridfit_jobs.py /scratch/mszinte/data RetinoMaps sub-05 327 b327 100
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

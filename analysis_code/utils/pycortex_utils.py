@@ -37,15 +37,21 @@ def get_roi_verts_hemi(fn,subject,rois):
                                      roi= rois, 
                                      mask=True
                                     )
+    na_vertices = np.isnan(data).any(axis=0)
+    
     # create a brain mask  
     brain_mask = np.any(list(roi_verts.values()), axis=0)
     
     # create a hemi mask  
     if 'hemi-L' in fn:
         hemi_mask = brain_mask[:len_data]
+        for i, na_vertices in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertices and hemi_mask[i]
         
     elif 'hemi-R' in fn: 
         hemi_mask = brain_mask[-len_data:]
+        for i, na_vertices in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertices and hemi_mask[i]
     else: 
         hemi_mask = brain_mask
         

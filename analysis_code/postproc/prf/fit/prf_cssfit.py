@@ -126,6 +126,8 @@ exponent_css_grid = np.linspace(0, 4, css_grid_nr)
 # load data
 img, data, data_roi, roi_idx = get_roi_verts_hemi(fn=input_fn,subject=subject,rois=rois)
 
+
+
 print('roi extraction done')
 
 
