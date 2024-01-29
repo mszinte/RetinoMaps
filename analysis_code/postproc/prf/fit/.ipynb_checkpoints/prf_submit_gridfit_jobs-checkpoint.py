@@ -25,7 +25,7 @@ Exemple:
 python prf_submit_gridfit_jobs.py [main directory] [project name] [subject num] [group] [server project] [memory]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_submit_gridfit_jobs.py /scratch/mszinte/data RetinoMaps sub-02 327 b327 100
+python prf_submit_gridfit_jobs.py /scratch/mszinte/data RetinoMaps sub-05 327 b327 100
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -79,6 +79,7 @@ dct_avg_gii_fns = "{}/{}/fsnative/func/fmriprep_dct_avg/*_task-pRF_*avg*.func.gi
 
 
 pp_fns=  glob.glob(dct_avg_gii_fns) + glob.glob(dct_avg_nii_fns) 
+
 
 for fit_num, pp_fn in enumerate(pp_fns):
     

@@ -22,7 +22,7 @@ To run:
     [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-05 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-11 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

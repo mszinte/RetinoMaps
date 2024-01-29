@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_gridfit.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-04 n
+python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
