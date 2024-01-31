@@ -22,7 +22,7 @@ To run:
 python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end.py /scratch/mszinte/data RetinoMaps sub-02 327
+python preproc_end.py /scratch/mszinte/data RetinoMaps sub-08 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
