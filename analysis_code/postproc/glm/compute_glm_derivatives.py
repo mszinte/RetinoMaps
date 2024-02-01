@@ -21,7 +21,7 @@ To run:
 >> python compute_glm_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-06 327
+python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-12 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

@@ -21,7 +21,7 @@ To run:
 python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python glm_fit.py /scratch/mszinte/data RetinoMaps sub-06 327
+python glm_fit.py /scratch/mszinte/data RetinoMaps sub-12 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------

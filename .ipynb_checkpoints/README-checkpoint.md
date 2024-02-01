@@ -73,6 +73,11 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [ ] Compute pRF CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 - [ ] Make pRF derivatives maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
+#### Final ploting
+- [ ] Make sub-all tsv [make_sub_all_tsv.py](analysis_code/postproc/prf/postfit/make_sub_all_tsv.py)
+- [ ] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
+
+
 #### GLM analysis
 - [ ] Run Glm for the differents tasks [glm_fit.py](analysis_code/postproc/glm/glm_fit.py)
 - [ ] Compute Glm derivatives [compute_glm_derivatives.py](analysis_code/postproc/glm/compute_glm_derivatives.py)

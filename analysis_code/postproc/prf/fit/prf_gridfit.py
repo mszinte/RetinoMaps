@@ -102,7 +102,7 @@ fit_fn_gauss_gridfit = fit_fn_gauss_gridfit.replace('bold', 'prf-fit_gauss_gridf
 pred_fn_gauss_gridfit = input_fn.split('/')[-1]
 pred_fn_gauss_gridfit = pred_fn_gauss_gridfit.replace('bold', 'prf-pred_gauss_gridfit')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
+vdm_fn = "{}/{}/derivatives/vdm/vdm_pRF_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
 
 # Get task specific visual design matrix
 vdm = np.load(vdm_fn)

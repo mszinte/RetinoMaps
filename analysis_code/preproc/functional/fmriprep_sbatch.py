@@ -33,7 +33,7 @@ python fmriprep_sbatch.py [main directory] [project name] [subject num]
                           [dof] [email account] [group] [server_project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-12 30 anat_only_n aroma_n fmapfree_n skip_bids_val_n cifti_output_170k_y fsaverage_y 12 uriel.lascombes@etu.univ-amu.fr 327 b327
+python fmriprep_sbatch.py /scratch/mszinte/data RetinoMaps sub-14 30 anat_only_n aroma_n fmapfree_n skip_bids_val_n cifti_output_170k_y fsaverage_y 12 uriel.lascombes@etu.univ-amu.fr 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
