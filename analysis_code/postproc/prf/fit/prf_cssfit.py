@@ -106,7 +106,7 @@ fit_fn_css = fit_fn_css.replace('bold', 'prf-fit_css')
 pred_fn_css = input_fn.split('/')[-1]
 pred_fn_css = pred_fn_css.replace('bold', 'prf-pred_css')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
+vdm_fn = "{}/{}/derivatives/vdm/vdm_pRF_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
 pycortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 
 # Set pycortex db and colormaps
