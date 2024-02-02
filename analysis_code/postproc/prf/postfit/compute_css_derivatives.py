@@ -21,7 +21,7 @@ To run:
 >> python compute_css_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_css_derivatives.py /scratch/mszinte/data RetinoMaps sub-05 327
+python compute_css_derivatives.py /scratch/mszinte/data RetinoMaps sub-06 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
