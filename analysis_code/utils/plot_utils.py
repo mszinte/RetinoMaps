@@ -89,9 +89,9 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
                                 meanline_visible=True), 
                       row=1, col=2)
         
-        # pRF ecc
+        # pRF n
         fig.add_trace(go.Violin(x=df.rois[df.rois==roi], 
-                                y=df.prf_ecc, 
+                                y=df.prf_n, 
                                 name=roi, 
                                 showlegend=False, 
                                 legendgroup='avg', 
@@ -112,9 +112,9 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
                          title_text='pRF size (dva)', 
                          row=1, col=2)
         
-        fig.update_yaxes(range=[0,15], 
+        fig.update_yaxes(range=[0,2], 
                          nticks=4, 
-                         title_text='pRF eccentricity (dva)', 
+                         title_text='pRF n', 
                          row=2, col=1)
         
         fig.update_xaxes(showline=True, 
@@ -131,7 +131,7 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
                           row=1, col=2)
         
         fig.update_traces(spanmode='manual', 
-                          span=[0,15], 
+                          span=[0,2], 
                           row=2, col=1)
         
         
@@ -247,5 +247,158 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
         
     return fig
     
+def prf_polar_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None]) :    
+    """
+     Make polar plots
+    
+     Parameters
+     ----------
+     data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, rois and subject columns
+     
+     Returns
+     -------
+     figs : a list of three figures
+     hemispheres : a list of corresponding hemispheres
+    """
+     
+    data['prf_angle'] = np.angle(data.polar_real + 1j * data.polar_imag)
+    
+    # Replace all data outer threshold with NaN data
+    data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
+             (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | 
+             (data.prf_loo_r2 <=rsq_th[0])] = np.nan
+    data = data.dropna()
+    
+    rois = pd.unique(data.rois)
+    hemis = np.append(pd.unique(data.hemi), 'brain')
+    
+    roi_colors = px.colors.sequential.Sunset[:4] + px.colors.sequential.Rainbow[:]
+    
+    rows, cols = 1, 12
+    fig_height, fig_width = 300, 1920
+    specs = [[{'type': 'polar'}] * cols]
+    num_slices = 12
+    
+    figs = []
+    hemispheres = []
+    for i, hemi in enumerate(hemis):
+        fig = make_subplots(rows=rows, cols=cols, print_grid=False, specs=specs)
         
+        hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'brain' else [hemi]
+    
+        for j, roi in enumerate(rois):
+    
+            df = data.loc[(data.subject == subject) & (data.rois==roi) & (data.hemi.isin(hemi_values))]
+            df = df.sort_values('prf_loo_r2', ascending=False)
+            df = df.head(250)
+    
+            #Conversion
+            df.prf_angle = np.degrees(df.prf_angle)
+            df.prf_angle = np.mod(df.prf_angle, 360)
+    
+            # Parts of polar angles and number of voxels in each part
+            theta_slices = np.linspace(0, 360, num_slices+1, endpoint=True)
+            voxels_counts, _ = np.histogram(df.prf_angle, bins=theta_slices)
+    
+            # barpolar
+            fig.add_trace(go.Barpolar(r=voxels_counts, 
+                                      theta=theta_slices, 
+                                      width=30, 
+                                      marker_color=roi_colors[j], 
+                                      marker_line_color='black', 
+                                      marker_line_width=1, 
+                                      opacity=0.8), 
+                          row=1, col=j+1)
+    
+        # Define parameters
+        fig.update_polars(angularaxis=dict(visible=False), 
+                          radialaxis=dict(visible=False))
         
+        fig.update_layout(title='{}'.format(hemi), 
+                          height=fig_height, 
+                          width=fig_width, 
+                          showlegend=False, 
+                          template='simple_white')
+        figs.append(fig)
+        hemispheres.append(hemi)
+        
+    return figs, hemispheres
+
+
+
+def prf_contralaterality_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None]) :    
+    """
+     Make polar plots
+    
+     Parameters
+     ----------
+     data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, rois and subject columns
+     
+     Returns
+     -------
+     figs : a list of three figures
+     hemispheres : a list of corresponding hemispheres
+    """
+    
+    # Replace all data outer threshold with NaN data
+    data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
+             (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | 
+             (data.prf_loo_r2 <=rsq_th[0])] = np.nan
+    data = data.dropna()
+    
+    rois = pd.unique(data.rois)
+    
+    rows, cols = 1, 12
+    fig_height, fig_width = 300, 1920
+    specs = [[{'type': 'pie'}] * cols]
+    
+    roi_colors = px.colors.sequential.Sunset[:4] + px.colors.sequential.Rainbow[:]
+    
+
+    fig = make_subplots(rows=rows, cols=cols, print_grid=False, specs=specs)
+    for j, roi in enumerate(rois):
+        
+        df_rh = data.loc[(data.subject == subject) & (data.rois == roi) & (data.hemi == 'hemi-R')]
+        df_lh = data.loc[(data.subject == subject) & (data.rois == roi) & (data.hemi == 'hemi-L')]
+        
+        # # Calculer le pourcentage de contralatéralité pour chaque hémisphère pondéré par RSQ
+        # percentage_right = sum(df_rh.loc[df_rh.prf_x < 0].prf_loo_r2) / sum(df_rh.prf_loo_r2) * 100
+        # percentage_left = sum(df_lh.loc[df_lh.prf_x > 0].prf_loo_r2) / sum(df_lh.prf_loo_r2) * 100
+
+        # Calculer le pourcentage d'excentricité total
+        percentage_total = (sum(df_rh.loc[df_rh.prf_x < 0].prf_loo_r2) + sum(df_lh.loc[df_lh.prf_x > 0].prf_loo_r2))/ (sum(df_rh.prf_loo_r2)+sum(df_lh.prf_loo_r2)) *100
+    
+        # print("{} - Contralateralité in {}: {:.1f}%".format(subject, roi, percentage_total))
+        percentage_rest = 100 - percentage_total        
+        
+        values = [percentage_total, percentage_rest]
+        
+        fig.add_trace(go.Pie(values=values,
+                             hole=0.5,
+                             marker=dict(colors=[roi_colors[j], 'white'], line=dict(color=['black', 'white'], width=[1,0])),
+                             showlegend=False,
+                             pull=[0, 0.01],
+                             rotation=percentage_total*3.6 if percentage_total < percentage_rest else 0,
+                             ), row=1, col=j+1)
+
+    # Define parameters
+    fig.update_layout(height=fig_height, 
+                      width=fig_width, 
+                      showlegend=False, 
+                      template='simple_white')
+    
+    return fig 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
+           
+            
