@@ -74,6 +74,7 @@ size_th= [0.1, 20]
 rsq_th = [0.05, 1]
 
 for subject in subjects : 
+    print('making {} figures'.format(subject))
     tsv_dir = '{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv'.format(main_dir, 
                                                                      project_dir, 
                                                                      subject)

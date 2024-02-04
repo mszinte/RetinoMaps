@@ -9,7 +9,7 @@ This repository contain all code allowing us to analyse our dataset [OpenNeuro:D
 ---
 Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
-### Main dependencies
+## Main dependencies
 ---
 [dcm2niix](https://github.com/rordenlab/dcm2niix); 
 [PyDeface](https://github.com/poldracklab/pydeface); 
@@ -18,12 +18,12 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/);
 [FFmpeg](https://ffmpeg.org/);
 [FSL](https://fsl.fmrib.ox.ac.uk);
-[Inkscape](https://inkscape.org/)
+[Inkscape](https://inkscape.org/);
 [workbench](https://humanconnectome.org/software/connectome-workbench)
 </br>
 
 
-## Data analysis
+## **Data analysis**
 ---
 
 ### To Do 
@@ -34,24 +34,24 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [ ] Plot retinotopy data, and get ROIs with grid fit
 - [ ] Code prf_fit_final which takes gaussian grid and run better model (dn or css) only on ROIs vertices
 
-### Pre-processing
-
+## Pre-processing
+---
 #### BIDS
-- [x] copy relevant data from PredictEye [copy_data.py](analysis_code/preproc/bids/bids_copy_data.sh) 
-- [x] change the 'task' to 'task_condition' coulumn name in event.tsv files to avoid BIDS problems [correct_events_files.ipynb](analysis_code/preproc/bids/correct_events_files.ipynb)
-- [x] deface participants t1w image [deface_sbatch.py](analysis_code/preproc/bids/deface_sbatch.py) 
+- [x] Copy relevant data from PredictEye [copy_data.py](analysis_code/preproc/bids/bids_copy_data.sh) 
+- [x] Change the 'task' to 'task_condition' coulumn name in event.tsv files to avoid BIDS problems [correct_events_files.ipynb](analysis_code/preproc/bids/correct_events_files.ipynb)
+- [x] Deface participants t1w image [deface_sbatch.py](analysis_code/preproc/bids/deface_sbatch.py) 
     </br>Note: run script for each subject separately.
-- [x] validate bids format [https://bids-standard.github.io/bids-validator/] / alternately, use a docker [https://pypi.org/project/bids-validator/]
+- [x] Validate bids format [https://bids-standard.github.io/bids-validator/] / alternately, use a docker [https://pypi.org/project/bids-validator/]
     </br>Note: for the webpage, use FireFox and wait for at least 30 min, even if nothing seems to happen.
 
 #### Structural preprocessing
 - [x] fMRIprep with anat-only option [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
-- [x] create sagital view video before manual edit [sagital_view.py](analysis_code/preproc/anatomical/sagital_view.py)
-- [x] manual edit of brain segmentation [pial_edits.sh](analysis_code/preproc/anatomical/pial_edits.sh)
+- [x] Create sagital view video before manual edit [sagital_view.py](analysis_code/preproc/anatomical/sagital_view.py)
+- [x] Manual edit of brain segmentation [pial_edits.sh](analysis_code/preproc/anatomical/pial_edits.sh)
 - [x] FreeSurfer with new brainmask manually edited [freesurfer_pial.py](analysis_code/preproc/anatomical/freesurfer_pial.py)
-- [x] create sagital view video before after edit [sagital_view.py](analysis_code/preproc/anatomical/sagital_view.py)
-- [x] make cut in the brains for flattening [cortex_cuts.sh](analysis_code/preproc/anatomical/cortex_cuts.sh)
-- [x] flatten the cut brains [flatten_sbatch.py](analysis_code/preproc/anatomical/flatten_sbatch.py)
+- [x] Create sagital view video before after edit [sagital_view.py](analysis_code/preproc/anatomical/sagital_view.py)
+- [x] Make cut in the brains for flattening [cortex_cuts.sh](analysis_code/preproc/anatomical/cortex_cuts.sh)
+- [x] Flatten the cut brains [flatten_sbatch.py](analysis_code/preproc/anatomical/flatten_sbatch.py)
 
 #### Functional preprocessing
 - [x] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
@@ -59,16 +59,18 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] High-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [x] Make timeseries inter-run correlation maps with pycortex [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
 
-### Post-processing
-
-#### PRF analysis
+## Post-processing
+---
+### **pRF analysis**
 - [x] Create the visual matrix design [vdm_builder.ipynb](analysis_code/postproc/prf/fit/vdm_builder.ipynb)
+
+#### Gaussian fit
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
 - [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py)
 - [x] Make pRF derivatives maps with pycortex [pycortex_maps_gridfit.py](analysis_code/postproc/prf/postfit/pycortex_maps_gridfit.py)
 
-#### Subject base analysis (fsnative space)
-- [x] draw ROIs using Inkscape
+#### Css fit
+- [x] Draw ROIs using Inkscape
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [x] Compute pRF CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 - [x] Make pRF derivatives maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
@@ -77,20 +79,20 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Make sub-all tsv [make_sub_all_tsv.py](analysis_code/postproc/prf/postfit/make_sub_all_tsv.py)
 - [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
 
-
-#### GLM analysis
+### **GLM analysis**
 - [x] Run Glm for the differents tasks [glm_fit.py](analysis_code/postproc/glm/glm_fit.py)
 - [x] Compute Glm derivatives [compute_glm_derivatives.py](analysis_code/postproc/glm/compute_glm_derivatives.py)
 - [x] Make GLM derivatives maps with pycortex [pycortex_maps_glm_final.py](analysis_code/postproc/glm/pycortex_maps_glm_final.py)
 
-#### On working
-- [ ] compute population cortical magnification [compute_pcm.py](analysis_code/postproc/prf/postfit/compute_pcm.py)
-- [ ] extract ROIs masks [roi_masks.ipynb](analysis_code/postproc/prf/postfit/roi_masks.ipynb) 
-- [ ] make pdf files with the maps [pdf_maps.py](analysis_code/postproc/prf/postfit/pdf_maps.py)
-- [ ] make webgl with the pycortex dataset [pycortex_maps.py](analysis_code/postproc/prf/webgl/pycortex_webgl.py) 
-- [ ] send the files [send_data.sh](analysis_code/postproc/prf/webgl/send_data.sh)
+### **Sub all analysis**
+- [x] Merge all subjects pycortex maps [pdf_maps.py](analysis_code/postproc/pdf_maps.py)
 
-### Main analysis
-- [ ] extract all data as pickle files or tsv [make_tsv.ipynb](analysis_code/postproc/prf/postfit/make_tsv.ipynb)
-- [ ] think about the individual participants figures
-- [ ] Figures and statistics [amblyo_analysis_and_figures.ipynb](analysis_code/postproc/result_analysis/amblyo_analysis_and_figures.ipynb)
+## On working
+---
+### pCM analysis
+- [ ] Compute population cortical magnification [compute_pcm.py](analysis_code/postproc/pcm/compute_pcm.py)
+ 
+### webgl
+- [ ] Make webgl with the pycortex dataset [pycortex_maps.py](analysis_code/postproc/prf/webgl/pycortex_webgl.py)
+- [ ] Send the files [send_data.sh](analysis_code/postproc/prf/webgl/send_data.sh)
+

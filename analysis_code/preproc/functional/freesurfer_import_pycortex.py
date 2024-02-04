@@ -21,7 +21,7 @@ To run:
 python freesurfer_import_pycortex.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Executions:
-python freesurfer_import_pycortex.py /scratch/mszinte/data RetinoMaps sub-17 327
+python freesurfer_import_pycortex.py /scratch/mszinte/data RetinoMaps sub-14 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------

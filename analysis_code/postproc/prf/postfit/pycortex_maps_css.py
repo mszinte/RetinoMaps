@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_css.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-06 y
+python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-09 y
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
