@@ -25,7 +25,7 @@ Exemple:
 python prf_submit_css_jobs.py [main directory] [project name] [subject num] [group] [server project] [memory]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_submit_css_jobs.py /scratch/mszinte/data RetinoMaps sub-02 327 b327 100
+python prf_submit_css_jobs.py /scratch/mszinte/data RetinoMaps sub-09 327 b327 100
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -53,25 +53,19 @@ subject = sys.argv[3]
 group = sys.argv[4]
 server_project = sys.argv[5]
 memory_val = sys.argv[6]
-hour_proc = 5
+hour_proc = 6
 
 # Cluster settings
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 cluster_name  = analysis_info['cluster_name']
-nb_procs = analysis_info['nb_procs_fit_prf']
+nb_procs = analysis_info['nb_procs_fit_prf_css']
 fit_per_hour = analysis_info['fit_per_hour_prf'] 
 
 # Define directories
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
-prf_dir = "{}/{}/prf".format(pp_dir, subject)
-os.makedirs(prf_dir, exist_ok=True)
 
-prf_jobs_dir = "{}/{}/prf/jobs".format(pp_dir, subject)
-os.makedirs(prf_jobs_dir, exist_ok=True)
-prf_logs_dir = "{}/{}/prf/log_outputs".format(pp_dir, subject)
-os.makedirs(prf_logs_dir, exist_ok=True)
 
 # define permission cmd
 chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
@@ -79,13 +73,21 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 wb_command_cmd = 'export PATH=$PATH:/scratch/mszinte/data/RetinoMaps/code/workbench/bin_rh_linux64'
 
 # Define fns (filenames)
-dct_avg_nii_fns = "{}/{}/170k/func/fmriprep_dct_loo_avg/*_task-pRF_*avg*.dtseries.nii".format(pp_dir,subject)
 dct_avg_gii_fns = "{}/{}/fsnative/func/fmriprep_dct_loo_avg/*_task-pRF_*avg*.func.gii".format(pp_dir,subject)
 
 
-pp_fns=  glob.glob(dct_avg_gii_fns) + glob.glob(dct_avg_nii_fns) 
+pp_fns=  glob.glob(dct_avg_gii_fns) 
+
+
 
 for fit_num, pp_fn in enumerate(pp_fns):
+    prf_dir = "{}/{}/fsnative/prf".format(pp_dir, subject)
+    os.makedirs(prf_dir, exist_ok=True)
+
+    prf_jobs_dir = "{}/{}/fsnative/prf/jobs".format(pp_dir, subject)
+    os.makedirs(prf_jobs_dir, exist_ok=True)
+    prf_logs_dir = "{}/{}/fsnative/prf/log_outputs".format(pp_dir, subject)
+    os.makedirs(prf_logs_dir, exist_ok=True)
     
     
     slurm_cmd = """\
@@ -117,6 +119,9 @@ for fit_num, pp_fn in enumerate(pp_fns):
     #Submit jobs
     print("Submitting {} to queue".format(sh_fn))
     os.system("sbatch {}".format(sh_fn))
+    
+
+    
 
 
     

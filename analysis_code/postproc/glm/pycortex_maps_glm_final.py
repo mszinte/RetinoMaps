@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_glm_final.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-12 n
+python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
