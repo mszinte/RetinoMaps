@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_glm_final.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-13 n
+python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-03 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_final = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
                  'vmin': 0, 'vmax': 3, 'cbar': 'discrete', 'cmap_steps': cmap_steps,
                  'cortex_type': 'VertexRGB','description': 'final map',
-                 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
+                 'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
                  'cbar_label': '', 'with_labels': True}
     maps_names.append('final')
     
