@@ -1,10 +1,12 @@
 {
     "account":"mszinte@login.mesocentre.univ-amu.fr",
     "project_name": "RetinoMaps",
-    "task_list": ["pRF","pMF"],
-    "sessions" : ["ses-01", "ses-02"], 
+    "sessions" : ["ses-01", "ses-02","ses-03"], 
+    "subjects" : ["sub-01", "sub-02", "sub-03", "sub-04", "sub-05","sub-06", "sub-07","sub-08", "sub-09","sub-11","sub-12"],
     "anat_session": ["ses-01"], 
+    "func_session": ["ses-02"], 
     "task_names": ["rest","pMF","pRF","PurLoc","SacLoc","PurVELoc","SacVELoc"],
+    "task_glm": ["PurLoc","SacLoc"],
     "cluster_name": "skylake",
     "TR": 1.2,
     "TRs": 208,
@@ -16,6 +18,7 @@
     "screen_size_cm" : [77.3,43.5],
     "screen_distance_cm": 120,
     "vdm_size_pix": [50,50],
+    "vdm_size_pix_eyes_mvt": [80,80],
     "screen_width": 77.3,
     "screen_height": 43.5,
     "screen_width_px": 1080,
@@ -31,8 +34,11 @@
     "ecc_th": [0.1,15.0],
     "size_th": [0.1,15.0],
     "rsqr_th": [0.1,1],
-    "alpha_range":[0,0.4],
+    "alpha_range":[0,1],
     "rsq_iterative_th": 0.01,
-    "nb_procs_fit_prf": 32,
-    "fit_per_hour_prf": 10000.0
+    "nb_procs_fit_prf_gauss": 8,
+    "nb_procs_fit_prf_css": 32,
+    "fit_per_hour_prf": 10000.0,
+    "glm_alpha": 0.01,
+    "glm_confounds" : ["trans_x","trans_x_derivative1","trans_x_derivative1_power2","trans_x_power2","trans_y","trans_y_derivative1","trans_y_derivative1_power2","trans_y_power2","trans_z","trans_z_derivative1","trans_z_power2","trans_z_derivative1_power2","rot_x","rot_x_derivative1","rot_x_power2","rot_x_derivative1_power2","rot_y","rot_y_derivative1","rot_y_power2","rot_y_derivative1_power2","rot_z","rot_z_derivative1","rot_z_power2","rot_z_derivative1_power2","c_comp_cor_00", "c_comp_cor_01", "c_comp_cor_02", "c_comp_cor_03", "c_comp_cor_04", "c_comp_cor_05", "c_comp_cor_06", "c_comp_cor_07", "c_comp_cor_08", "c_comp_cor_09","c_comp_cor_10", "c_comp_cor_11","w_comp_cor_00", "w_comp_cor_01", "w_comp_cor_02", "w_comp_cor_03", "w_comp_cor_04", "w_comp_cor_05", "w_comp_cor_06", "w_comp_cor_07", "w_comp_cor_08", "w_comp_cor_09","w_comp_cor_10", "w_comp_cor_11"]
 }

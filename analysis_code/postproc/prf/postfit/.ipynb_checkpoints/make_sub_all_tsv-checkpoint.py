@@ -55,6 +55,7 @@ subjects = analysis_info['subjects']
 # load subjects tsv and concatenate them
 data_all = pd.DataFrame()
 for subject in subjects :
+    print('adding {}'.format(subject))
 
     tsv_dir ='{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv'.format(main_dir, 
                                                                     project_dir, 

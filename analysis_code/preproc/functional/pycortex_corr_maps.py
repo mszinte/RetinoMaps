@@ -22,7 +22,7 @@ To run:
 >> python pycortex_corr_maps.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-14 n
+python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -43,9 +43,8 @@ import numpy as np
 import os
 import sys
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
+from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
 deb = ipdb.set_trace
-
 
 #Define analysis parameters
 with open('../../settings.json') as f:
@@ -54,17 +53,12 @@ with open('../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 tasks = analysis_info['task_names']
-alpha_range = analysis_info["alpha_range_corr"]
-
-
 
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 save_svg_in = sys.argv[4]
-
-
 try:
     if save_svg_in == 'yes' or save_svg_in == 'y':
         save_svg = True
@@ -75,13 +69,11 @@ try:
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
     
-
 # Maps settings
-cmap_corr = 'RdBu_r_alpha'
+cmap_corr = 'RdBu_r'
 
 # plot scales
 corr_scale = [-1, 1]
-
 deriv_fn_label = 'corr'
  
 # Define directories and fn
@@ -90,17 +82,11 @@ cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
 
-
-
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
-    
     corr_dir = "{}/{}/derivatives/pp_data/{}/{}/corr/fmriprep_dct_corr".format(main_dir, project_dir, subject, format_)
     flatmaps_dir = '{}/{}/derivatives/pp_data/{}/{}/corr/pycortex/flatmaps_corr'.format(main_dir, project_dir, subject, format_)
     datasets_dir = '{}/{}/derivatives/pp_data/{}/{}/corr/pycortex/datasets_corr'.format(main_dir, project_dir, subject, format_)
-
-
-
 
     os.makedirs(flatmaps_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
@@ -112,35 +98,21 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             corr_fn_L = "{}/{}_task-{}_hemi-L_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             corr_fn_R = "{}/{}_task-{}_hemi-R_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             corr_data = load_surface_pycortex(L_fn=corr_fn_L, R_fn=corr_fn_R)
+            print('data loaded')
             
         elif format_ == '170k':
             cor_fn = '{}/{}_task-{}_fmriprep_dct_corr_bold.dtseries.nii'.format(corr_dir, subject, task)
             corr_data = load_surface_pycortex(brain_fn=cor_fn)
+            print('data loaded')
             save_svg = False
 
-        
-        
         print('Creating flatmaps...')
-        
-                
         maps_names = []
         
-
-
-        
-        print('data are load')
         # correlation
-    
-
-        alpha = (corr_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
-        alpha[alpha>1]=1
-        alpha = alpha.astype(np.uint8)
-        
-        
-        
-        param_correlations = {'data': corr_data, 'cmap': cmap_corr ,'alpha' : alpha,
+        param_correlations = {'data': corr_data, 'cmap': cmap_corr ,
                       'vmin': corr_scale[0], 'vmax': corr_scale[1], 'cbar': 'discrete', 
-                      'cortex_type': 'VertexRGB', 'description': '{} {} correlation'.format(subject,task), 
+                      'cortex_type': 'Vertex', 'description': '{} {} correlation'.format(subject,task), 
                       'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg, 'cbar_label': 'Pearson coefficient',
                       'with_labels': True}
         maps_names.append('correlations')
@@ -167,6 +139,5 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, task, deriv_fn_label)
         dataset = cortex.Dataset(data=volumes)
         dataset.save(dataset_file)
-        
     
     
