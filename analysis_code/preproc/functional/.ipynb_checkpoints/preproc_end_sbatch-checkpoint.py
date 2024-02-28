@@ -22,7 +22,7 @@ To run:
     [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-17 327 b327
+python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-22 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -82,8 +82,6 @@ slurm_cmd = """\
     
 preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
-wb_command_cmd = "export PATH=$PATH:{}/{}/code/workbench/bin_rh_linux64".format(main_dir,project_dir)
-
 # Define permission cmd
 chmod_cmd = "chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir)
 chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group)
@@ -92,8 +90,7 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd, 
-                                         wb_command_cmd, 
+of.write("{} \n{} \n{} \n{}".format(slurm_cmd, 
                                          preproc_end_surf_cmd,
                                          chmod_cmd,
                                          chgrp_cmd))
