@@ -75,8 +75,9 @@ def eventsMatrix(design_file, task, tr):
             dur = np.round(sum(group[1]['duration']),2)
             ttype = group[1]['trial_type'][group[1].index[0]]
             
+            new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
+            new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
-            new_events_glm = new_events_glm.append(pd.Series([onset,dur,ttype],index =['onset', 'duration', 'trial_type']), ignore_index=True)
 
     else:
         if 'VE' not in task: # Sac/Pur Loc
@@ -92,7 +93,8 @@ def eventsMatrix(design_file, task, tr):
                 dur = np.round(sum(group[1]['duration']),2)
                 ttype = group[1]['trial_type'][group[1].index[0]]
 
-                new_events_glm = new_events_glm.append(pd.Series([onset,dur,ttype],index =['onset', 'duration', 'trial_type']), ignore_index=True)
+                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
+                new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
 
         elif 'SacVE' in task: # Sac/Pur Loc: # Visual-Endogenous Sac/Pur Loc 
@@ -111,7 +113,8 @@ def eventsMatrix(design_file, task, tr):
                 dur = np.round(sum(group[1]['duration']),2)
                 vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
 
-                new_events_glm = new_events_glm.append(pd.Series([onset,dur,vis_end],index =['onset', 'duration', 'trial_type']), ignore_index=True)
+                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+                new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
         elif 'PurVE' in task: # Sac/Pur Loc: # Visual-Endogenous Sac/Pur Loc 
             events_glm = events[['onset','duration','trial_type', 'eyemov_vis_end']].copy(deep=True)
@@ -128,7 +131,8 @@ def eventsMatrix(design_file, task, tr):
                 ttype = group[1]['trial_type'][group[1].index[0]]
                 vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
 
-                new_events_glm = new_events_glm.append(pd.Series([onset,dur,vis_end],index =['onset', 'duration', 'trial_type']), ignore_index=True)
+                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+                new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
     for idx in new_events_glm.index:
         if idx==0:

@@ -21,7 +21,7 @@ To run:
 >> python compute_gauss_gridfit_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_gauss_gridfit_derivatives.py /scratch/mszinte/data RetinoMaps sub-14 327
+python compute_gauss_gridfit_derivatives.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
