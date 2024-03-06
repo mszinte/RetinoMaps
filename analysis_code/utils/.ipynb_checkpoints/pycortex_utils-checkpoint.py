@@ -1,4 +1,129 @@
 import numpy as np
+def get_roi_verts_hemi(fn,subject,rois):
+    """
+    load an surface image, and return vertex from ROIs only from the corresponding 
+    hemisphere
+
+    Parameters
+    ----------
+    fn : surface filename
+    subject : subject 
+    rois : list of rois you want extract 
+    
+    Returns
+    -------
+    img : the image load from fn   
+    data_roi : numpy rois data 
+              2 dim (time x vertices from all the rois)  
+              
+    roi_idx : indices of the rois vertices 
+    
+    
+    data_hemi : numpy stacked data
+                2 dim (time x vertices)    
+    """
+    
+    import cortex
+    from surface_utils import load_surface
+
+    
+    
+    # import data 
+    img, data = load_surface(fn=fn)
+    len_data = data.shape[1]
+    
+    # export masks 
+    roi_verts = cortex.get_roi_verts(subject=subject, 
+                                     roi= rois, 
+                                     mask=True
+                                    )
+    na_vertices = np.isnan(data).any(axis=0)
+    
+    # create a brain mask  
+    brain_mask = np.any(list(roi_verts.values()), axis=0)
+    
+    # create a hemi mask  
+    if 'hemi-L' in fn:
+        hemi_mask = brain_mask[:len_data]
+        for i, na_vertices in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        
+    elif 'hemi-R' in fn: 
+        hemi_mask = brain_mask[-len_data:]
+        for i, na_vertices in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertices and hemi_mask[i]
+    else: 
+        hemi_mask = brain_mask
+        
+    roi_idx = np.where(hemi_mask)[0]
+    
+    data_roi = data[:,hemi_mask]
+
+        
+    return img, data, data_roi, roi_idx
+
+# def load_mmp_rois():
+#     import numpy as np
+#     rois = np.load('mmp_atlas_rois.npz')
+#     return rois
+
+
+
+def lire_fichier_npz():
+    import numpy as np
+    from pkg_resources import resource_stream
+    
+    try:
+        with resource_stream(__name__, 'mmp_atlas_rois.npz') as f:
+            data = np.load(f)
+            donnees = dict(data)
+            return donnees
+    except FileNotFoundError:
+        print(f"Le fichier {nom_fichier} n'a pas été trouvé.")
+        return None
+
+
+
+def get_roi_masks_hemi(fn,subject,rois,return_mask=True):
+    """
+    Acces to a single hemisphere rois masks 
+
+    Parameters
+    ----------
+    fn : surface filename
+    subject : subject 
+    rois : list of rois you want extract 
+    
+    Returns
+    -------
+    rois_masks : A dictionary where the keys represent the ROIs 
+    and the values correspond to the respective masks for each hemisphere.
+             
+    hemi : The correponding hemisphere. 
+  
+    """
+    import cortex
+    from surface_utils import load_surface
+
+    # import data 
+    img, data = load_surface(fn=fn)
+    len_data = data.shape[1]  
+    
+    # export masks 
+    roi_verts = cortex.get_roi_verts(subject=subject, 
+                                     roi= rois, 
+                                     mask=return_mask
+                                    )
+    # create a hemi mask  
+    if 'hemi-L' in fn:
+        hemi = 'hemi-L'
+        rois_masks = {roi: data[:len_data] for roi, data in roi_verts.items()}
+        
+    elif 'hemi-R' in fn:
+        hemi = 'hemi-R'
+        rois_masks = {roi: data[-len_data:] for roi, data in roi_verts.items()}
+          
+    return rois_masks, hemi
 
 def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, return_hemi_len=None):
     """

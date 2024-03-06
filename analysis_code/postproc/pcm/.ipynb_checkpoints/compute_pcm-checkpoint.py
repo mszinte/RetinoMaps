@@ -13,18 +13,19 @@ sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: subject name (e.g. sub-01)
 sys.argv[4]: group (e.g. 327)
+sys.argv[4]: model (e.g. css)
 -----------------------------------------------------------------------------------------
 Output(s):
 New brain volume in derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/prf/postfit/
+>> cd ~/projects/amblyo_prf/analysis_code/postproc/pcm
 2. run python command
->> python compute_pcm.py [main directory] [project name] [subject num] [group]
+>> python compute_pcm.py [main directory] [project name] [subject] [group] [model]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_pcm.py /scratch/mszinte/data amblyo_prf sub-01 327
+python compute_pcm.py /scratch/mszinte/data amblyo_prf sub-01 327 gauss
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -55,63 +56,68 @@ task = analysis_info['task']
 high_pass_type = analysis_info['high_pass_type']
 vert_dist_th = analysis_info['vertex_pcm_rad']
 rois = analysis_info["rois"]
-xfm_name = analysis_info["xfm_name"]
 
 # inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+model = sys.argv[5]
 
-# set folders
+# Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
-fit_dir = "{}/{}/derivatives/pp_data/{}/prf/fit".format(main_dir, project_dir, subject)
-deriv_avg_fn = "{}/{}_task-{}_fmriprep_{}_bold_avg_prf-deriv.nii.gz".format(fit_dir, subject, task, high_pass_type)
-deriv_avg_loo_fn = "{}/{}_task-{}_fmriprep_{}_bold_loo_avg_prf-deriv.nii.gz".format(fit_dir, subject, task, high_pass_type)
-deriv_fns = [deriv_avg_fn,deriv_avg_loo_fn]
-
-# set pycortex db and colormaps
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
 
-# get surfaces for each hemisphere
-surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
-surf_lh, surf_rh = surfs[0], surfs[1]
-
-# get the vertices number per hemisphere
-lh_vert_num, rh_vert_num = surf_lh.pts.shape[0], surf_rh.pts.shape[0]
-vert_num = lh_vert_num + rh_vert_num
-
-# get a dicst with the surface vertices contained in each ROI
-roi_verts_dict = cortex.utils.get_roi_verts(subject, mask=False)
-
-# mapper from voxels to vertices
-mapper = cortex.get_mapper(subject, xfm_name, 'line_nearest', recache=True)
-
 # derivatives settings
-params_num = 10
-rsq_idx, rsq_loo_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9
+rsq_idx, ecc_idx, size_idx, x_idx, y_idx = 0, 1, 4, 7, 8
 
-for deriv_fn in deriv_fns:
+for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
-    print('add pCM to {}'.format(deriv_fn))
-    
-    # load data
-    deriv_img = nb.load(deriv_fn)
-    deriv_mat = deriv_img.get_fdata()
-    
-    # parameters in vertices
-    vert_rsq_data = mapper(cortex.Volume(deriv_mat[...,rsq_idx].T, subject, xfm_name)).data
-    vert_x_data = mapper(cortex.Volume(deriv_mat[...,x_idx].T, subject, xfm_name)).data
-    vert_y_data = mapper(cortex.Volume(deriv_mat[...,y_idx].T, subject, xfm_name)).data
-    vert_size_data = mapper(cortex.Volume(deriv_mat[...,size_idx].T, subject, xfm_name)).data
-    vert_ecc_data = mapper(cortex.Volume(deriv_mat[...,ecc_idx].T, subject, xfm_name)).data
+    # define directories and fn
+    prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, 
+                                                           subject, format_)
+    fit_dir = "{}/fit".format(prf_dir)
+    prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
+
+    if format_ == 'fsnative':
+        deriv_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_avg_prf-deriv_{}_gridfit.func.gii'.format(
+            prf_deriv_dir, subject, task, model)
+        deriv_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_avg_prf-deriv_{}_gridfit.func.gii'.format(
+            prf_deriv_dir, subject, task, model)
+        deriv_mat = load_surface_pycortex(L_fn=deriv_avg_fn_L, 
+                                          R_fn=deriv_avg_fn_R,)
+        
+    elif format_ == '170k':
+        deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_avg_prf-deriv_{}_gridfit.dtseries.nii'.format(
+            prf_deriv_dir, subject, task, model)
+        deriv_mat = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        save_svg = False
+
+    # parameters
+    vert_rsq_data = deriv_mat[rsq_idx, ...]
+    vert_x_data = deriv_mat[x_idx, ...]
+    vert_y_data = deriv_mat[y_idx, ...]
+    vert_size_data = deriv_mat[size_idx, ...]
+    vert_ecc_data = deriv_mat[ecc_idx, ...]
     
     # create empty results
     vert_cm = np.zeros(vert_num)*np.nan
+    
+    # get surfaces for each hemisphere
+    surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
+    surf_lh, surf_rh = surfs[0], surfs[1]
+
+    # get the vertices number per hemisphere
+    lh_vert_num, rh_vert_num = surf_lh.pts.shape[0], surf_rh.pts.shape[0]
+    vert_num = lh_vert_num + rh_vert_num
+
+    # get a dict with the surface vertices contained in each ROI
+    roi_verts_dict = cortex.utils.get_roi_verts(subject, mask=False)
+    #### TO REPLACE BY YOUR NEW FUNCTION TO GET ROIS FROM NPZ IN CASE OF SUB-170K
 
     for roi in rois:
+        
         # find ROI vertex
         roi_vert_lh_idx = roi_verts_dict[roi][roi_verts_dict[roi]<lh_vert_num]
         roi_vert_rh_idx = roi_verts_dict[roi][roi_verts_dict[roi]>=lh_vert_num]
@@ -134,7 +140,7 @@ for deriv_fn in deriv_fns:
                 roi_vert_idx, roi_surf_idx = roi_vert_rh_idx, roi_surf_rh_idx
                 vert_rsq, vert_x, vert_y, vert_size = vert_rh_rsq, vert_rh_x, vert_rh_y, vert_rh_size
 
-            desc = 'ROI -> {} / Hemisphere -> {}'.format(roi, hemi)
+            print('ROI -> {} / Hemisphere -> {}'.format(roi, hemi))
 
             for i, (vert_idx, surf_idx) in enumerate(zip(roi_vert_idx, roi_surf_idx)):
 
@@ -172,21 +178,14 @@ for deriv_fn in deriv_fns:
 
                         # compute cortical magnification in mm/deg (surface distance / pRF positon distance)
                         vert_cm[vert_idx] = vert_geo_dist_avg/vert_prf_dist
+    
+    
+    # save as last entry in pRF derivative file
+    deriv_mat_new = np.zeros((deriv_mat.shape[0]+1, deriv_mat.shape[1]))*np.nan
+    deriv_mat_new[0:-1,...] = deriv_mat
+    deriv_mat_new[-1,...] = vert_cm
+    ### TO SAVE WITH NEW save_surface_pycortex WHICH WILL SPLIT DATA FOR GIFTI BUT NOT CIFTI
 
-    
-    # convert back to volume
-    vert_cm_nonan = vert_cm
-    vert_cm_nonan[np.isnan(vert_cm)] = 0
-    vol_cm = mapper.backwards(vert_cm_nonan)
-    
-    # sava in pRF derivative file
-    deriv_mat_new = np.zeros((deriv_img.shape[0], deriv_img.shape[1], deriv_img.shape[2], params_num+1))
-    deriv_mat_new[...,:deriv_img.shape[3]] = deriv_mat
-    deriv_mat_new[...,-1] = vol_cm.T
-
-    deriv_new_img = nb.Nifti1Image(dataobj=deriv_mat_new, affine=deriv_img.affine, header=deriv_img.header)
-    deriv_new_img.to_filename(deriv_fn)
-    
 # Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(main_dir, project_dir, group))

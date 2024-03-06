@@ -62,7 +62,29 @@ def get_roi_verts_hemi(fn,subject,rois):
         
     return img, data, data_roi, roi_idx
 
-def get_roi_masks_hemi(fn,subject,rois):
+# def load_mmp_rois():
+#     import numpy as np
+#     rois = np.load('mmp_atlas_rois.npz')
+#     return rois
+
+
+
+def lire_fichier_npz():
+    import numpy as np
+    from pkg_resources import resource_stream
+    
+    try:
+        with resource_stream(__name__, 'mmp_atlas_rois.npz') as f:
+            data = np.load(f)
+            donnees = dict(data)
+            return donnees
+    except FileNotFoundError:
+        print(f"Le fichier {nom_fichier} n'a pas été trouvé.")
+        return None
+
+
+
+def get_roi_masks_hemi(fn,subject,rois,return_mask=True):
     """
     Acces to a single hemisphere rois masks 
 
@@ -90,7 +112,7 @@ def get_roi_masks_hemi(fn,subject,rois):
     # export masks 
     roi_verts = cortex.get_roi_verts(subject=subject, 
                                      roi= rois, 
-                                     mask=True
+                                     mask=return_mask
                                     )
     # create a hemi mask  
     if 'hemi-L' in fn:
