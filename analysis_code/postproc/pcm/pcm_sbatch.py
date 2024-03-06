@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-pcm_sbatch..py
+pcm_sbatch.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Run computation of population cortical magnification
@@ -10,18 +10,19 @@ sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: subject name (e.g. sub-01)
 sys.argv[4]: group (e.g. 327)
+sys.argv[5]: model (e.g. css)
 -----------------------------------------------------------------------------------------
 Output(s):
 sh file for running batch command
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/prf/postfit/
+>> cd ~/projects/amblyo_prf/analysis_code/postproc/pcm
 2. run python command
->> python pcm_sbatch.py [main directory] [project name] [subject num] [group]
+>> python pcm_sbatch.py [main directory] [project name] [subject num] [group] [model]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pcm_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 327
+python pcm_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 327 css
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
