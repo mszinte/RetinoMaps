@@ -69,17 +69,26 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 
 # Define fns (filenames)
 dct_avg_gii_fns = "{}/{}/fsnative/func/fmriprep_dct_loo_avg/*_task-pRF_*avg*.func.gii".format(pp_dir,subject)
+dct_avg_nii_fns = "{}/{}/170k/func/fmriprep_dct_loo_avg/*_task-pRF_*avg*.dtseries.nii".format(pp_dir,subject)
 
-pp_fns=  glob.glob(dct_avg_gii_fns) 
+pp_fns =  glob.glob(dct_avg_gii_fns) + glob.glob(dct_avg_nii_fns)
 
 for fit_num, pp_fn in enumerate(pp_fns):
-    prf_dir = "{}/{}/fsnative/prf".format(pp_dir, subject)
-    os.makedirs(prf_dir, exist_ok=True)
+    if pp_fn.endswith('.nii'):
+        prf_dir = "{}/{}/170k/prf".format(pp_dir, subject)
+        os.makedirs(prf_dir, exist_ok=True)
+        prf_jobs_dir = "{}/{}/170k/prf/jobs".format(pp_dir, subject)
+        os.makedirs(prf_jobs_dir, exist_ok=True)
+        prf_logs_dir = "{}/{}/170k/prf/log_outputs".format(pp_dir, subject)
+        os.makedirs(prf_logs_dir, exist_ok=True)
 
-    prf_jobs_dir = "{}/{}/fsnative/prf/jobs".format(pp_dir, subject)
-    os.makedirs(prf_jobs_dir, exist_ok=True)
-    prf_logs_dir = "{}/{}/fsnative/prf/log_outputs".format(pp_dir, subject)
-    os.makedirs(prf_logs_dir, exist_ok=True)
+    elif pp_fn.endswith('.gii'):
+        prf_dir = "{}/{}/fsnative/prf".format(pp_dir, subject)
+        os.makedirs(prf_dir, exist_ok=True)
+        prf_jobs_dir = "{}/{}/fsnative/prf/jobs".format(pp_dir, subject)
+        os.makedirs(prf_jobs_dir, exist_ok=True)
+        prf_logs_dir = "{}/{}/fsnative/prf/log_outputs".format(pp_dir, subject)
+        os.makedirs(prf_logs_dir, exist_ok=True)
     
     
     slurm_cmd = """\

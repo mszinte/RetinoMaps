@@ -97,13 +97,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         if format_ == 'fsnative':
             corr_fn_L = "{}/{}_task-{}_hemi-L_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             corr_fn_R = "{}/{}_task-{}_hemi-R_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
-            corr_data = load_surface_pycortex(L_fn=corr_fn_L, R_fn=corr_fn_R)
-            print('data loaded')
+            results = load_surface_pycortex(L_fn=corr_fn_L, R_fn=corr_fn_R)
+            corr_data = results['data_concat']
             
         elif format_ == '170k':
             cor_fn = '{}/{}_task-{}_fmriprep_dct_corr_bold.dtseries.nii'.format(corr_dir, subject, task)
-            corr_data = load_surface_pycortex(brain_fn=cor_fn)
-            print('data loaded')
+            results = load_surface_pycortex(brain_fn=cor_fn)
+            corr_data = results['data_concat']
             save_svg = False
 
         print('Creating flatmaps...')

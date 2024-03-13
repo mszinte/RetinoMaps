@@ -17,12 +17,12 @@ sh file for running batch command
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/pcm
+>> cd ~/projects/RetinoMaps/analysis_code/postproc/pcm
 2. run python command
->> python pcm_sbatch.py [main directory] [project name] [subject num] [group] [model]
+>> python pcm_sbatch.py [main directory] [project name] [subject num] [group] [server_project] [model]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pcm_sbatch.py /scratch/mszinte/data amblyo_prf sub-01 327 css
+python pcm_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327 css
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ import ipdb
 deb = ipdb.set_trace
 
 # define analysis parameters
-with open('../../../settings.json') as f:
+with open('../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 
@@ -49,24 +49,25 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+server_project = sys.argv[5]
+model = sys.argv[6]
 
 # Define cluster/server specific parameters
 cluster_name  = analysis_info['cluster_name']
-proj_name = analysis_info['proj_name']
 nb_procs = 8
 memory_val = 48
 hour_proc = 4
 
 # set folders
-log_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/log_outputs".format(main_dir, project_dir, subject)
-job_dir = "{}/{}/derivatives/pp_data/{}/prf/pcm/jobs".format(main_dir, project_dir, subject)
+log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
+job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, project_dir, subject)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(job_dir, exist_ok=True)
 
 slurm_cmd = """\
 #!/bin/bash
 #SBATCH -p {cluster_name}
-#SBATCH -A {proj_name}
+#SBATCH -A {server_project}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
@@ -74,10 +75,10 @@ slurm_cmd = """\
 #SBATCH -e {log_dir}/{subject}_pcm_%N_%j_%a.err
 #SBATCH -o {log_dir}/{subject}_pcm_%N_%j_%a.out
 #SBATCH -J {subject}_pcm
-""".format(proj_name=proj_name, cluster_name=cluster_name,
+""".format(server_project=server_project, cluster_name=cluster_name,
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
-compute_pcm_cmd = "python compute_pcm.py {} {} {} {}".format(main_dir, project_dir, subject, group)
+compute_pcm_cmd = "python compute_pcm.py {} {} {} {} {}".format(main_dir, project_dir, subject, group, model)
 
 # create sh fn
 sh_fn = "{}/{}_pcm.sh".format(job_dir, subject)

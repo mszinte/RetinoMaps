@@ -27,12 +27,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 ---
 
 ### To Do 
-- [ ] Update help section prf_fit
-- [ ] In plots.ipynb add boxplot across rois and type of fit
-- [ ] Test with prf_fit_test.py grid fit with 100 steps of guassian grid vs iterative no bound vs iterative boudn 5 repeat
-- [ ] Code prf_fit_grid: gaussian fit with large grid (100 steps?) and only _avg data (SEE prf_fit_test codes)
-- [ ] Plot retinotopy data, and get ROIs with grid fit
-- [ ] Code prf_fit_final which takes gaussian grid and run better model (dn or css) only on ROIs vertices
+
 
 ## Pre-processing
 ---
@@ -66,15 +61,23 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 #### Gaussian fit
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
-- [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py)
+- [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py) 
 - [x] Make pRF derivatives maps with pycortex [pycortex_maps_gridfit.py](analysis_code/postproc/prf/postfit/pycortex_maps_gridfit.py)
 
-#### Css fit
+#### Rois
 - [x] Draw ROIs on fsnative using Inkscape
-- [x] Import ROIs from the MMP atlas for the hcp 170k template [creat_hcp_rois.ipynb](analysis_code/postproc/prf/postfit/creat_hcp_rois.ipynb)
+- [x] Import ROIs from the MMP atlas for the hcp 170k template [creat_hcp_rois.ipynb](analysis_code/atlas/creat_hcp_rois.ipynb)
+- [x] Creat 170k MMP rois mask [creat_170k_mmp_rois_mask.ipynb](analysis_code/atlas/creat_170k_mmp_rois_mask.ipynb)
+
+#### Css fit
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [x] Compute pRF CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
-- [x] Make pRF derivatives maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
+
+### pCM analysis
+- [x] Compute population cortical magnification [pcm_sbatch.py](analysis_code/postproc/pcm/pcm_sbatch.py)
+
+### Final pycortex maps 
+- [x] Make pRF derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
 #### Final ploting
 - [x] Make sub-all tsv [make_sub_all_tsv.py](analysis_code/postproc/prf/postfit/make_sub_all_tsv.py)
