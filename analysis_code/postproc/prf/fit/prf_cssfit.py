@@ -23,7 +23,8 @@ python prf_cssfit.py [main directory] [project name] [subject name]
 [inout file name] [number of jobs]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-02/fsnative/func/fmriprep_dct_loo_avg/sub-02_task-pRF_hemi-L_fmriprep_dct_avg_loo-4_bold.func.gii 32  
+python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-02 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-01/fsnative/func/fmriprep_dct_loo_avg/sub-02_task-pRF_hemi-L_fmriprep_dct_avg_loo-4_bold.func.gii 32  
+python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-01 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-01/170k/func/fmriprep_dct_loo_avg/sub-01_task-pRF_fmriprep_dct_avg_loo-5_bold.dtseries.nii 32  
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -56,7 +57,7 @@ import cortex
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from surface_utils import load_surface ,make_surface_image
-from pycortex_utils import set_pycortex_config_file, get_roi_verts_hemi
+from pycortex_utils import set_pycortex_config_file, data_from_rois
 from maths_utils import r2_score_surf
 
 # Get inputs
@@ -84,21 +85,30 @@ vdm_height = analysis_info['vdm_size_pix'][1]
 TR = analysis_info['TR']
 gauss_grid_nr = analysis_info['gauss_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
-rois = analysis_info['rois']
+
+
 rsq_iterative_th = analysis_info['rsq_iterative_th']
 css_grid_nr = analysis_info['css_grid_nr']
 
 # Define directories and files names (fn)
 if input_fn.endswith('.nii'):
-    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/170k/prf/fit".format(
-        main_dir,project_dir,subject)
+    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/170k/prf/fit".format(main_dir, 
+                                                                     project_dir, 
+                                                                     subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
+    rois = analysis_info['mmp_rois']
+    # rois = rois[0:1] # TO BE REMOVE
 
 elif input_fn.endswith('.gii'):
-    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/fsnative/prf/fit".format(
-        main_dir,project_dir,subject)
+    prf_fit_dir = "{}/{}/derivatives/pp_data/{}/fsnative/prf/fit".format(main_dir, 
+                                                                         project_dir, 
+                                                                         subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
+    rois = analysis_info['rois']
+    # rois = rois[0:1] # TO BE REMOVE
 
+print(rois)
+print(input_fn)
 
 fit_fn_css = input_fn.split('/')[-1]
 fit_fn_css = fit_fn_css.replace('bold', 'prf-fit_css')
@@ -106,12 +116,16 @@ fit_fn_css = fit_fn_css.replace('bold', 'prf-fit_css')
 pred_fn_css = input_fn.split('/')[-1]
 pred_fn_css = pred_fn_css.replace('bold', 'prf-pred_css')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm_pRF_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
-pycortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+vdm_fn = "{}/{}/derivatives/vdm/vdm_pRF_{}_{}.npy".format(main_dir, 
+                                                          project_dir, 
+                                                          vdm_width, 
+                                                          vdm_height)
 
-# Set pycortex db and colormaps
-set_pycortex_config_file(pycortex_dir)
-importlib.reload(cortex)
+# pycortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+
+# # Set pycortex db and colormaps
+# set_pycortex_config_file(pycortex_dir)
+# importlib.reload(cortex)
 
 # Get task specific visual design matrix
 vdm = np.load(vdm_fn)
@@ -124,15 +138,11 @@ exponent_css_grid = np.linspace(0, 4, css_grid_nr)
 
 
 # load data
-img, data, data_roi, roi_idx = get_roi_verts_hemi(fn=input_fn,subject=subject,rois=rois)
-
-
+img, data, data_roi, roi_idx = data_from_rois(fn=input_fn, 
+                                              subject=subject, 
+                                              rois=rois)
 
 print('roi extraction done')
-
-
-
-
 
 # determine visual design
 stimulus = PRFStimulus2D(screen_size_cm=screen_size_cm[1], 
@@ -175,8 +185,7 @@ css_fitter = CSS_Iso2DGaussianFitter(data=data_roi.T,
                                      model=css_model, 
                                      n_jobs=n_jobs,
                                      use_previous_gaussian_fitter_hrf=False,
-                                     previous_gaussian_fitter=gauss_fitter
-                                    )
+                                     previous_gaussian_fitter=gauss_fitter)
 
 
 
@@ -230,7 +239,10 @@ maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
 
 
 # export fit
-img_css_fit_mat = make_surface_image(data=css_fit_mat.T, source_img=img, maps_names=maps_names)
+img_css_fit_mat = make_surface_image(data=css_fit_mat.T, 
+                                     source_img=img, 
+                                     maps_names=maps_names)
+
 nb.save(img_css_fit_mat,'{}/{}'.format(prf_fit_dir, fit_fn_css)) 
 
 # export pred
@@ -240,8 +252,9 @@ nb.save(img_css_pred_mat,'{}/{}'.format(prf_fit_dir, pred_fn_css))
 
 # Print duration
 end_time = datetime.datetime.now()
-print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".format(
-start_time=start_time, end_time=end_time, dur=end_time - start_time))
+print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".format(start_time=start_time, 
+                                                                                    end_time=end_time, 
+                                                                                    dur=end_time - start_time))
 
 
 

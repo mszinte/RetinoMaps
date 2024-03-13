@@ -88,7 +88,9 @@ size_scale = [0, 7.5]
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
- 
+
+if subject == 'sub-170k':
+    formats = ['170k']
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, subject,format_)
@@ -103,12 +105,19 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     if format_ == 'fsnative':
         deriv_avg_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
         deriv_avg_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
-        deriv_mat = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
+        results = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
+        deriv_mat = results['data_concat']
         
     elif format_ == '170k':
         deriv_avg_fn = '{}/{}_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'.format(prf_deriv_dir, subject)
-        deriv_mat = load_surface_pycortex(brain_fn=deriv_avg_fn)
-        save_svg = False
+        results = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        deriv_mat = results['data_concat']
+        
+        if subject == 'sub-170k':
+            save_svg = save_svg
+        else: 
+            save_svg = False
+            
     
     print('Creating flatmaps...')
     

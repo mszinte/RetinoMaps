@@ -20,14 +20,15 @@ New brain volume in derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/amblyo_prf/analysis_code/postproc/pcm
+>> cd ~/projects/RetinoMaps/analysis_code/postproc/pcm
 2. run python command
 >> python compute_pcm.py [main directory] [project name] [subject] [group] [model]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_pcm.py /scratch/mszinte/data amblyo_prf sub-01 327 gauss
+python compute_pcm.py /scratch/mszinte/data RetinoMaps sub-01 327 gauss
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 
@@ -35,18 +36,24 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 import warnings
 warnings.filterwarnings("ignore")
 
-# general imports
-import cortex
-import importlib
-import json
-import numpy as np
-import os
-import sys
-sys.path.append("{}/../../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file
-import nibabel as nb
+# Debug
 import ipdb
 deb = ipdb.set_trace
+
+# general imports
+import os
+import sys
+import json
+import cortex
+import importlib
+import numpy as np
+import nibabel as nb
+
+# Personal iports
+sys.path.append("{}/../../../utils".format(os.getcwd()))
+from pycortex_utils import draw_cortex, set_pycortex_config_file, make_image_pycortex
+
+
 
 # define analysis parameters
 with open('../../../settings.json') as f:
@@ -72,8 +79,8 @@ importlib.reload(cortex)
 # derivatives settings
 rsq_idx, ecc_idx, size_idx, x_idx, y_idx = 0, 1, 4, 7, 8
 
+
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
-    
     # define directories and fn
     prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, 
                                                            subject, format_)
@@ -81,18 +88,32 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
 
     if format_ == 'fsnative':
+        atlas_name = None
+        surf_size = None
         deriv_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_avg_prf-deriv_{}_gridfit.func.gii'.format(
             prf_deriv_dir, subject, task, model)
         deriv_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_avg_prf-deriv_{}_gridfit.func.gii'.format(
             prf_deriv_dir, subject, task, model)
-        deriv_mat = load_surface_pycortex(L_fn=deriv_avg_fn_L, 
-                                          R_fn=deriv_avg_fn_R,)
+        
+        results = load_surface_pycortex(L_fn=deriv_avg_fn_L, 
+                                        R_fn=deriv_avg_fn_R, 
+                                        return_img=True)
+
+        deriv_mat, img_L, img_R = results['data_concat'], results['img_L'], results['img_R']
+
+
         
     elif format_ == '170k':
         deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_avg_prf-deriv_{}_gridfit.dtseries.nii'.format(
             prf_deriv_dir, subject, task, model)
-        deriv_mat = load_surface_pycortex(brain_fn=deriv_avg_fn)
-        save_svg = False
+        atlas_name = 'mmp'
+        surf_size = '59k'
+        results = load_surface_pycortex(brain_fn=deriv_avg_fn,
+                                        return_img=True,
+                                        return_59k_mask=True, 
+                                        return_170k_mask=True, 
+                                        return_source_data=True)
+        deriv_mat, mask_59k, mask_170k, deriv_mat_170k, img  = results['data_concat'], results['mask_59k'], results['mask_170k'], results['source_data'], results['img']
 
     # parameters
     vert_rsq_data = deriv_mat[rsq_idx, ...]

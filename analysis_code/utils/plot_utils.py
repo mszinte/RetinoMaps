@@ -101,6 +101,19 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
                                 line_color = roi_colors[j], 
                                 meanline_visible=True), 
                       row=2, col=1)
+        
+        # pcm
+        fig.add_trace(go.Violin(x=df.rois[df.rois==roi], 
+                                y=df.pcm, 
+                                name=roi, 
+                                showlegend=False, 
+                                legendgroup='avg', 
+                                points=False, 
+                                scalemode='width', 
+                                width=0.75,  
+                                line_color = roi_colors[j], 
+                                meanline_visible=True), 
+                      row=2, col=2)
  
         
         # Set axis titles only for the left-most column and bottom-most row

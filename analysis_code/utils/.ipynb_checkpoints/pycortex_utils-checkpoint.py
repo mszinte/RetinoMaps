@@ -1,10 +1,69 @@
 import numpy as np
-def get_roi_verts_hemi(fn,subject,rois):
+def load_rois_atlas(atlas_name, surf_size, rois=None, mask=True, path_to_atlas=None):
     """
-    load an surface image, and return vertex from ROIs only from the corresponding 
-    hemisphere
+    Loads ROIs from an atlas.
 
     Parameters
+    ----------
+    atlas_name : str
+        The name of the atlas.
+    surf_size : str
+        Size of the surface, either '59k' or '170k'.
+    rois : list of str, optional
+        List of ROIs you want to extract. If None, all ROIs are returned. 
+        Default is None.
+    mask : bool, optional
+        If True, returns the ROI masks. If False, returns the indices where the masks are True.
+        Default is True.
+    path_to_atlas : str, optional
+        Path to the directory containing the atlas data. If not provided, the function looks for the atlas 
+        data in the default directory.
+
+    Returns
+    -------
+    rois_masks : dict
+        A dictionary where the keys represent the ROIs and the values correspond 
+        to the respective masks for each hemisphere.
+
+    Raises
+    ------
+    ValueError
+        If 'surf_size' is not '59k' or '170k'.
+    """
+    import os
+    import numpy as np
+    
+    # Validating surf_size
+    if surf_size not in ['59k', '170k']:
+        raise ValueError("Invalid value for 'surf_size'. It should be either '59k' or '170k'.")
+        
+    # Loading data from the specified path or default directory
+    if path_to_atlas:
+        data = np.load(path_to_atlas)
+    else:    
+        atlas_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../atlas/"))
+        filename = "{}_atlas_rois_{}.npz".format(atlas_name, surf_size)
+        data = np.load('{}/{}'.format(atlas_dir, filename))
+    
+    rois_dict = dict(data)
+    
+    # Handling the case where mask is False
+    if not mask:
+        # Returning indices where the masks are True
+        rois_dict = {roi: np.where(rois_dict[roi])[0] for roi in rois_dict}
+        
+    # Filtering ROIs if rois is provided
+    if rois is None:
+        return rois_dict
+    elif isinstance(rois, list):
+        filtered_rois = {roi: rois_dict[roi] for roi in rois if roi in rois_dict}
+        return filtered_rois
+    else:
+        raise ValueError("Invalid value for 'rois'. It should be either None or a list of ROI names.")
+        
+def data_from_rois(fn, subject, rois, return_concat_hemis):
+    """
+    Load a surface, and returne vertex only data from the specified ROIs
     ----------
     fn : surface filename
     subject : subject 
@@ -22,21 +81,26 @@ def get_roi_verts_hemi(fn,subject,rois):
     data_hemi : numpy stacked data
                 2 dim (time x vertices)    
     """
-    
     import cortex
     from surface_utils import load_surface
 
-    
-    
     # import data 
     img, data = load_surface(fn=fn)
     len_data = data.shape[1]
     
-    # export masks 
-    roi_verts = cortex.get_roi_verts(subject=subject, 
-                                     roi= rois, 
-                                     mask=True
-                                    )
+    # get rois mask 
+    if fn.endswith('.gii'):
+        roi_verts = cortex.get_roi_verts(subject=subject, 
+                                         roi= rois, 
+                                         mask=True)
+    elif fn.endswith('.nii'):
+        if len_data > 60000:
+            surf_size = '170k'
+        else:
+            surf_size = '59k'
+            
+        roi_verts = load_rois_atlas(atlas_name='mmp',surf_size=surf_size)
+    
     na_vertices = np.isnan(data).any(axis=0)
     
     # create a brain mask  
@@ -53,7 +117,8 @@ def get_roi_verts_hemi(fn,subject,rois):
         for i, na_vertices in enumerate(na_vertices):
             hemi_mask[i] = not na_vertices and hemi_mask[i]
     else: 
-        hemi_mask = brain_mask
+        for i, na_vertices in enumerate(na_vertices):
+            brain_mask[i] = not na_vertices and brain_mask[i]
         
     roi_idx = np.where(hemi_mask)[0]
     
@@ -62,73 +127,67 @@ def get_roi_verts_hemi(fn,subject,rois):
         
     return img, data, data_roi, roi_idx
 
-# def load_mmp_rois():
-#     import numpy as np
-#     rois = np.load('mmp_atlas_rois.npz')
-#     return rois
-
-
-
-def lire_fichier_npz():
-    import numpy as np
-    from pkg_resources import resource_stream
-    
-    try:
-        with resource_stream(__name__, 'mmp_atlas_rois.npz') as f:
-            data = np.load(f)
-            donnees = dict(data)
-            return donnees
-    except FileNotFoundError:
-        print(f"Le fichier {nom_fichier} n'a pas été trouvé.")
-        return None
-
-
-
-def get_roi_masks_hemi(fn,subject,rois,return_mask=True):
+def get_rois(subject, return_concat_hemis=False,rois=None, mask=True, atlas_name=None, surf_size=None):
     """
-    Acces to a single hemisphere rois masks 
+    Accesses single hemisphere ROI masks for GIFTI and atlas ROI for CIFTI.
 
     Parameters
     ----------
-    fn : surface filename
-    subject : subject 
-    rois : list of rois you want extract 
-    
+    subject : str
+        Subject name in the pycortex database.
+    return_concat_hemis : bool, optional
+        Indicates whether to return concatenated hemisphere ROIs. Defaults to False.
+    rois : list of str, optional
+        List of ROIs you want to extract.
+    mask : bool, optional
+        Indicates whether to mask the ROIs. Defaults to True.
+    atlas_name : str, optional
+        If atlas_name is not None, subject has to be a template subject (i.e., sub-170k).
+        If provided, `surf_size` must also be specified.
+    surf_size : str, optional
+        The size in which you want the ROIs. It should be '59k' or '170k'. 
+        Required if `atlas_name` is provided.
+
     Returns
     -------
-    rois_masks : A dictionary where the keys represent the ROIs 
-    and the values correspond to the respective masks for each hemisphere.
-             
-    hemi : The correponding hemisphere. 
-  
+    rois_masks : dict
+        A dictionary where the keys represent the ROIs and the values correspond to the respective masks for each hemisphere.
     """
     import cortex
     from surface_utils import load_surface
-
-    # import data 
-    img, data = load_surface(fn=fn)
-    len_data = data.shape[1]  
     
-    # export masks 
-    roi_verts = cortex.get_roi_verts(subject=subject, 
-                                     roi= rois, 
-                                     mask=return_mask
-                                    )
-    # create a hemi mask  
-    if 'hemi-L' in fn:
-        hemi = 'hemi-L'
-        rois_masks = {roi: data[:len_data] for roi, data in roi_verts.items()}
-        
-    elif 'hemi-R' in fn:
-        hemi = 'hemi-R'
-        rois_masks = {roi: data[-len_data:] for roi, data in roi_verts.items()}
-          
-    return rois_masks, hemi
+    surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
+    surf_lh, surf_rh = surfs[0], surfs[1]
+    lh_vert_num, rh_vert_num = surf_lh.pts.shape[0], surf_rh.pts.shape[0]
 
-def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, return_hemi_len=None):
+    
+    # get rois 
+    if atlas_name :
+        roi_verts = load_rois_atlas(atlas_name=atlas_name, 
+                                    surf_size=surf_size,
+                                    rois=rois, 
+                                    mask=mask)
+        return roi_verts
+
+    else:
+        roi_verts = cortex.get_roi_verts(subject=subject, 
+                                         roi=rois, 
+                                         mask=mask)
+    
+    rois_masks_L = {roi: data[:lh_vert_num] for roi, data in roi_verts.items()}
+    rois_masks_R = {roi: data[-rh_vert_num:] for roi, data in roi_verts.items()}
+
+    if return_concat_hemis :
+        return roi_verts
+    else:
+        return rois_masks_L, rois_masks_R
+
+def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=False, 
+                          return_hemi_len=False, return_59k_mask=False, return_source_data=False):
     """
     Load a surface image independently if it's CIFTI or GIFTI, and return 
-    concatenated data from the left and right cortex
+    concatenated data from the left and right cortex if data are GIFTI and 
+    a decomposition from 170k vertices to 59k verticices if data are CIFTI.
 
     Parameters
     ----------
@@ -137,48 +196,113 @@ def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=None, 
     brain_fn : brain data in cifti format
     return_img : whether to include img in the return
     return_hemi_len : whether to include hemisphere lengths in the return
+    return_59k_mask : whether to include a mask corresponding to cortex vertices 
+                      (True) or medial wall vertices (False) for 59k data
+    return_source_data : whether to include the source data in the return (both for GIFTI and CIFTI)
     
     Returns
     -------
-    result : numpy array or list
-        data_concat : numpy stacked data of the two hemisphere. 
-                      2 dim (time x vertices)
-        (optional) img_L : surface image data for the left hemisphere
-        (optional) img_R : surface image data for the right hemisphere
-        (optional) len_L : length of the left hemisphere data
-        (optional) len_R : length of the right hemisphere data
+    result : dict
+        A dictionary containing the following keys:
+        - 'data_concat': numpy array, stacked data of the two hemispheres. 2-dimensional array (time x vertices).
+        - 'img_L': optional numpy array, surface image data for the left hemisphere.
+        - 'img_R': optional numpy array, surface image data for the right hemisphere.
+        - 'len_L': optional int, length of the left hemisphere data.
+        - 'len_R': optional int, length of the right hemisphere data.
+        - 'mask_59k': optional numpy array, mask where True corresponds to cortex vertices and False to medial wall vertices for 59k data.
+        - 'source_data_L': optional numpy array, source data for the left hemisphere (only available if return_source_data is True).
+        - 'source_data_R': optional numpy array, source data for the right hemisphere (only available if return_source_data is True).
+        - 'source_data': optional numpy array, source data for the entire brain (only available if return_source_data is True).
     """
-    
+
     from surface_utils import load_surface
-    from cifti_utils import decompose_cifti
+    from cifti_utils import from_170k_to_59k
     
+    result = {}
+
     if L_fn and R_fn: 
         img_L, data_L = load_surface(L_fn)
-        len_L = np.shape(data_L)[1]
+        len_L = data_L.shape[1]
         img_R, data_R = load_surface(R_fn)
-        len_R = np.shape(data_R)[1]
+        len_R = data_R.shape[1]
         data_concat = np.concatenate((data_L, data_R), axis=1)
-        
+        result['data_concat'] = data_concat
+        if return_img:
+            result['img_L'] = img_L
+            result['img_R'] = img_R
+        if return_hemi_len:
+            result['len_L'] = len_L
+            result['len_R'] = len_R
+        if return_source_data:
+            result['source_data_L'] = data_L
+            result['source_data_R'] = data_R
+
     elif brain_fn:
-        img, mat = load_surface(brain_fn)
-        vol, data_L, data_R = decompose_cifti(img)
-        data_concat = np.concatenate((data_L, data_R), axis=1)
+        img, data = load_surface(brain_fn)
+        result.update(from_170k_to_59k(img=img, 
+                                        data=data, 
+                                        return_concat_hemis=True, 
+                                        return_59k_mask=return_59k_mask))
 
-    if return_img is None and return_hemi_len is None:
-        return data_concat
-
-    result = [data_concat]
-
-    if return_img:
-        result.append(img_L)
-        result.append(img_R)
-
-    if return_hemi_len:
-        result.append(len_L)
-        result.append(len_R)
+        if return_img:
+            result['img'] = img
+        if return_source_data:
+            result['source_data'] = data
 
     return result
+
+def make_image_pycortex(data, 
+                        maps_names=None,
+                        img_L=None, 
+                        img_R=None, 
+                        lh_vert_num=None, 
+                        rh_vert_num=None, 
+                        img=None, 
+                        brain_mask_59k=None):
+    """
+    Make a Cifti or Gifti image with data imported by PyCortex. This means that Gifti data 
+    will be split by hemisphere, and Cifti data will be transformed back into 170k size.
+
+    Parameters:
+    - data: numpy array, your data.
+    - maps_names: list of strings, optional, names for the mapped data.
+    - img_L: Gifti Surface, left hemisphere surface object.
+    - img_R: Gifti Surface, right hemisphere surface object.
+    - lh_vert_num: int, number of vertices in the left hemisphere.
+    - rh_vert_num: int, number of vertices in the right hemisphere.
+    - img: Cifti Surface, source volume for mapping onto the surface.
+    - brain_mask_59k: numpy array, optional, brain mask for 59k vertices (output of the from_170k_to_59k function).
+
+    Returns:
+    If mapping onto separate hemispheres (img_L and img_R provided):
+    - new_img_L: Gifti img, new surface representing data on the left hemisphere.
+    - new_img_R: Gifti img, new surface representing data on the right hemisphere.
+
+    If mapping onto a single hemisphere (img provided):
+    - new_img: Cifti img, new surface representing data on 170k size.
+    """
+    from cifti_utils import from_59k_to_170k
+    from surface_utils import make_surface_image 
+    import numpy as np
     
+
+    if img_L and img_R: 
+        data_L = data[:,:lh_vert_num]
+        data_R = data[:,-rh_vert_num:]
+
+        new_img_L = make_surface_image(data_L, img_L, maps_names=maps_names)
+        new_img_R = make_surface_image(data_R, img_R, maps_names=maps_names)
+        return new_img_L, new_img_R
+        
+    elif img:
+        data_170k = from_59k_to_170k(data_59k=data, 
+                                     brain_mask_59k=brain_mask_59k)
+                
+        new_img = make_surface_image(data=data_170k, 
+                                     source_img=img, 
+                                     maps_names=maps_names)
+        return new_img
+
 
 def set_pycortex_config_file(cortex_folder):
 

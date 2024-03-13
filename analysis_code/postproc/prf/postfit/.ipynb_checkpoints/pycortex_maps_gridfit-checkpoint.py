@@ -21,7 +21,7 @@ To run:
 >> python pycortex_maps_gridfit.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-03 n
+python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-02 y
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
@@ -103,11 +103,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     if format_ == 'fsnative':
         deriv_avg_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
         deriv_avg_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_avg_prf-deriv_gauss_gridfit.func.gii'.format(prf_deriv_dir, subject)
-        deriv_mat = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
+        results = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
+        deriv_mat = results['data_concat']
         
     elif format_ == '170k':
         deriv_avg_fn = '{}/{}_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'.format(prf_deriv_dir, subject)
-        deriv_mat = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        results = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        deriv_mat = results['data_concat']
         save_svg = False
     
     print('Creating flatmaps...')
