@@ -73,6 +73,7 @@ dct_avg_nii_fns = "{}/{}/170k/func/fmriprep_dct_loo_avg/*_task-pRF_*avg*.dtserie
 
 pp_fns =  glob.glob(dct_avg_gii_fns) + glob.glob(dct_avg_nii_fns)
 
+
 for fit_num, pp_fn in enumerate(pp_fns):
     if pp_fn.endswith('.nii'):
         prf_dir = "{}/{}/170k/prf".format(pp_dir, subject)

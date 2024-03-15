@@ -57,22 +57,6 @@ sys.path.append("{}/../../utils".format(os.getcwd()))
 from pycortex_utils import set_pycortex_config_file, load_surface_pycortex, get_rois, make_image_pycortex
 
 
-
-# define analysis parameters
-with open('../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-tasks = analysis_info["task_names"]
-task = tasks[2]
-
-vert_dist_th = analysis_info['vertex_pcm_rad']
-formats = analysis_info['formats']
-
-
-
-
-
-
 # inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
@@ -85,10 +69,21 @@ if model == 'gauss':
 elif model == 'css':
     model = 'avg_css'
 
-# Set pycortex db and colormaps
-cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
-set_pycortex_config_file(cortex_dir)
-importlib.reload(cortex)
+# define analysis parameters
+with open('../../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+tasks = analysis_info["task_names"]
+task = tasks[2]
+
+vert_dist_th = analysis_info['vertex_pcm_rad']
+formats = analysis_info['formats']
+
+
+# # Set pycortex db and colormaps
+# cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+# set_pycortex_config_file(cortex_dir)
+# importlib.reload(cortex)
 
 # derivatives settings
 rsq_idx, ecc_idx, size_idx, x_idx, y_idx = 0, 1, 4, 7, 8
@@ -105,7 +100,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     if format_ == 'fsnative':
         rois = analysis_info['rois']
-
         atlas_name = None 
         surf_size = None        
         deriv_avg_fn_L = glob.glob('{}/{}*pRF_hemi-L*{}.func.gii'.format(prf_deriv_dir, subject, model))
@@ -123,7 +117,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         
     elif format_ == '170k':
         rois = analysis_info['mmp_rois']
-
         atlas_name = 'mmp'
         surf_size = '59k'
         deriv_avg_fn = glob.glob('{}/{}*pRF*{}*.dtseries.nii'.format(prf_deriv_dir, subject, model)) 

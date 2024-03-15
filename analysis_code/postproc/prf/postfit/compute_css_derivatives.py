@@ -145,7 +145,7 @@ for loo_deriv_fns in loo_deriv_fns_list:
     # Averaging computation
     deriv_img, deriv_data = load_surface(fn=loo_deriv_fns[0])
     loo_deriv_data_avg = np.zeros(deriv_data.shape)
-    for loo_deriv_fn in loo_deriv_fns:
+    for n_run, loo_deriv_fn in enumerate(loo_deriv_fns):
         loo_deriv_avg_fn = loo_deriv_fn.split('/')[-1]
         loo_deriv_avg_fn = re.sub(r'avg_loo-\d+_prf-deriv', 'prf-deriv-loo-avg', loo_deriv_avg_fn)
         
@@ -153,7 +153,11 @@ for loo_deriv_fns in loo_deriv_fns_list:
         loo_deriv_img, loo_deriv_data = load_surface(fn=loo_deriv_fn)
         
         # Averagin
-        loo_deriv_data_avg += loo_deriv_data/len(loo_deriv_fns)
+        # loo_deriv_data_avg += loo_deriv_data/len(loo_deriv_fns)
+        if n_run == 0:
+            loo_deriv_data_avg = np.copy(loo_deriv_data)
+        else:
+            loo_deriv_data_avg = np.nanmean(np.array([loo_deriv_data_avg, loo_deriv_data]), axis=0)
     
     if hemi:
         avg_fn = '{}/{}/fsnative/prf/prf_derivatives/{}'.format(pp_dir, subject, loo_deriv_avg_fn)
@@ -222,7 +226,7 @@ for format_, extension in zip(formats, extensions):
                 
             df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
               
-# # Define permission cmd
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# Define permission cmd
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
 
