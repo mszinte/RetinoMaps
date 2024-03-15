@@ -1,7 +1,8 @@
 # RetinoMaps
 ## About
 ---
-We study cerebral areas implicated in both vision and eye movements..</br>
+We study cerebral areas implicated in both vision and eye movements.</br>
+All the analysis are down in surface with both fsnative ad 170k space.
 This repository contain all code allowing us to analyse our dataset [OpenNeuro:DSXXXXX](https://openneuro.org/datasets/dsXXXX).</br>
 
 ---
@@ -62,6 +63,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 #### Gaussian fit
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
 - [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py) 
+- [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
 - [x] Make pRF derivatives maps with pycortex [pycortex_maps_gridfit.py](analysis_code/postproc/prf/postfit/pycortex_maps_gridfit.py)
 
 #### Rois
@@ -73,10 +75,12 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [x] Compute pRF CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 
-### pCM analysis
+#### pCM analysis
 - [x] Compute population cortical magnification [pcm_sbatch.py](analysis_code/postproc/pcm/pcm_sbatch.py)
 
-### Final pycortex maps 
+- [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
+
+#### Final pycortex maps 
 - [x] Make pRF derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
 #### Final ploting
@@ -88,13 +92,11 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Compute Glm derivatives [compute_glm_derivatives.py](analysis_code/postproc/glm/compute_glm_derivatives.py)
 - [x] Make GLM derivatives maps with pycortex [pycortex_maps_glm_final.py](analysis_code/postproc/glm/pycortex_maps_glm_final.py)
 
-### **Sub all analysis**
+### **Group analysis**
 - [x] Merge all subjects pycortex maps [pdf_maps.py](analysis_code/postproc/pdf_maps.py)
 
 ## On working
 ---
-### pCM analysis
-- [ ] Compute population cortical magnification [compute_pcm.py](analysis_code/postproc/pcm/compute_pcm.py)
  
 ### webgl
 - [ ] Make webgl with the pycortex dataset [pycortex_maps.py](analysis_code/postproc/prf/webgl/pycortex_webgl.py)

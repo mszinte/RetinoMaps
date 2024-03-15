@@ -126,9 +126,9 @@ def data_from_rois(fn, subject, rois):
                                     return_hemis=False,
                                     rois=rois, 
                                     mask=True)
-    
+
     # Create a brain mask
-    na_vertices = np.isnan(data).any(axis=0)
+    na_vertices = np.where(np.isnan(data).any(axis=0))[0]
     brain_mask = np.any(list(roi_verts.values()), axis=0)
         
     # create a hemi mask  
@@ -143,11 +143,9 @@ def data_from_rois(fn, subject, rois):
             hemi_mask[i] = not na_vertices and hemi_mask[i]
     else: 
         hemi_mask = brain_mask
+        for i, na_vertices in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertices and hemi_mask[i]
     
-    # Correct NaN values in hemisphere mask
-    for i, na_vertex in enumerate(na_vertices):
-        if na_vertex:
-            hemi_mask[i] = False
     
     # Get indices of regions of interest (ROIs)
     roi_idx = np.where(hemi_mask)[0]
