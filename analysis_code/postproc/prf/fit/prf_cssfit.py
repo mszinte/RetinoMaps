@@ -23,7 +23,7 @@ python prf_cssfit.py [main directory] [project name] [subject name]
 [inout file name] [number of jobs]
 -----------------------------------------------------------------------------------------
 Exemple:
-python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-01 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-01/fsnative/func/fmriprep_dct_loo_avg/sub-01_task-pRF_hemi-R_fmriprep_dct_avg_loo-2_bold.func.gii 32  
+python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-01 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-01/fsnative/func/fmriprep_dct_loo_avg/sub-01_task-pRF_hemi-L_fmriprep_dct_avg_loo-2_bold.func.gii 32  
 python prf_cssfit.py /scratch/mszinte/data RetinoMaps sub-01 /scratch/mszinte/data/RetinoMaps/derivatives/pp_data/sub-01/170k/func/fmriprep_dct_loo_avg/sub-01_task-pRF_fmriprep_dct_avg_loo-5_bold.dtseries.nii 32  
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
@@ -141,6 +141,7 @@ exponent_css_grid = np.linspace(0, 4, css_grid_nr)
 img, data, data_roi, roi_idx = data_from_rois(fn=input_fn, 
                                               subject=subject, 
                                               rois=rois)
+
 
 print('roi extraction done')
 

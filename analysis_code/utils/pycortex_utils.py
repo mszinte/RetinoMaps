@@ -128,23 +128,24 @@ def data_from_rois(fn, subject, rois):
                                     mask=True)
 
     # Create a brain mask
-    na_vertices = np.where(np.isnan(data).any(axis=0))[0]
+    # na_vertices = np.where(np.isnan(data).any(axis=0))[0]
+    na_vertices = np.isnan(data).any(axis=0)
     brain_mask = np.any(list(roi_verts.values()), axis=0)
         
     # create a hemi mask  
     if 'hemi-L' in fn:
         hemi_mask = brain_mask[:len_data]
-        for i, na_vertices in enumerate(na_vertices):
-            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
         
     elif 'hemi-R' in fn: 
         hemi_mask = brain_mask[-len_data:]
-        for i, na_vertices in enumerate(na_vertices):
-            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
     else: 
         hemi_mask = brain_mask
-        for i, na_vertices in enumerate(na_vertices):
-            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
     
     
     # Get indices of regions of interest (ROIs)
@@ -156,79 +157,7 @@ def data_from_rois(fn, subject, rois):
         
     return img, data, data_roi, roi_idx
 
-# def get_rois(subject, return_concat_hemis=False, return_hemi=None, rois=None, mask=True, atlas_name=None, surf_size=None):
-#     """
-#     Accesses single hemisphere ROI masks for GIFTI and atlas ROI for CIFTI.
 
-#     Parameters
-#     ----------
-#     subject : str
-#         Subject name in the pycortex database.
-#     return_concat_hemis : bool, optional
-#         Indicates whether to return concatenated hemisphere ROIs. Defaults to False.
-#     return_hemi : str, optional
-#         Indicates which hemisphere's ROI masks to return. Can be 'hemi-L' for the left hemisphere or 'hemi-R' for the right hemisphere.
-#     rois : list of str, optional
-#         List of ROIs you want to extract.
-#     mask : bool, optional
-#         Indicates whether to mask the ROIs. Defaults to True.
-#     atlas_name : str, optional
-#         If atlas_name is not None, subject has to be a template subject (i.e., sub-170k).
-#         If provided, `surf_size` must also be specified.
-#     surf_size : str, optional
-#         The size in which you want the ROIs. It should be '59k' or '170k'. 
-#         Required if `atlas_name` is provided.
-
-#     Returns
-#     -------
-#     rois_masks : dict
-#         A dictionary where the keys represent the ROIs and the values correspond to the respective masks for the specified hemisphere.
-#     """ 
-#     import cortex
-    
-#     surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
-#     surf_lh, surf_rh = surfs[0], surfs[1]
-#     lh_vert_num, rh_vert_num = surf_lh.pts.shape[0], surf_rh.pts.shape[0]
-
-    
-#     # get rois 
-#     if atlas_name :
-#         roi_verts = load_rois_atlas(atlas_name=atlas_name, 
-#                                     surf_size=surf_size,
-#                                     return_hemis=False,
-#                                     rois=rois, 
-#                                     mask=mask)
-        
-#         if return_concat_hemis :
-#             return roi_verts
-        
-        
-#         elif return_hemi == 'hemi-L':
-#             roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
-#             return roi_verts_L
-#         elif return_hemi == 'hemi-R':
-#             roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
-#             return roi_verts_R
-#         else:
-#             roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
-#             return roi_verts_L, roi_verts_R
-
-#     else:
-#         roi_verts = cortex.get_roi_verts(subject=subject, 
-#                                           roi=rois, 
-#                                           mask=mask)
-    
-#         rois_masks_L = {roi: data[:lh_vert_num] for roi, data in roi_verts.items()}
-#         rois_masks_R = {roi: data[-rh_vert_num:] for roi, data in roi_verts.items()}
-
-#         if return_concat_hemis :
-#             return roi_verts
-#         elif return_hemi == 'hemi-L':
-#             return rois_masks_L
-#         elif return_hemi == 'hemi-R':
-#             return rois_masks_R
-#         else:
-#             return rois_masks_L, rois_masks_R
 
 def get_rois(subject, return_concat_hemis=False, return_hemi=None, rois=None, mask=True, atlas_name=None, surf_size=None):
     """
