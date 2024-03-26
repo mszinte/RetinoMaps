@@ -26,19 +26,15 @@ Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
 # General imports
-
-
 import os
 import sys
 import json
 import pandas as pd
-
 
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
@@ -49,18 +45,16 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 group = sys.argv[3]
 
-# general imports
+# Debug
 import ipdb
 deb = ipdb.set_trace
-
-
 
 # load settings
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 subjects = analysis_info['subjects']
-# subjects  += ['sub-all']
+subjects  += ['group']
 # formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 formats = ['fsnative']
@@ -85,6 +79,7 @@ for subject in subjects :
                                                                        format_)
         os.makedirs(fig_dir, exist_ok=True)
         
+        # make figures 
         data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
         fig1 = prf_violins_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig2 = prf_ecc_size_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
@@ -92,7 +87,7 @@ for subject in subjects :
         fig3 = prf_contralaterality_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig4 = prf_ecc_pcm_plot(data, subject, ecc_th=ecc_th, pcm_th=pcm_th, rsq_th=rsq_th)
         
-        
+        #save figures 
         fig1.write_image("{}/{}_prf_rsq_size_n_pcm.pdf".format(fig_dir, subject))
         fig2.write_image("{}/{}_prf_size_ecc.pdf".format(fig_dir, subject)) 
         fig3.write_image("{}/{}_contralaterality.pdf".format(fig_dir, subject)) 

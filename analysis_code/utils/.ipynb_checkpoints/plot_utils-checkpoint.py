@@ -5,13 +5,14 @@ from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
 
-def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None]) :
+
+def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None], pcm_th=[None,None]) :
     """
     Make violins plots for pRF r2/loo_r2, ecc and size
 
     Parameters
     ----------
-    data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, rois and subject columns
+    data : A data frame with prf_rsq, prf_size, prf_loo_r2, pcm, rois and subject columns
     
     Returns
     -------
@@ -20,6 +21,7 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
     # Replace all data outer threshold with NaN data
     data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
              (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | 
+             (data.pcm < pcm_th[0]) | (data.pcm > pcm_th[1]) |
              (data.prf_loo_r2 <=rsq_th[0])] = np.nan
     
     data = data.dropna()
@@ -101,38 +103,58 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
                                 line_color = roi_colors[j], 
                                 meanline_visible=True), 
                       row=2, col=1)
+        
+        # pcm
+        fig.add_trace(go.Violin(x=df.rois[df.rois==roi], 
+                                y=df.pcm, 
+                                name=roi, 
+                                showlegend=False, 
+                                legendgroup='avg', 
+                                points=False, 
+                                scalemode='width', 
+                                width=0.75,  
+                                line_color = roi_colors[j], 
+                                meanline_visible=True), 
+                      row=2, col=2)
  
         
         # Set axis titles only for the left-most column and bottom-most row
-        fig.update_yaxes(range=[0,1], 
+        fig.update_yaxes(range=[0,1],
+                         nticks=5, 
                          title_text='r2', 
                          row=1, col=1)
         
         fig.update_yaxes(range=[0,20], 
+                         nticks=5, 
                          title_text='pRF size (dva)', 
                          row=1, col=2)
         
         fig.update_yaxes(range=[0,2], 
-                         nticks=4, 
+                         nticks=5, 
                          title_text='pRF n', 
                          row=2, col=1)
+        
+        fig.update_yaxes(range=[0,20], 
+                         nticks=5, 
+                         title_text='pCM', 
+                         row=2, col=2)
         
         fig.update_xaxes(showline=True, 
                          ticklen=0, 
                          linecolor=('rgba(255,255,255,0)'), 
                          tickfont=dict(size=18))
         
-        fig.update_traces(spanmode='manual', 
-                          span=[0,1], 
-                          row=1, col=1)  
+        # fig.update_traces(spanmode='manual', 
+        #                   span=[0,1], 
+        #                   row=1, col=1)  
         
-        fig.update_traces(spanmode='manual', 
-                          span=[0.1,20], 
-                          row=1, col=2)
+        # fig.update_traces(spanmode='manual', 
+        #                   span=[0.1,20], 
+        #                   row=1, col=2)
         
-        fig.update_traces(spanmode='manual', 
-                          span=[0,2], 
-                          row=2, col=1)
+        # fig.update_traces(spanmode='manual', 
+        #                   span=[0,2], 
+        #                   row=2, col=1)
         
         
     fig.update_layout(height=fig_height, 
@@ -150,9 +172,11 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
     
     return fig 
 
+
+
 def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None]) :
     """
-    Make violins plots for pRF r2/loo_r2, ecc and size
+    Make figure of ecc size relation 
 
     Parameters
     ----------
@@ -163,9 +187,7 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
     fig : the figure 
     """
     
-    from maths_utils import weighted_regression
-    import scipy
-    from scipy import stats
+    from maths_utils import weighted_regression, bootstrap_ci_median
     
     
     fig_height, fig_width = 400, 800
@@ -174,7 +196,7 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
     # Replace all data outer threshold with NaN data
     data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
              (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | 
-             (data.prf_loo_r2 <=rsq_th[0])] = np.nan
+             (data.prf_loo_r2 <= rsq_th[0])] = np.nan
     
     data = data.dropna()
 
@@ -198,19 +220,34 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
             df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=np.arange(0, 17.5, 2.5)))
             df_sorted = df.sort_values('prf_ecc')
             
-            ecc_mean = np.array(df_grouped['prf_ecc'].mean())
-            sd_mean = np.array(df_grouped['prf_size'].mean())
-            r2_mean = np.array(df_grouped['prf_loo_r2'].mean())
+
+
             
+            
+            ecc_med = np.array(df_grouped['prf_ecc'].median())
+            size_med = np.array(df_grouped['prf_size'].median())
+            r2_med = np.array(df_grouped['prf_loo_r2'].median())
             # CI95 for each group of ecc
-            ci = df_grouped['prf_size'].apply(lambda x: stats.t.interval(0.95, len(x)-1, loc=np.nanmean(x), scale=scipy.stats.sem(x, nan_policy='omit')))
-            upper_bound = np.array(ci.apply(lambda x: x[1]))
-            lower_bound = np.array(ci.apply(lambda x: x[0]))
-            
+            ci = df_grouped['prf_size'].apply(lambda x: bootstrap_ci_median(x))
+            upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+            lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+
             # Linear regression
-            slope, intercept = weighted_regression(ecc_mean, sd_mean, r2_mean)
-            slope_upper, intercept_upper = weighted_regression(ecc_mean[np.where(~np.isnan(upper_bound))], upper_bound[~np.isnan(upper_bound)], r2_mean[np.where(~np.isnan(upper_bound))])
-            slope_lower, intercept_lower = weighted_regression(ecc_mean[np.where(~np.isnan(lower_bound))], lower_bound[~np.isnan(lower_bound)], r2_mean[np.where(~np.isnan(lower_bound))])
+            slope, intercept = weighted_regression(ecc_med, 
+                                                   size_med, 
+                                                   r2_med,
+                                                   model='linear')
+            
+            slope_upper, intercept_upper = weighted_regression(ecc_med[np.where(~np.isnan(upper_bound))], 
+                                                               upper_bound[~np.isnan(upper_bound)], 
+                                                               r2_med[np.where(~np.isnan(upper_bound))], 
+                                                               model='linear')
+            
+            slope_lower, intercept_lower = weighted_regression(ecc_med[np.where(~np.isnan(lower_bound))], 
+                                                               lower_bound[~np.isnan(lower_bound)], 
+                                                               r2_med[np.where(~np.isnan(lower_bound))], 
+                                                               model='linear')
+            
             line = slope[0][0] * np.array(df_sorted.prf_ecc) + intercept[0]
             line_upper = slope_upper[0][0] * np.array(df_sorted.prf_ecc) + intercept_upper[0]
             line_lower = slope_lower[0][0] * np.array(df_sorted.prf_ecc) + intercept_lower[0]
@@ -219,15 +256,23 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
                                      line=dict(color=roi_color, width=3), showlegend=False), 
                           row=1, col=l+1)
 
+            # # Error area
+            # fig.add_trace(go.Scatter(x=np.concatenate([df_sorted.prf_ecc, df_sorted.prf_ecc[::-1]]), 
+            #                           y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
+            #                           mode='lines', fill='toself', fillcolor=roi_color_opac, 
+            #                           line=dict(color=roi_color_opac, width=0), showlegend=False), 
+            #               row=1, col=l+1)
             # Error area
             fig.add_trace(go.Scatter(x=np.concatenate([df_sorted.prf_ecc, df_sorted.prf_ecc[::-1]]), 
-                                     y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
-                                     mode='lines', fill='toself', fillcolor=roi_color_opac, 
-                                     line=dict(color=roi_color_opac, width=0), showlegend=False), 
+                                      y=np.concatenate([list(upper_bound), list(lower_bound[::-1])]), 
+                                      mode='lines', fill='toself', fillcolor=roi_color_opac, 
+                                      line=dict(color=roi_color_opac, width=0), showlegend=False), 
                           row=1, col=l+1)
+            
+
 
             # Markers
-            fig.add_trace(go.Scatter(x=ecc_mean, y=sd_mean, mode='markers', 
+            fig.add_trace(go.Scatter(x=ecc_med, y=size_med, mode='markers', 
                                      error_y=dict(type='data', array=ci.apply(lambda x: (x[1] - x[0]) / 2).tolist(), visible=True, thickness=3, width=0, color =roi_color),
                                      marker=dict(color='white', size=8, 
                                                  line=dict(color=roi_color,width=3)
@@ -246,7 +291,370 @@ def prf_ecc_size_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rs
         fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template='simple_white')
         
     return fig
+
+
+# def prf_ecc_pcm_plot(data, subject, ecc_th=[None,None], pcm_th=[None,None], rsq_th=[None,None]) :
+#     """
+#     Make figure of ecc pcm relation 
+
+#     Parameters
+#     ----------
+#     data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, pcm, rois and subject columns
     
+#     Returns
+#     -------
+#     fig : the figure 
+#     """
+
+#     from maths_utils import weighted_regression, bootstrap_ci_median
+
+
+#     fig_height, fig_width = 400, 800
+#     rows, cols = 1,4
+    
+#     # Replace all data outer threshold with NaN data
+#     data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
+#               (data.pcm < pcm_th[0]) | (data.pcm > pcm_th[1]) | 
+#               (data.prf_loo_r2 <= rsq_th[0])] = np.nan
+    
+#     data = data.dropna()
+
+#     # Define colors
+#     roi_colors = px.colors.sequential.Sunset[:4] + px.colors.sequential.Rainbow[:]
+
+#     lines = [['V1', 'V2', 'V3'],['V3AB', 'LO', 'VO'],['hMT+', 'iIPS', 'sIPS'],['iPCS', 'sPCS', 'mPCS']]
+
+#     fig = make_subplots(rows=rows, cols=cols, print_grid=False)
+#     for l, line_label in enumerate(lines):
+#         for j, roi in enumerate(line_label):
+            
+#             # Sorting best datas
+#             df = data.loc[(data.subject == subject) & (data.rois == roi)]
+            
+#             # Parametring colors
+#             roi_color = roi_colors[j + l * 3]
+#             roi_color_opac = f"rgba{roi_color[3:-1]}, 0.15)"
+            
+#             # Grouping by eccentricities
+#             df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=np.arange(0, 17.5, 2.5)))
+#             df_sorted = df.sort_values('prf_ecc')
+            
+#             ecc_med = np.array(df_grouped['prf_ecc'].median())
+#             sd_med = np.array(df_grouped['pcm'].median())
+#             r2_med = np.array(df_grouped['prf_loo_r2'].median())
+            
+#             # CI95 for each group of ecc
+#             ci = df_grouped['pcm'].apply(lambda x: bootstrap_ci_median(x))
+#             upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+#             lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            
+#             # Linear regression
+#             slope, intercept = weighted_regression(ecc_med, 
+#                                                     sd_med, 
+#                                                     r2_med, 
+#                                                     model='pcm')
+            
+#             slope_upper, intercept_upper = weighted_regression(ecc_med[~np.isnan(upper_bound)], 
+#                                                                 upper_bound[~np.isnan(upper_bound)], 
+#                                                                 r2_med[~np.isnan(upper_bound)], 
+#                                                                 model='pcm')
+            
+#             slope_lower, intercept_lower = weighted_regression(ecc_med[~np.isnan(lower_bound)], 
+#                                                                 lower_bound[~np.isnan(lower_bound)], 
+#                                                                 r2_med[~np.isnan(lower_bound)], 
+#                                                                 model='pcm')
+            
+#             line = 1 / (slope * np.array(df_sorted.prf_ecc)) + intercept
+#             line_upper = 1 / (slope_upper * np.array(df_sorted.prf_ecc)) + intercept_upper
+#             line_lower = 1 / (slope_lower * np.array(df_sorted.prf_ecc)) + intercept_lower
+
+#             fig.add_trace(go.Scatter(x=np.array(df_sorted.prf_ecc), 
+#                                       y=line, 
+#                                       mode='lines', 
+#                                       name=roi, 
+#                                       legendgroup=roi, 
+#                                       line=dict(color=roi_color, width=3), 
+#                                       showlegend=False), 
+#                           row=1, col=l+1)
+
+#             # Error area
+#             fig.add_trace(go.Scatter(x=np.concatenate([df_sorted.prf_ecc, df_sorted.prf_ecc[::-1]]), 
+#                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
+#                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
+#                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
+#                           row=1, col=l+1)
+
+#             # Markers
+#             fig.add_trace(go.Scatter(x=ecc_med, 
+#                                       y=sd_med, 
+#                                       mode='markers', 
+#                                       error_y=dict(type='data', array=ci.apply(lambda x: (x[1] - x[0]) / 2).tolist(), visible=True, thickness=3, width=0, color=roi_color),
+#                                       marker=dict(color='white', size=8, line=dict(color=roi_color,width=3)), 
+#                                       showlegend=False), 
+#                           row=1, col=l + 1)
+            
+#             # Add legend
+#             annotation = go.layout.Annotation(x=10, 
+#                                               y=10-j*1.5, 
+#                                               text=roi, 
+#                                               xanchor='left',
+#                                               showarrow=False, 
+#                                               font=dict(color=roi_color, size=12))
+#             fig.add_annotation(annotation, row=1, col=l+1)
+
+#         # Set axis titles only for the left-most column and bottom-most row
+#         fig.update_yaxes(title_text='pCM (mm/dva)', row=1, col=1)
+#         fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0,15], row=1, col=l+1)
+#         fig.update_yaxes(range=[0,10])
+#         fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template='simple_white')
+        
+#     return fig
+# def prf_ecc_pcm_plot(data, subject, ecc_th=[None,None], pcm_th=[None,None], rsq_th=[None,None]) :
+#     """
+#     Make figure of ecc pcm relation 
+
+#     Parameters
+#     ----------
+#     data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, pcm, rois and subject columns
+    
+#     Returns
+#     -------
+#     fig : the figure 
+#     """
+
+#     from maths_utils import weighted_regression, bootstrap_ci_median
+#     import numpy as np
+#     import pandas as pd
+#     import plotly.graph_objects as go
+#     from plotly.subplots import make_subplots
+
+#     fig_height, fig_width = 400, 800
+#     rows, cols = 1,4
+    
+#     # Replace all data outer threshold with NaN data
+#     data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
+#              (data.pcm < pcm_th[0]) | (data.pcm > pcm_th[1]) | 
+#              (data.prf_loo_r2 <= rsq_th[0])] = np.nan
+    
+#     data = data.dropna()
+
+#     # Define colors
+#     roi_colors = px.colors.sequential.Sunset[:4] + px.colors.sequential.Rainbow[:]
+
+#     lines = [['V1', 'V2', 'V3'],['V3AB', 'LO', 'VO'],['hMT+', 'iIPS', 'sIPS'],['iPCS', 'sPCS', 'mPCS']]
+
+#     fig = make_subplots(rows=rows, cols=cols, print_grid=False)
+#     for l, line_label in enumerate(lines):
+#         for j, roi in enumerate(line_label):
+            
+#             # Sorting best datas
+#             df = data.loc[(data.subject == subject) & (data.rois == roi)]
+            
+#             # Parametring colors
+#             roi_color = roi_colors[j + l * 3]
+#             roi_color_opac = f"rgba{roi_color[3:-1]}, 0.15)"
+            
+#             # Grouping by eccentricities
+#             df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=np.arange(0, 17.5, 2.5)))
+#             df_sorted = df.sort_values('prf_ecc')
+            
+#             ecc_med = np.array(df_grouped['prf_ecc'].median())
+#             sd_med = np.array(df_grouped['pcm'].median())
+#             r2_med = np.array(df_grouped['prf_loo_r2'].median())
+            
+#             # Calcul de l'écart-type pour chaque groupe d'eccentricités
+#             std_dev = df_grouped['pcm'].std()
+            
+#             # CI95 for each group of ecc
+#             ci = df_grouped['pcm'].apply(lambda x: bootstrap_ci_median(x))
+#             upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+#             lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            
+#             # Linear regression
+#             slope, intercept = weighted_regression(ecc_med, 
+#                                                    sd_med, 
+#                                                    r2_med, 
+#                                                    model='pcm')
+            
+#             slope_upper, intercept_upper = weighted_regression(ecc_med[~np.isnan(upper_bound)], 
+#                                                                upper_bound[~np.isnan(upper_bound)], 
+#                                                                r2_med[~np.isnan(upper_bound)], 
+#                                                                model='pcm')
+            
+#             slope_lower, intercept_lower = weighted_regression(ecc_med[~np.isnan(lower_bound)], 
+#                                                                lower_bound[~np.isnan(lower_bound)], 
+#                                                                r2_med[~np.isnan(lower_bound)], 
+#                                                                model='pcm')
+            
+#             line = 1 / (slope * np.array(df_sorted.prf_ecc)) + intercept
+#             line_upper = 1 / (slope_upper * np.array(df_sorted.prf_ecc)) + intercept_upper
+#             line_lower = 1 / (slope_lower * np.array(df_sorted.prf_ecc)) + intercept_lower
+
+#             fig.add_trace(go.Scatter(x=np.array(df_sorted.prf_ecc), 
+#                                      y=line, 
+#                                      mode='lines', 
+#                                      name=roi, 
+#                                      legendgroup=roi, 
+#                                      line=dict(color=roi_color, width=3), 
+#                                      showlegend=False), 
+#                           row=1, col=l+1)
+
+#             # Tracer les barres d'erreur utilisant l'écart-type
+#             fig.add_trace(go.Scatter(x=np.concatenate([ecc_med, ecc_med[::-1]]),
+#                                      y=np.concatenate([sd_med + std_dev, (sd_med - std_dev)[::-1]]),
+#                                      mode='lines',
+#                                      fill='toself',
+#                                      fillcolor=roi_color_opac,
+#                                      line=dict(color=roi_color_opac, width=0),
+#                                      showlegend=False),
+#                           row=1, col=l+1)
+
+#             # Tracer les barres d'erreur
+#             fig.add_trace(go.Scatter(x=ecc_med,
+#                                      y=sd_med,
+#                                      mode='markers',
+#                                      error_y=dict(type='data', array=std_dev.tolist(), visible=True, thickness=3, width=0, color=roi_color),
+#                                      marker=dict(color='white', size=8, line=dict(color=roi_color, width=3)),
+#                                      showlegend=False),
+#                           row=1, col=l + 1)
+            
+#             # Add legend
+#             annotation = go.layout.Annotation(x=10, 
+#                                               y=10-j*1.5, 
+#                                               text=roi, 
+#                                               xanchor='left',
+#                                               showarrow=False, 
+#                                               font=dict(color=roi_color, size=12))
+#             fig.add_annotation(annotation, row=1, col=l+1)
+
+#         # Set axis titles only for the left-most column and bottom-most row
+#         fig.update_yaxes(title_text='pCM (mm/dva)', row=1, col=1)
+#         fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0,15], row=1, col=l+1)
+#         fig.update_yaxes(range=[0,10])
+#         fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template='simple_white')
+        
+#     return fig
+
+def prf_ecc_pcm_plot(data, subject, ecc_th=[None,None], pcm_th=[None,None], rsq_th=[None,None]) :
+    """
+    Make figure of ecc pcm relation 
+
+    Parameters
+    ----------
+    data : A data frame with prf_rsq, prf_ecc, prf_size, prf_loo_r2, pcm, rois and subject columns
+    
+    Returns
+    -------
+    fig : the figure 
+    """
+
+    from maths_utils import weighted_regression, bootstrap_ci_median
+    import numpy as np
+    import pandas as pd
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    fig_height, fig_width = 400, 800
+    rows, cols = 1,4
+    
+    # Replace all data outer threshold with NaN data
+    data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
+             (data.pcm < pcm_th[0]) | (data.pcm > pcm_th[1]) | 
+             (data.prf_loo_r2 <= rsq_th[0])] = np.nan
+    
+    data = data.dropna()
+
+    # Define colors
+    roi_colors = px.colors.sequential.Sunset[:4] + px.colors.sequential.Rainbow[:]
+
+    lines = [['V1', 'V2', 'V3'],['V3AB', 'LO', 'VO'],['hMT+', 'iIPS', 'sIPS'],['iPCS', 'sPCS', 'mPCS']]
+
+    fig = make_subplots(rows=rows, cols=cols, print_grid=False)
+    for l, line_label in enumerate(lines):
+        for j, roi in enumerate(line_label):
+            
+            # Sorting best datas
+            df = data.loc[(data.subject == subject) & (data.rois == roi)]
+            
+            # Parametring colors
+            roi_color = roi_colors[j + l * 3]
+            roi_color_opac = f"rgba{roi_color[3:-1]}, 0.15)"
+            
+            # Grouping by eccentricities
+            df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=np.arange(0, 17.5, 2.5)))
+            df_sorted = df.sort_values('prf_ecc')
+            
+            ecc_med = np.array(df_grouped['prf_ecc'].median())
+            sd_med = np.array(df_grouped['pcm'].median())
+            r2_med = np.array(df_grouped['prf_loo_r2'].median())
+            
+            # Calcul de l'écart-type pour chaque groupe d'eccentricités
+            std_dev = df_grouped['pcm'].std()
+            
+            # CI95 for each group of ecc
+            ci = df_grouped['pcm'].apply(lambda x: bootstrap_ci_median(x))
+            upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+            lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            
+            # Linear regression
+            slope, intercept = weighted_regression(ecc_med, 
+                                                   sd_med, 
+                                                   r2_med, 
+                                                   model='pcm')
+            
+            slope_upper, intercept_upper = weighted_regression(ecc_med[~np.isnan(upper_bound)], 
+                                                               upper_bound[~np.isnan(upper_bound)], 
+                                                               r2_med[~np.isnan(upper_bound)], 
+                                                               model='pcm')
+            
+            slope_lower, intercept_lower = weighted_regression(ecc_med[~np.isnan(lower_bound)], 
+                                                               lower_bound[~np.isnan(lower_bound)], 
+                                                               r2_med[~np.isnan(lower_bound)], 
+                                                               model='pcm')
+            
+            line = 1 / (slope * np.array(df_sorted.prf_ecc)) + intercept
+            line_upper = 1 / (slope_upper * np.array(df_sorted.prf_ecc)) + intercept_upper
+            line_lower = 1 / (slope_lower * np.array(df_sorted.prf_ecc)) + intercept_lower
+
+            # Calculer la moyenne et la SEM
+            mean_sd = df_grouped['pcm'].mean()
+            sem_sd = df_grouped['pcm'].sem()
+
+            # Tracer les barres d'erreur utilisant la SEM
+            fig.add_trace(go.Scatter(x=np.concatenate([ecc_med, ecc_med[::-1]]),
+                                     y=np.concatenate([mean_sd + sem_sd, (mean_sd - sem_sd)[::-1]]),
+                                     mode='lines',
+                                     line=dict(color=roi_color, width=1),
+                                     fill='toself',
+                                     fillcolor=roi_color_opac,
+                                     name=f'{roi} SEM'),
+                          row=1, col=l+1)
+
+            # Tracer la ligne de la moyenne
+            fig.add_trace(go.Scatter(x=ecc_med,
+                                     y=mean_sd,
+                                     mode='lines',
+                                     line=dict(color=roi_color, width=3),
+                                     name=f'{roi} Mean'),
+                          row=1, col=l+1)
+
+            # Add legend
+            annotation = go.layout.Annotation(x=10, 
+                                              y=10-j*1.5, 
+                                              text=roi, 
+                                              xanchor='left',
+                                              showarrow=False, 
+                                              font=dict(color=roi_color, size=12))
+            fig.add_annotation(annotation, row=1, col=l+1)
+
+        # Set axis titles only for the left-most column and bottom-most row
+        fig.update_yaxes(title_text='pCM (mm/dva)', row=1, col=1)
+        fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0,15], row=1, col=l+1)
+        fig.update_yaxes(range=[0,10])
+        fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template='simple_white')
+        
+    return fig
+
 def prf_polar_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq_th=[None,None]) :    
     """
      Make polar plots
@@ -392,8 +800,8 @@ def prf_contralaterality_plot(data, subject, ecc_th=[None,None], size_th=[None,N
     
     
     
-    
-    
+
+
     
     
     

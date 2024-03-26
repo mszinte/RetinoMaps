@@ -28,7 +28,6 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # stop warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -50,7 +49,7 @@ from surface_utils import load_surface , make_surface_image
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 group = sys.argv[3]
-model = sys.arg[4]
+model = sys.argv[4]
 
 if model == 'gauss':
     model = 'gauss_gridfit'
@@ -60,22 +59,18 @@ elif model == 'css':
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-subjects = analysis_info['subjects_all']
-
+subjects = analysis_info['subjects']
 
 prf_dir = '{}/{}/derivatives/pp_data/sub-170k/170k/prf'.format(main_dir, project_dir)
 avg_170k_dir = '{}/prf_derivatives'.format(prf_dir)
 os.makedirs(avg_170k_dir, exist_ok=True)
-
-if model == 'gauss_gridfit' :
-    avg_170k_fn = 'sub-170k_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'
-elif model == 'avg_css':
-    avg_170k_fn = 'sub-170k_task-pRF_fmriprep_dct_prf-derivs_pcm-loo-avg_css.dtseries.nii'
     
 for n_subject, subject in enumerate(subjects) :
     print('adding {} to averaging'.format(subject))
     
-    deriv_dir = '{}/{}/derivatives/pp_data/{}/170k/prf/prf_derivatives'.format(main_dir, project_dir, subject)
+    deriv_dir = '{}/{}/derivatives/pp_data/{}/170k/prf/prf_derivatives'.format(main_dir, 
+                                                                               project_dir, 
+                                                                               subject)
 
     if model == 'gauss_gridfit' :
         deriv_fn = '{}_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'.format(subject)
@@ -92,6 +87,10 @@ for n_subject, subject in enumerate(subjects) :
 
     
 #  export results 
+if model == 'gauss_gridfit' :
+    avg_170k_fn = 'sub-170k_task-pRF_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii'
+elif model == 'avg_css':
+    avg_170k_fn = 'sub-170k_task-pRF_fmriprep_dct_prf-derivs_pcm-loo-avg_css.dtseries.nii'
 maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
               'amplitude','baseline', 'x','y','hrf_1','hrf_2']
 
@@ -99,6 +98,6 @@ print('saving {}/{}'.format(avg_170k_dir, avg_170k_fn))
 avg_img = make_surface_image(data=data_avg, source_img=img, maps_names=maps_names)
 nb.save(avg_img,'{}/{}'.format(avg_170k_dir, avg_170k_fn))
 
-# # Define permission cmd
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# Define permission cmd
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

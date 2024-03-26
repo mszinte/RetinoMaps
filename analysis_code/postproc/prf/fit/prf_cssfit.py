@@ -97,7 +97,6 @@ if input_fn.endswith('.nii'):
                                                                      subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
     rois = analysis_info['mmp_rois']
-    # rois = rois[0:1] # TO BE REMOVE
 
 elif input_fn.endswith('.gii'):
     prf_fit_dir = "{}/{}/derivatives/pp_data/{}/fsnative/prf/fit".format(main_dir, 
@@ -105,10 +104,6 @@ elif input_fn.endswith('.gii'):
                                                                          subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
     rois = analysis_info['rois']
-    # rois = rois[0:1] # TO BE REMOVE
-
-print(rois)
-print(input_fn)
 
 fit_fn_css = input_fn.split('/')[-1]
 fit_fn_css = fit_fn_css.replace('bold', 'prf-fit_css')
@@ -141,7 +136,6 @@ exponent_css_grid = np.linspace(0, 4, css_grid_nr)
 img, data, data_roi, roi_idx = data_from_rois(fn=input_fn, 
                                               subject=subject, 
                                               rois=rois)
-
 
 print('roi extraction done')
 
@@ -187,9 +181,6 @@ css_fitter = CSS_Iso2DGaussianFitter(data=data_roi.T,
                                      n_jobs=n_jobs,
                                      use_previous_gaussian_fitter_hrf=False,
                                      previous_gaussian_fitter=gauss_fitter)
-
-
-
 # run css grid fit
 css_fitter.grid_fit(exponent_grid=exponent_css_grid,
                     verbose=verbose,
@@ -220,8 +211,6 @@ for est,vert in enumerate(roi_idx):
                                                       hrf_1=css_fit[est][6],
                                                       hrf_2=css_fit[est][7])
         
-
-
 # compute loo r2
 loo_bold_fn = input_fn.replace('dct_avg_loo','dct_loo')
 loo_img, loo_bold = load_surface(fn=loo_bold_fn)
@@ -231,13 +220,9 @@ loo_r2 = r2_score_surf(bold_signal=loo_bold, model_prediction=css_pred_mat)
 # add loo r2 css_fit_mat
 css_fit_mat = np.column_stack((css_fit_mat, loo_r2))
 
-
-
 # export data
 maps_names = ['mu_x', 'mu_y', 'prf_size', 'prf_amplitude', 'bold_baseline',
               'n', 'hrf_1','hrf_2', 'r_squared','loo_r2']
-
-
 
 # export fit
 img_css_fit_mat = make_surface_image(data=css_fit_mat.T, 

@@ -59,8 +59,12 @@ memory_val = 48
 hour_proc = 4
 
 # set folders
-log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, project_dir, subject)
-job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, project_dir, subject)
+log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, 
+                                                            project_dir, 
+                                                            subject)
+job_dir = "{}/{}/derivatives/pp_data/{}/jobs".format(main_dir, 
+                                                     project_dir, 
+                                                     subject)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(job_dir, exist_ok=True)
 
@@ -78,8 +82,12 @@ slurm_cmd = """\
 """.format(server_project=server_project, cluster_name=cluster_name,
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
-compute_pcm_cmd = "python compute_pcm.py {} {} {} {} {}".format(main_dir, project_dir, subject, group, model)
-
+    
+compute_pcm_cmd = "python compute_pcm.py {} {} {} {} {}".format(main_dir, 
+                                                                project_dir, 
+                                                                subject, 
+                                                                group, 
+                                                                model)
 # create sh fn
 sh_fn = "{}/{}_pcm.sh".format(job_dir, subject)
 

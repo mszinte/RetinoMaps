@@ -39,10 +39,8 @@ import nibabel as nb
 import os
 import sys
 
-
+# personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-
-
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 deb = ipdb.set_trace
@@ -79,7 +77,6 @@ for format_, extension in zip(formats, extensions):
         deriv_fn = fit_fn.split('/')[-1]
         deriv_fn = deriv_fn.replace('prf-fit', 'prf-deriv')
     
-    
         if os.path.isfile(fit_fn) == False:
             sys.exit('Missing files, analysis stopped : {}'.format(fit_fn))
         else:
@@ -87,18 +84,17 @@ for format_, extension in zip(formats, extensions):
             
             # get arrays
             fit_img, fit_data = load_surface(fit_fn)
-    
      
             # compute and save derivatives array
             maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size',
                           'amplitude','baseline', 'x','y','hrf_1','hrf_2']
             
             deriv_array = fit2deriv(fit_array=fit_data,model='gauss')
-            deriv_img = make_surface_image(data=deriv_array, source_img=fit_img, maps_names=maps_names)
+            deriv_img = make_surface_image(data=deriv_array, 
+                                           source_img=fit_img, 
+                                           maps_names=maps_names)
             nb.save(deriv_img,'{}/{}'.format(prf_deriv_dir,deriv_fn))
     
-        
-
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
 os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

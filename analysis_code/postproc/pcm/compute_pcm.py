@@ -31,7 +31,6 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # stop warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -51,11 +50,9 @@ import numpy as np
 import pandas as pd
 import nibabel as nb
 
-
 # Personal iports
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from pycortex_utils import set_pycortex_config_file, load_surface_pycortex, get_rois, make_image_pycortex
-
 
 # inputs
 main_dir = sys.argv[1]
@@ -79,7 +76,6 @@ task = tasks[2]
 vert_dist_th = analysis_info['vertex_pcm_rad']
 formats = analysis_info['formats']
 
-
 # # Set pycortex db and colormaps
 # cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 # set_pycortex_config_file(cortex_dir)
@@ -87,7 +83,6 @@ formats = analysis_info['formats']
 
 # derivatives settings
 rsq_idx, ecc_idx, size_idx, x_idx, y_idx = 0, 1, 4, 7, 8
-
 
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
@@ -102,10 +97,12 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         rois = analysis_info['rois']
         atlas_name = None 
         surf_size = None        
-        deriv_avg_fn_L = glob.glob('{}/{}*pRF_hemi-L*{}.func.gii'.format(prf_deriv_dir, subject, model))
-        deriv_avg_fn_R = glob.glob('{}/{}*pRF_hemi-R*{}*.func.gii'.format(prf_deriv_dir, subject, model))
-        
-
+        deriv_avg_fn_L = glob.glob('{}/{}*pRF_hemi-L*{}.func.gii'.format(prf_deriv_dir, 
+                                                                         subject, 
+                                                                         model))
+        deriv_avg_fn_R = glob.glob('{}/{}*pRF_hemi-R*{}*.func.gii'.format(prf_deriv_dir, 
+                                                                          subject, 
+                                                                          model))
         
         results = load_surface_pycortex(L_fn=deriv_avg_fn_L[0], 
                                         R_fn=deriv_avg_fn_R[0], 
@@ -119,19 +116,22 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         rois = analysis_info['mmp_rois']
         atlas_name = 'mmp'
         surf_size = '59k'
-        deriv_avg_fn = glob.glob('{}/{}*pRF*{}*.dtseries.nii'.format(prf_deriv_dir, subject, model)) 
+        deriv_avg_fn = glob.glob('{}/{}*pRF*{}*.dtseries.nii'.format(prf_deriv_dir, 
+                                                                     subject, 
+                                                                     model)) 
         results = load_surface_pycortex(brain_fn=deriv_avg_fn[0],
                                         return_img=True,
                                         return_59k_mask=True,  
                                         return_source_data=True)
+        
         deriv_mat = results['data_concat']
         mask_59k = results['mask_59k']
         deriv_mat_170k = results['source_data'] 
         img = results['img']
-        
 
     # get surfaces for each hemisphere
-    surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(pycortex_subject, "flat")]
+    surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(pycortex_subject, 
+                                                                      "flat")]
     surf_lh, surf_rh = surfs[0], surfs[1]
     # get the vertices number per hemisphere
     lh_vert_num, rh_vert_num = surf_lh.pts.shape[0], surf_rh.pts.shape[0]
@@ -203,7 +203,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
                     # get geodesic distances (mm)
                     try :
-                        geo_patch = surf.get_geodesic_patch(radius=vert_dist_th, vertex=surf_idx)
+                        geo_patch = surf.get_geodesic_patch(radius=vert_dist_th, 
+                                                            vertex=surf_idx)
                     except Exception as e:
                         print("Vertex #{}: error: {} within {} mm".format(vert_idx, e, vert_dist_th))
                         geo_patch['vertex_mask'] = np.zeros(surf.pts.shape[0]).astype(bool)
@@ -240,9 +241,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
     # Exporte Data
     if model == 'gauss_gridfit':
-            maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size', 'amplitude', 'baseline', 'x', 'y', 'hrf_1',' hrf_2', 'pcm']
+            maps_names = ['rsq', 'ecc', 'polar_real', 'polar_imag', 'size', 
+                          'amplitude', 'baseline', 'x', 'y', 'hrf_1',' hrf_2', 
+                          'pcm']
     elif model == 'avg_css':
-        maps_names = ['prf_rsq', 'prf_ecc', 'polar_real', 'polar_imag', 'prf_size', 'amplitude', 'baseline', 'prf_x','prf_y',' hrf_1', 'hrf_2','prf_n', 'prf_loo_r2', 'pcm']
+        maps_names = ['prf_rsq', 'prf_ecc', 'polar_real', 'polar_imag', 
+                      'prf_size', 'amplitude', 'baseline', 'prf_x','prf_y',
+                      ' hrf_1', 'hrf_2','prf_n', 'prf_loo_r2', 'pcm']
 
     if format_ == 'fsnative':
 
@@ -261,7 +266,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         nb.save(new_img_R, '{}/{}'.format(prf_deriv_dir,deriv_avg_fn_R))
         
         
-        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, project_dir, subject, format_, subject)
+        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, 
+                                                                                          project_dir, 
+                                                                                          subject, 
+                                                                                          format_, 
+                                                                                          subject)
         tsv_df = pd.read_table(prf_tsv_fn)
         
         
@@ -287,7 +296,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
         nb.save(new_img, '{}/{}'.format(prf_deriv_dir,deriv_avg_fn))
         
-        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, project_dir, subject, format_, subject)
+        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, 
+                                                                                          project_dir, 
+                                                                                          subject, 
+                                                                                          format_, 
+                                                                                          subject)
         tsv_df = pd.read_table(prf_tsv_fn)
         tsv_df['pcm'] = np.nan
 
@@ -297,8 +310,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         
         tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
 
-      
-
-# # Define permission cmd
-# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-# os.system("chgrp -Rf {} {}/{}".format(main_dir, project_dir, group))
+# Define permission cmd
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(main_dir, project_dir, group))

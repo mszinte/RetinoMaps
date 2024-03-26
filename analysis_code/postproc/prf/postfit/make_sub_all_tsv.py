@@ -35,11 +35,13 @@ warnings.filterwarnings("ignore")
 import ipdb
 deb = ipdb.set_trace
 
-import pandas as pd 
+
+
+import os
 import sys
 import json
-import os
-
+import numpy as np
+import pandas as pd 
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
@@ -52,10 +54,20 @@ with open('../../../settings.json') as f:
 subjects = analysis_info['subjects']
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
+rois_list = analysis_info['rois']
+
+
+
+ecc_th = [0, 30]
+size_th= [0,30 ]
+rsq_th = [0, 1]
+pcm_th = [0, 20]
+n_th = [0, 10]
 
 for format_, extension in zip(formats, extensions):
     # load subjects tsv and concatenate them
     data_all = pd.DataFrame()
+    data_mean_all = pd.DataFrame() 
     for subject in subjects :
         print('adding {}'.format(subject))
     
@@ -63,12 +75,31 @@ for format_, extension in zip(formats, extensions):
                                                                   project_dir, 
                                                                   subject, 
                                                                   format_)
+        
         data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+        data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | (data.prf_n < n_th[0]) | (data.prf_n > n_th[1]) | (data.prf_loo_r2 <= rsq_th[0])] = np.nan
+
+        data = data.dropna()
         
         data_all = pd.concat([data_all, data], ignore_index=True)
+       
+        
+        
+        
+        # data_mean_subject = data.groupby(['rois', 'hemi'], as_index=False)[data.select_dtypes(include='number').columns].apply(lambda x: (x.drop(columns='prf_rsq').mul(x['prf_rsq'], axis=0).sum() / x['prf_rsq'].sum())).assign(prf_rsq = data.groupby(['rois', 'hemi'], as_index=False).prf_rsq.mean().prf_rsq).assign(sub_origine=data['subject'].unique()[0])
+        numeric_columns = data.select_dtypes(include='number').columns
+        grouped_data = data.groupby(['hemi', 'rois', pd.cut(data['prf_ecc'], bins=np.arange(0, 20, 1))])
+        data_mean_subject = grouped_data.apply(lambda x: (x[numeric_columns].drop(columns='prf_rsq').mul(x['prf_rsq'], axis=0).sum() / x['prf_rsq'].sum())).assign(prf_rsq=grouped_data['prf_rsq'].mean()).reset_index(level=['hemi', 'rois']).reset_index(drop=True)
+        data_mean_subject['sub_origine'] = data['subject'].unique()[0]
+
+        
+        data_mean_subject['rois'] = pd.Categorical(data_mean_subject['rois'], categories=rois_list, ordered=True)
+        data_mean_subject = data_mean_subject.sort_values(by='rois')
+        data_mean_all = pd.concat([data_mean_all, data_mean_subject], ignore_index=True)
         
     data_all = data_all.rename(columns={'subject': 'sub-origine'})
     data_all['subject'] = ['group'] * len(data_all)
+    data_mean_all['subject'] = ['group'] * len(data_mean_all)
     
     # export tsv 
     tsv_all_dir = '{}/{}/derivatives/pp_data/group/{}/prf/tsv'.format(main_dir, 
@@ -76,13 +107,14 @@ for format_, extension in zip(formats, extensions):
                                                                       format_)
     os.makedirs(tsv_all_dir, exist_ok=True)
         
-    data_all.to_csv('{}/group_task-prf_loo.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
+    data_all.to_csv('{}/group_task-prf_loo_all.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
+    data_mean_all.to_csv('{}/group_task-prf_loo.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
     
     
-    # Define permission cmd
-    os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-    os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
-    
+# # Define permission cmd
+# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+
     
     
 

@@ -33,17 +33,20 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # General imports
-import cortex
-import importlib
-import ipdb
-import json
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 import sys
+import json
+import cortex
+import importlib
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
 
+# Debug
+import ipdb
 deb = ipdb.set_trace
 
 #Define analysis parameters
@@ -69,7 +72,7 @@ try:
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
        
-# Maps settings ['prf_rsq', 'prf_ecc', 'polar_real', 'polar_imag', 'prf_size', 'amplitude', 'baseline', 'prf_x','prf_y',' hrf_1', 'hrf_2','prf_n', 'prf_loo_r2', 'pcm']
+# Maps settings 
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
     amp_idx, baseline_idx, x_idx, y_idx, n_idx, loo_rsq_idx, pcm_idx = 0,1,2,3,4,5,6,7,8,11,12,13
 
@@ -145,10 +148,15 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
     ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
     ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
-    
-    
-    
-    all_th = np.array((amp_down,rsqr_th_down,rsqr_th_up,loo_rsqr_th_down,loo_rsqr_th_up,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
+    all_th = np.array((amp_down, 
+                       rsqr_th_down, 
+                       rsqr_th_up, 
+                       loo_rsqr_th_down, 
+                       loo_rsqr_th_up, 
+                       size_th_down, 
+                       size_th_up, 
+                       ecc_th_down, 
+                       ecc_th_up)) 
     deriv_mat[loo_rsq_idx,np.logical_and.reduce(all_th)==False]=0
     
     # loo r-square
@@ -163,9 +171,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                           'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
                           'cbar_label': 'pRF loo R2', 'with_labels': True}
     maps_names.append('loo_rsq_css')
-    
-    
-    
     # r-square
     rsq_data = deriv_mat[rsq_idx,...]
     param_rsq_css = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
@@ -207,7 +212,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'with_labels': True}
     maps_names.append('size_css')
     
-    
     # n
     n_data = deriv_mat[n_idx,...]
     param_n_css = {'data': n_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
@@ -243,7 +247,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         roi_param = {'subject': pycortex_subject, 'xfmname': None, 'roi_name': roi_name}
         print(roi_name)
         exec('param_{}.update(roi_param)'.format(maps_name))
-        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name = maps_name))
+        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
         exec("plt.savefig('{}/{}_task-pRF_{}_{}.pdf')".format(flatmaps_dir, subject, maps_name, deriv_fn_label))
         plt.close()
     
