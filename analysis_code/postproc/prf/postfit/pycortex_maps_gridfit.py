@@ -26,24 +26,26 @@ python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-01 n
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
-import cortex
-import importlib
+#  Debug import 
 import ipdb
-import json
-import matplotlib.pyplot as plt
-import numpy as np
+deb = ipdb.set_trace
+
+# General imports
 import os
 import sys
+import json
+import cortex
+import importlib
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
-
-deb = ipdb.set_trace
 
 #Define analysis parameters
 with open('../../../settings.json') as f:

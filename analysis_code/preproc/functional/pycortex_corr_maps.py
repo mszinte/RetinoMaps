@@ -27,24 +27,25 @@ python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-01 n
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
-import cortex
-import importlib
+#  Debug import 
 import ipdb
-import json
-import matplotlib.pyplot as plt
-import nibabel as nb
-import numpy as np
+deb = ipdb.set_trace
+
+# General imports
 import os
 import sys
+import json
+import cortex
+import importlib
+import matplotlib.pyplot as plt
+
+# Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
-deb = ipdb.set_trace
+from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
 
 #Define analysis parameters
 with open('../../settings.json') as f:
@@ -78,10 +79,13 @@ deriv_fn_label = 'corr'
  
 # Define directories and fn
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+
 # Set pycortex db and colormaps
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
 
+if subject == 'sub-170k':
+    formats = ['170k']
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     corr_dir = "{}/{}/derivatives/pp_data/{}/{}/corr/fmriprep_dct_corr".format(main_dir, project_dir, subject, format_)
@@ -104,7 +108,10 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             cor_fn = '{}/{}_task-{}_fmriprep_dct_corr_bold.dtseries.nii'.format(corr_dir, subject, task)
             results = load_surface_pycortex(brain_fn=cor_fn)
             corr_data = results['data_concat']
-            save_svg = False
+            if subject == 'sub-170k':
+                save_svg = save_svg
+            else: 
+                save_svg = False
 
         print('Creating flatmaps...')
         maps_names = []

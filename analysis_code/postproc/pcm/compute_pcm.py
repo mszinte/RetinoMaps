@@ -87,8 +87,7 @@ rsq_idx, ecc_idx, size_idx, x_idx, y_idx = 0, 1, 4, 7, 8
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     # define directories and fn
-    prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, 
-                                                           subject, format_)
+    prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, subject, format_)
     fit_dir = "{}/fit".format(prf_dir)
     prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
     
@@ -97,12 +96,14 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         rois = analysis_info['rois']
         atlas_name = None 
         surf_size = None        
-        deriv_avg_fn_L = glob.glob('{}/{}*pRF_hemi-L*{}.func.gii'.format(prf_deriv_dir, 
-                                                                         subject, 
-                                                                         model))
-        deriv_avg_fn_R = glob.glob('{}/{}*pRF_hemi-R*{}*.func.gii'.format(prf_deriv_dir, 
-                                                                          subject, 
-                                                                          model))
+        deriv_avg_fn_L = glob.glob('{}/{}*hemi-L*prf-deriv-*{}.func.gii'.format(prf_deriv_dir, 
+                                                                                   subject, 
+                                                                                   model))
+        
+        deriv_avg_fn_R = glob.glob('{}/{}*hemi-R*prf-deriv-*{}.func.gii'.format(prf_deriv_dir, 
+                                                                                   subject, 
+                                                                                   model))
+   
         
         results = load_surface_pycortex(L_fn=deriv_avg_fn_L[0], 
                                         R_fn=deriv_avg_fn_R[0], 
@@ -116,7 +117,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         rois = analysis_info['mmp_rois']
         atlas_name = 'mmp'
         surf_size = '59k'
-        deriv_avg_fn = glob.glob('{}/{}*pRF*{}*.dtseries.nii'.format(prf_deriv_dir, 
+        deriv_avg_fn = glob.glob('{}/{}*prf-deriv-*{}.dtseries.nii'.format(prf_deriv_dir, 
                                                                      subject, 
                                                                      model)) 
         results = load_surface_pycortex(brain_fn=deriv_avg_fn[0],
@@ -266,17 +267,16 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         nb.save(new_img_R, '{}/{}'.format(prf_deriv_dir,deriv_avg_fn_R))
         
         
-        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, 
-                                                                                          project_dir, 
-                                                                                          subject, 
-                                                                                          format_, 
-                                                                                          subject)
+        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_css-prf_derivatives.tsv'.format(main_dir, 
+                                                                                                 project_dir, 
+                                                                                                 subject, 
+                                                                                                 format_, 
+                                                                                                 subject)
         tsv_df = pd.read_table(prf_tsv_fn)
         
         
         tsv_df['pcm'] = np.nan
-        
-
+    
         for roi in roi_verts_dict.keys():
             data_roi = deriv_mat_new[-1, roi_verts_dict[roi]]
             tsv_df.loc[tsv_df['rois'] == roi, 'pcm'] = data_roi
@@ -296,19 +296,37 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
         nb.save(new_img, '{}/{}'.format(prf_deriv_dir,deriv_avg_fn))
         
-        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_task-prf_loo.tsv'.format(main_dir, 
-                                                                                          project_dir, 
-                                                                                          subject, 
-                                                                                          format_, 
-                                                                                          subject)
-        tsv_df = pd.read_table(prf_tsv_fn)
-        tsv_df['pcm'] = np.nan
-
-        for roi in roi_verts_dict.keys():
-            data_roi = deriv_mat_new[-1, roi_verts_dict[roi]]
-            tsv_df.loc[tsv_df['rois'] == roi, 'pcm'] = data_roi
+        concat_rois_list = [analysis_info['mmp_rois'], analysis_info['rois']]
+        for n_list, rois_list in enumerate(concat_rois_list):
+            rois = rois_list
+            if 'LO' in rois_list:
+                atlas_name = 'mmp_group'
+                tsv_suffix = 'derivatives_group'
+            else:
+                atlas_name = 'mmp'
+                tsv_suffix = 'derivatives'
+                
+            roi_verts_dict = get_rois(pycortex_subject, 
+                                      return_concat_hemis=True, 
+                                      rois=rois, 
+                                      mask=False, 
+                                      atlas_name=atlas_name, 
+                                      surf_size=surf_size)
         
-        tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
+            prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_css-prf_{}.tsv'.format(main_dir, 
+                                                                                            project_dir, 
+                                                                                            subject, 
+                                                                                            format_, 
+                                                                                            subject, 
+                                                                                            tsv_suffix)
+            tsv_df = pd.read_table(prf_tsv_fn)
+            tsv_df['pcm'] = np.nan
+    
+            for roi in roi_verts_dict.keys():
+                data_roi = deriv_mat_new[-1, roi_verts_dict[roi]]
+                tsv_df.loc[tsv_df['rois'] == roi, 'pcm'] = data_roi
+            
+            tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
 
 # Define permission cmd
 os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))

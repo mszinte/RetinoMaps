@@ -21,23 +21,24 @@ To run:
 >> python glm_sbatch.py [main directory] [project name] [subject num] [group] [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python glm_sbatch.py /scratch/mszinte/data RetinoMaps sub-02 327 b327
+python glm_sbatch.py /scratch/mszinte/data RetinoMaps sub-03 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
-# stop warnings
+# Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
+# debug 
+import ipdb 
+deb = ipdb.set_trace
+
 # general imports
-import json
 import os
 import sys
-import ipdb
-deb = ipdb.set_trace
+import json
 
 # define analysis parameters
 with open('../../settings.json') as f:
@@ -89,7 +90,7 @@ chgrp_cmd = "chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_di
 sh_fn = "{}/{}_glm.sh".format(job_dir, subject)
 of = open(sh_fn, 'w')
 
-of.write("{} \n{} \n{} \n{} \n{}".format(slurm_cmd, glm_fit_cmd, chmod_cmd, chgrp_cmd))
+of.write("{} \n{} \n{} \n{}".format(slurm_cmd, glm_fit_cmd, chmod_cmd, chgrp_cmd))
 of.close()
 
 

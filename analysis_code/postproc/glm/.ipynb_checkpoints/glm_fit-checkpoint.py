@@ -21,17 +21,16 @@ To run:
 python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python glm_fit.py /scratch/mszinte/data RetinoMaps sub-02 327
+python glm_fit.py /scratch/mszinte/data RetinoMaps sub-12 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# debug input
+# debug 
 import ipdb 
 deb = ipdb.set_trace
 
@@ -57,10 +56,8 @@ sys.path.append("{}/../../utils".format(os.getcwd()))
 from glm_utils import eventsMatrix, extract_predictions_r2
 from surface_utils import load_surface, make_surface_image
 
-
 # Start counting the elapsed time for code execution
 start_time = datetime.datetime.now()
-
 
 # Inputs
 main_dir = sys.argv[1]
@@ -140,7 +137,6 @@ for format_, extension in zip(formats, extensions):
                                                                                  task,
                                                                                  run_num))
             
-        
             confounds = pd.read_table(con_file[0])[confounds_list].dropna(axis=1)
         
             # make the designe matrixe  

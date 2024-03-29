@@ -53,11 +53,12 @@ deb = ipdb.set_trace
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-subjects = analysis_info['subjects']
-subjects  += ['group']
-# formats = analysis_info['formats']
+# subjects = analysis_info['subjects']
+# subjects  += ['group', 'sub-170k']
+formats = analysis_info['formats']
 extensions = analysis_info['extensions']
-formats = ['fsnative']
+
+subjects = ['sub-170k']
 
 # Settings 
 ecc_th = [0, 15]
@@ -66,8 +67,17 @@ rsq_th = [0.05, 1]
 pcm_th = [0, 20]
 
 for subject in subjects : 
+    if subject == 'sub-170k':
+        formats = ['170k']
+        extensions = ['dtseries.nii']
     for format_, extension in zip(formats, extensions):
         print('making {} figures'.format(subject))
+        if format_ == 'fsnative':
+            tsv_suffix = 'derivatives'
+        elif format_ == '170k':
+            tsv_suffix = 'derivatives_group'
+            
+            
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(main_dir, 
                                                                    project_dir, 
                                                                    subject, 
@@ -80,7 +90,8 @@ for subject in subjects :
         os.makedirs(fig_dir, exist_ok=True)
         
         # make figures 
-        data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+        data = pd.read_table('{}/{}_css-prf_{}.tsv'.format(tsv_dir,subject, tsv_suffix))
+
         fig1 = prf_violins_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig2 = prf_ecc_size_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         figures, hemis = prf_polar_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
@@ -97,9 +108,9 @@ for subject in subjects :
     
             figure.write_image("{}/{}_subplot_polar_{}.pdf".format(fig_dir, subject, hemi))
         
-# Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# # Define permission cmd
+# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
     
     
     

@@ -27,18 +27,22 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
+
+# debug 
+import ipdb
+deb = ipdb.set_trace
 
 # General imports
 import os
 import re
 import sys
 import glob
-import ipdb
 import json
+import cortex
+import importlib
 import pandas as pd
 import numpy as np
 import nibabel as nb
@@ -47,8 +51,8 @@ import nibabel as nb
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
-from pycortex_utils import get_rois
-deb = ipdb.set_trace
+from pycortex_utils import get_rois, set_pycortex_config_file
+
 
 # Inputs
 main_dir = sys.argv[1]
@@ -63,6 +67,10 @@ with open('../../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 
+# Set pycortex db and colormaps
+cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+set_pycortex_config_file(cortex_dir)
+importlib.reload(cortex)
 
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 for format_, extension in zip(formats, extensions):
@@ -203,39 +211,50 @@ for format_, extension in zip(formats, extensions):
                 df_rois_hemi = pd.DataFrame(data_dict)
                 df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
                 
-            df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
+            df_rois_brain.to_csv('{}/{}_css-prf_derivatives.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
              
     elif format_ == '170k':
-        rois = analysis_info['mmp_rois'] 
-        atlas_name = 'mmp'
-        surf_size = '170k'
-        brain_data_avg = hemi_data_avg['170k']
-        roi_verts_L, roi_verts_R = get_rois(subject, 
-                                            return_concat_hemis=False, 
-                                            return_hemi=None, 
-                                            rois=rois, 
-                                            mask=True, 
-                                            atlas_name=atlas_name, 
-                                            surf_size=surf_size)
+        concat_rois_list = [analysis_info['mmp_rois'], analysis_info['rois']]
+        for n_list, rois_list in enumerate(concat_rois_list):
+            rois = rois_list
         
-        df_rois_brain = pd.DataFrame()
-        for hemi in ['hemi-L', 'hemi-R']:
-            if hemi == 'hemi-L':
-                roi_verts = roi_verts_L
-            elif hemi == 'hemi-R':
-                roi_verts = roi_verts_R
+            # rois = analysis_info['mmp_rois'] 
+            if 'LO' in rois_list:   
+                atlas_name = 'mmp_group'
+            else:
+                atlas_name = 'mmp'
                 
-
-            for roi in roi_verts.keys():
-                # make a dictionaire with data for each rois 
-                data_dict = {col: brain_data_avg[col_idx, roi_verts[roi]] for col_idx, col in enumerate(maps_names)}
-                data_dict['rois'] = [roi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-                data_dict['subject'] = [subject] * brain_data_avg[:, roi_verts[roi]].shape[1]
-                data_dict['hemi'] = [hemi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-                df_rois_hemi = pd.DataFrame(data_dict)
-                df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
+            surf_size = '170k'
+            brain_data_avg = hemi_data_avg['170k']
+            roi_verts_L, roi_verts_R = get_rois(subject, 
+                                                return_concat_hemis=False, 
+                                                return_hemi=None, 
+                                                rois=rois, 
+                                                mask=True, 
+                                                atlas_name=atlas_name, 
+                                                surf_size=surf_size)
+            
+            df_rois_brain = pd.DataFrame()
+            for hemi in ['hemi-L', 'hemi-R']:
+                if hemi == 'hemi-L':
+                    roi_verts = roi_verts_L
+                elif hemi == 'hemi-R':
+                    roi_verts = roi_verts_R
+                    
+    
+                for roi in roi_verts.keys():
+                    # make a dictionaire with data for each rois 
+                    data_dict = {col: brain_data_avg[col_idx, roi_verts[roi]] for col_idx, col in enumerate(maps_names)}
+                    data_dict['rois'] = [roi] * brain_data_avg[:, roi_verts[roi]].shape[1]
+                    data_dict['subject'] = [subject] * brain_data_avg[:, roi_verts[roi]].shape[1]
+                    data_dict['hemi'] = [hemi] * brain_data_avg[:, roi_verts[roi]].shape[1]
+                    df_rois_hemi = pd.DataFrame(data_dict)
+                    df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
                 
-            df_rois_brain.to_csv('{}/{}_task-prf_loo.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
+                if atlas_name == 'mmp':
+                    df_rois_brain.to_csv('{}/{}_css-prf_derivatives.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
+                if atlas_name == 'mmp_group':
+                    df_rois_brain.to_csv('{}/{}_css-prf_derivatives_group.tsv'.format(prf_tsv_dir,subject), sep="\t", na_rep='NaN',index=False)
               
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))

@@ -21,7 +21,7 @@ To run:
 >> python compute_glm_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-12 327
+python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -108,7 +108,7 @@ for glm_files in glm_files_list:
     
     img, data = load_surface(fn=glm_files[0])
     final_map = np.zeros((1,data[fdr_p_map_idx].shape[0]))
-    
+    # final_map = np.full((1, data[fdr_p_map_idx].shape[0]), np.nan)
     if glm_files[0].find('hemi-L') != -1: hemi = 'hemi-L'
     elif glm_files[0].find('hemi-R') != -1: hemi = 'hemi-R'
     else: hemi = None
@@ -164,7 +164,8 @@ for glm_files in glm_files_list:
         for vert, fdr_value in enumerate(fdr_p_map):
             if fdr_value < glm_alpha:
                 final_map[:,vert] += task_idx
-    
+            
+    # final_map[final_map == 0] = np.nan
     # export final map
     if hemi:
         final_fn = "{}/{}/derivatives/pp_data/{}/fsnative/glm/glm_derivatives/{}_task-eyes-mvt_{}_space-fsnative_dct_glm-significant_map.func.gii".format(
@@ -179,9 +180,6 @@ for glm_files in glm_files_list:
     nb.save(final_img, final_fn)
 
     
-    
-
- 
 
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))

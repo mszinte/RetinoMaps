@@ -21,17 +21,16 @@ To run:
 python preproc_end.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python glm_fit.py /scratch/mszinte/data RetinoMaps sub-12 327
+python glm_fit.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# debug input
+# debug 
 import ipdb 
 deb = ipdb.set_trace
 
@@ -46,9 +45,11 @@ import numpy as np
 import pandas as pd
 import nibabel as nb
 import scipy.stats as stats
+import matplotlib.pyplot as plt
 
 # nilearn import
 from nilearn.glm import fdr_threshold
+from nilearn.plotting import plot_design_matrix 
 from nilearn.glm.contrasts import compute_contrast
 from nilearn.glm.first_level import make_first_level_design_matrix, run_glm
 
@@ -57,10 +58,8 @@ sys.path.append("{}/../../utils".format(os.getcwd()))
 from glm_utils import eventsMatrix, extract_predictions_r2
 from surface_utils import load_surface, make_surface_image
 
-
 # Start counting the elapsed time for code execution
 start_time = datetime.datetime.now()
-
 
 # Inputs
 main_dir = sys.argv[1]
@@ -140,7 +139,6 @@ for format_, extension in zip(formats, extensions):
                                                                                  task,
                                                                                  run_num))
             
-        
             confounds = pd.read_table(con_file[0])[confounds_list].dropna(axis=1)
         
             # make the designe matrixe  
@@ -152,9 +150,17 @@ for format_, extension in zip(formats, extensions):
                                                        hrf_model='spm',
                                                        drift_model=None,
                                                        add_regs=confounds)
-
-        
-
+            #  Save the designe matrix 
+            dm_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/designe_matrix'.format(main_dir, 
+                                                                                 project_dir, 
+                                                                                 subject, 
+                                                                                 format_)
+            os.makedirs(dm_dir, exist_ok=True)
+            design_matrix.to_csv('{}/{}_task-{}_designe_matrix.tsv'.format(dm_dir, subject, task), sep="\t", na_rep='NaN', index=False)
+            plt.figure()
+            plot_design_matrix(design_matrix)
+            plt.savefig('{}/{}_task-{}_designe_matrix.pdf'.format(dm_dir, subject, task))
+            plt.close()
 
             # make glm output filenames
             glm_pred_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-pred') 
@@ -168,8 +174,8 @@ for format_, extension in zip(formats, extensions):
             
             # extract glm predictions and r2       
             glm_pred, glm_r2 = extract_predictions_r2 (labels=labels,
-                                                       estimate=estimates,
-                                                       source_data=preproc_data)
+                                                        estimate=estimates,
+                                                        source_data=preproc_data)
         
             
             # Compute the contrasts 
@@ -202,8 +208,8 @@ for format_, extension in zip(formats, extensions):
             maps_names = ['z_map','z_p_map','fdr','fdr_p_map','rsquare_map']
 
             fit_img = make_surface_image(data=fit, 
-                                         source_img=preproc_img, 
-                                         maps_names=maps_names)
+                                          source_img=preproc_img, 
+                                          maps_names=maps_names)
 
             
             nb.save(fit_img,'{}/{}'.format(glm_dir,glm_fit_fn)) 
@@ -225,5 +231,7 @@ print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".for
         dur=end_time - start_time))
 
         
-
+# Define permission cmd
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
 

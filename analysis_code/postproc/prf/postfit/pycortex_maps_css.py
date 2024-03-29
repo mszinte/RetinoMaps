@@ -21,16 +21,19 @@ To run:
 >> python pycortex_maps_css.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 y
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
+
+# Debug
+import ipdb
+deb = ipdb.set_trace
 
 # General imports
 import os
@@ -45,9 +48,7 @@ import matplotlib.pyplot as plt
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
 
-# Debug
-import ipdb
-deb = ipdb.set_trace
+
 
 #Define analysis parameters
 with open('../../../settings.json') as f:
