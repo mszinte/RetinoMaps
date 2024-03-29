@@ -53,7 +53,8 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
 - [x] Load freesurfer and import subject in pycortex db [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 - [x] High-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
-- [x] Make timeseries inter-run correlation maps with pycortex [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
+- [x] Average inter-run correlations of each subject in 170k template [170k_corr_averaging.py](analysis_code/preproc/functional/170k_corr_averaging.py) 
+- [x] Make timeseries inter-run correlations maps with pycortex [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
 
 ## Post-processing
 ---
@@ -77,14 +78,13 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 #### pCM analysis
 - [x] Compute population cortical magnification [pcm_sbatch.py](analysis_code/postproc/pcm/pcm_sbatch.py)
-
 - [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
 
 #### Final pycortex maps 
 - [x] Make pRF derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
 #### Final ploting
-- [x] Make sub-all tsv [make_sub_all_tsv.py](analysis_code/postproc/prf/postfit/make_sub_all_tsv.py)
+- [x] Make sub-all tsv [make_group_tsv.py](analysis_code/postproc/prf/postfit/make_group_tsv.py)
 - [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
 
 ### **GLM analysis**

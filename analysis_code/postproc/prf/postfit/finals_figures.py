@@ -26,19 +26,15 @@ Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
 # General imports
-
-
 import os
 import sys
 import json
 import pandas as pd
-
 
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
@@ -49,21 +45,20 @@ main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 group = sys.argv[3]
 
-# general imports
+# Debug
 import ipdb
 deb = ipdb.set_trace
-
-
 
 # load settings
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-subjects = analysis_info['subjects']
-# subjects  += ['sub-all']
-# formats = analysis_info['formats']
+# subjects = analysis_info['subjects']
+# subjects  += ['group', 'sub-170k']
+formats = analysis_info['formats']
 extensions = analysis_info['extensions']
-formats = ['fsnative']
+
+subjects = ['sub-170k']
 
 # Settings 
 ecc_th = [0, 15]
@@ -72,8 +67,17 @@ rsq_th = [0.05, 1]
 pcm_th = [0, 20]
 
 for subject in subjects : 
+    if subject == 'sub-170k':
+        formats = ['170k']
+        extensions = ['dtseries.nii']
     for format_, extension in zip(formats, extensions):
         print('making {} figures'.format(subject))
+        if format_ == 'fsnative':
+            tsv_suffix = 'derivatives'
+        elif format_ == '170k':
+            tsv_suffix = 'derivatives_group'
+            
+            
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(main_dir, 
                                                                    project_dir, 
                                                                    subject, 
@@ -85,14 +89,16 @@ for subject in subjects :
                                                                        format_)
         os.makedirs(fig_dir, exist_ok=True)
         
-        data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+        # make figures 
+        data = pd.read_table('{}/{}_css-prf_{}.tsv'.format(tsv_dir,subject, tsv_suffix))
+
         fig1 = prf_violins_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig2 = prf_ecc_size_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         figures, hemis = prf_polar_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig3 = prf_contralaterality_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
         fig4 = prf_ecc_pcm_plot(data, subject, ecc_th=ecc_th, pcm_th=pcm_th, rsq_th=rsq_th)
         
-        
+        #save figures 
         fig1.write_image("{}/{}_prf_rsq_size_n_pcm.pdf".format(fig_dir, subject))
         fig2.write_image("{}/{}_prf_size_ecc.pdf".format(fig_dir, subject)) 
         fig3.write_image("{}/{}_contralaterality.pdf".format(fig_dir, subject)) 
@@ -102,9 +108,9 @@ for subject in subjects :
     
             figure.write_image("{}/{}_subplot_polar_{}.pdf".format(fig_dir, subject, hemi))
         
-# Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# # Define permission cmd
+# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
     
     
     

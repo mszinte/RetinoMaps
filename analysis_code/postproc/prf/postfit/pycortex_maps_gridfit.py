@@ -26,24 +26,26 @@ python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-01 n
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
-import cortex
-import importlib
+#  Debug import 
 import ipdb
-import json
-import matplotlib.pyplot as plt
-import numpy as np
+deb = ipdb.set_trace
+
+# General imports
 import os
 import sys
+import json
+import cortex
+import importlib
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
-
-deb = ipdb.set_trace
 
 #Define analysis parameters
 with open('../../../settings.json') as f:
@@ -188,7 +190,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         roi_param = {'subject': pycortex_subject, 'xfmname': None, 'roi_name': roi_name}
         print(roi_name)
         exec('param_{}.update(roi_param)'.format(maps_name))
-        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name = maps_name))
+        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
         exec("plt.savefig('{}/{}_task-pRF_{}_{}.pdf')".format(flatmaps_dir, subject, maps_name, deriv_fn_label))
         plt.close()
     

@@ -91,8 +91,7 @@ cd '{fs_dir}/{subject}/surf/'\n\n""".format(server_project=server_project, nb_pr
     sh_fn = "{}/{}_{}_flatten.sh".format(job_dir, subject, hemi)
 
     of = open(sh_fn, 'w')
-    of.write("{}".format(slurm_cmd))
-    of.write("{}".format(flatten_cmd))
+    of.write("{} \n{} \n{} \n{}".format(slurm_cmd, flatten_cmd, chmod_cmd, chgrp_cmd))
     of.close()
 
     # Submit jobs

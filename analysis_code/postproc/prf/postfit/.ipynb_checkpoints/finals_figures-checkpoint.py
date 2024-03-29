@@ -26,27 +26,19 @@ Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
 # General imports
-
-
 import os
 import sys
 import json
 import pandas as pd
 
-
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from plot_utils import prf_violins_plot, prf_ecc_size_plot
-
-# # figure imports
-# import plotly.graph_objects as go
-# import plotly.express as px
+from plot_utils import prf_violins_plot, prf_ecc_size_plot, prf_polar_plot, prf_contralaterality_plot, prf_ecc_pcm_plot 
 
 # Inputs
 main_dir = sys.argv[1]
@@ -64,32 +56,48 @@ with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 subjects = analysis_info['subjects']
-subjects  += ['sub-all']
-
+subjects  += ['group']
+# formats = analysis_info['formats']
+extensions = analysis_info['extensions']
+formats = ['fsnative']
 
 # Settings 
 ecc_th = [0, 15]
 size_th= [0.1, 20]
 rsq_th = [0.05, 1]
+pcm_th = [0, 20]
 
 for subject in subjects : 
-    tsv_dir = '{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv'.format(main_dir, 
-                                                                     project_dir, 
-                                                                     subject)
+    for format_, extension in zip(formats, extensions):
+        print('making {} figures'.format(subject))
+        tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(main_dir, 
+                                                                   project_dir, 
+                                                                   subject, 
+                                                                   format_)
+        
+        fig_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/figures'.format(main_dir, 
+                                                                       project_dir, 
+                                                                       subject, 
+                                                                       format_)
+        os.makedirs(fig_dir, exist_ok=True)
+        
+        data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+        fig1 = prf_violins_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
+        fig2 = prf_ecc_size_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
+        figures, hemis = prf_polar_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
+        fig3 = prf_contralaterality_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
+        fig4 = prf_ecc_pcm_plot(data, subject, ecc_th=ecc_th, pcm_th=pcm_th, rsq_th=rsq_th)
+        
+        
+        fig1.write_image("{}/{}_prf_rsq_size_n_pcm.pdf".format(fig_dir, subject))
+        fig2.write_image("{}/{}_prf_size_ecc.pdf".format(fig_dir, subject)) 
+        fig3.write_image("{}/{}_contralaterality.pdf".format(fig_dir, subject)) 
+        fig4.write_image("{}/{}_prf_pcm_ecc.pdf".format(fig_dir, subject)) 
+        
+        for i, (figure, hemi) in enumerate(zip(figures, hemis), start=1):
     
-    fig_dir = '{}/{}/derivatives/pp_data/{}/fsnative/prf/figures'.format(main_dir, 
-                                                                         project_dir, 
-                                                                         subject)
-    os.makedirs(fig_dir, exist_ok=True)
-    
-    data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
-    fig1 = prf_violins_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
-    fig2 = prf_ecc_size_plot(data, subject, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th)
-    
-    
-    fig1.write_image("{}/{}_prf_rsq_size_ecc.pdf".format(fig_dir, subject))
-    fig2.write_image("{}/{}_prf_size_ecc.pdf".format(fig_dir, subject)) 
-    
+            figure.write_image("{}/{}_subplot_polar_{}.pdf".format(fig_dir, subject, hemi))
+        
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
 os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

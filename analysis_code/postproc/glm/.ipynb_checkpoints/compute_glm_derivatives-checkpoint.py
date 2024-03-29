@@ -21,7 +21,7 @@ To run:
 >> python compute_glm_derivatives.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-13 327
+python compute_glm_derivatives.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -180,8 +180,6 @@ for glm_files in glm_files_list:
 
     
     
-
- 
 
 # Define permission cmd
 os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))

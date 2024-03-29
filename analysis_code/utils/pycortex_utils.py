@@ -481,7 +481,7 @@ def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRG
     
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
-    colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val), N = cmap_steps)
+    colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
     
     if cortex_type=='VolumeRGB':
         # convert data to RGB
@@ -607,6 +607,31 @@ def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRG
         cbar_axis.set_yticklabels(np.linspace(vmax[1],vmin[1],3))
         cbar_axis.set_xlabel(cbar_label[0], size='x-large')
         cbar_axis.set_ylabel(cbar_label[1], size='x-large')
+        
+    elif cbar == 'glm':
+        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+        
+        val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
+
+        # Exclure les valeurs proches du blanc
+        val = val[val > 0.25]
+        
+        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        
+        colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        colorbar_location = [0.85, 0.02, 0.04, 0.2]
+        bounds_label = ['Both','Saccade','Pursuit']  
+        bounds = np.linspace(vmin, vmax, colmap.N) 
+        ticks_positions = [0.5, 1.5, 2.5]  
+        norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
+        cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmapglm.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
+        cb.set_ticklabels(bounds_label)
+        cb.ax.tick_params(size=0,labelsize=20) 
+        
+        
+        
+
 
     
     # add to overlay

@@ -21,29 +21,30 @@ To run:
 >> python pycortex_maps_glm_final.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-03 n
+python pycortex_maps_glm_final.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
-import cortex
-import importlib
+#  Debug import 
 import ipdb
-import json
-import matplotlib.pyplot as plt
-import numpy as np
+deb = ipdb.set_trace
+
+# General imports
 import os
 import sys
+import json
+import cortex
+import importlib
+import matplotlib.pyplot as plt
+
+# Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
-
-deb = ipdb.set_trace
 
 #Define analysis parameters
 with open('../../settings.json') as f:
@@ -73,11 +74,9 @@ except ValueError:
 # Maps settings
 z_map_idx, z_p_map_idx, fdr_idx, fdr_p_map_idx, r2_idx = 0,1,2,3,4
      
-cmap = 'J4R'
+cmap = 'glm'
 col_offset = 1.0/14.0
-cmap_steps = 4
-
-
+cmap_steps = 255
 
 # plot scales
 z_map_scale = [-7, 7]
@@ -88,7 +87,9 @@ p_map_scale = [0, 1]
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
- 
+
+if subject == 'sub-170k':
+    formats = ['170k'] 
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     glm_dir = "{}/{}/derivatives/pp_data/{}/{}/glm".format(main_dir, project_dir, subject,format_)
@@ -105,41 +106,33 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     if format_ == 'fsnative': 
         deriv_glm_fn_L = '{}/{}_task-eyes-mvt_hemi-L_space-fsnative_dct_glm-significant_map.func.gii'.format(glm_deriv_dir, subject)
         deriv_glm_fn_R = '{}/{}_task-eyes-mvt_hemi-R_space-fsnative_dct_glm-significant_map.func.gii'.format(glm_deriv_dir, subject)
-        final_mat = load_surface_pycortex(L_fn=deriv_glm_fn_L, R_fn=deriv_glm_fn_R)
+        results = load_surface_pycortex(L_fn=deriv_glm_fn_L, R_fn=deriv_glm_fn_R)
+        final_mat = results['data_concat']
         
     elif format_ == '170k':
         deriv_avg_fn = '{}/{}_task-eyes-mvt_space-fsLR_den-170k_dct_glm-significant_map.dtseries.nii'.format(glm_deriv_dir, subject)
-        final_mat = load_surface_pycortex(brain_fn=deriv_avg_fn)
-        save_svg = False
+        results = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        final_mat = results['data_concat']
+        
+        if subject == 'sub-170k':
+            save_svg = save_svg
+        else: 
+            save_svg = False
     
     print('Creating flatmaps...')
     
     maps_names = []
-    
-   
-    
-    # param_final = {'data': final_mat, 'cmap': cmap, '
-    #                'vmin': 0, 'vmax': 3, 'cmap_steps': cmap_steps, 'cortex_type': 'Vertex',
-    #                'cbar': 'polar', 'col_offset': col_offset, 
-    #                'description': 'final map', 
-    #                'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
-    #                'with_labels': True}
-    
-    # maps_names.append('final')
-    
+
     final_data = final_mat[0,...]
     alpha_range = [0,0]
     alpha = (final_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha[alpha>1]=1
     param_final = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
-                 'vmin': 0, 'vmax': 3, 'cbar': 'discrete', 'cmap_steps': cmap_steps,
+                 'vmin': 0, 'vmax': 3, 'cbar': 'glm', 'cmap_steps': cmap_steps,
                  'cortex_type': 'VertexRGB','description': 'final map',
                  'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
                  'cbar_label': '', 'with_labels': True}
     maps_names.append('final')
-    
-
-
     
     # draw flatmaps
     volumes = {}

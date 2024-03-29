@@ -50,37 +50,46 @@ with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 subjects = analysis_info['subjects']
+formats = analysis_info['formats']
+extensions = analysis_info['extensions']
 
-
-# load subjects tsv and concatenate them
-data_all = pd.DataFrame()
-for subject in subjects :
-    print('adding {}'.format(subject))
-
-    tsv_dir ='{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv'.format(main_dir, 
-                                                                    project_dir, 
-                                                                    subject)
-    data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+for format_, extension in zip(formats, extensions):
+    # load subjects tsv and concatenate them
+    data_all = pd.DataFrame()
+    data_mean_all = pd.DataFrame() 
+    for subject in subjects :
+        print('adding {}'.format(subject))
     
-    data_all = pd.concat([data_all, data], ignore_index=True)
+        tsv_dir ='{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(main_dir, 
+                                                                  project_dir, 
+                                                                  subject, 
+                                                                  format_)
+        data = pd.read_table('{}/{}_task-prf_loo.tsv'.format(tsv_dir,subject))
+        
+        data_all = pd.concat([data_all, data], ignore_index=True)
+        data_mean_subject = data.groupby(['rois', 'hemi'], as_index=False)[data.select_dtypes(include='number').columns].mean().assign(sub_origine=data['subject'].unique()[0])
+        data_mean_all = pd.concat([data_mean_all, data_mean_subject], ignore_index=True)
+        
+    data_all = data_all.rename(columns={'subject': 'sub-origine'})
+    data_all['subject'] = ['group'] * len(data_all)
+    data_mean_all['subject'] = ['group'] * len(data_mean_all)
     
-data_all = data_all.rename(columns={'subject': 'sub-origine'})
-data_all['subject'] = ['sub-all'] * len(data_all)
-
-# export tsv 
-tsv_all_dir = '{}/{}/derivatives/pp_data/sub-all/fsnative/prf/tsv'.format(main_dir, 
-                                                                          project_dir)
-os.makedirs(tsv_all_dir, exist_ok=True)
+    # export tsv 
+    tsv_all_dir = '{}/{}/derivatives/pp_data/group/{}/prf/tsv'.format(main_dir, 
+                                                                      project_dir, 
+                                                                      format_)
+    os.makedirs(tsv_all_dir, exist_ok=True)
+        
+    data_all.to_csv('{}/group_task-prf_loo_all.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
+    data_mean_all.to_csv('{}/group_task-prf_loo.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
     
-data_all.to_csv('{}/sub-all_task-prf_loo.tsv'.format(tsv_all_dir), sep="\t", na_rep='NaN',index=False)
+    
+# # Define permission cmd
+# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
 
-
-# Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
-
-
-
+    
+    
 
 
 
