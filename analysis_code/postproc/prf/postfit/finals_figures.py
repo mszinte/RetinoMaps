@@ -53,12 +53,12 @@ deb = ipdb.set_trace
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-# subjects = analysis_info['subjects']
-# subjects  += ['group', 'sub-170k']
+subjects = analysis_info['subjects']
+subjects  += ['group', 'sub-170k']
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 
-subjects = ['sub-170k']
+
 
 # Settings 
 ecc_th = [0, 15]
