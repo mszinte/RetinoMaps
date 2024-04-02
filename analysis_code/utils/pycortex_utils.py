@@ -236,19 +236,32 @@ def get_rois(subject, return_concat_hemis=False, return_hemi=None, rois=None, ma
     else:
         roi_verts = cortex.get_roi_verts(subject=subject, 
                                           roi=rois, 
-                                          mask=mask)
-    
+                                          mask=True)
         rois_masks_L = {roi: data[:lh_vert_num] for roi, data in roi_verts.items()}
         rois_masks_R = {roi: data[-rh_vert_num:] for roi, data in roi_verts.items()}
+        
+        if mask==True:
+            if return_concat_hemis :
+                return roi_verts
+            elif return_hemi == 'hemi-L':
+                return rois_masks_L
+            elif return_hemi == 'hemi-R':
+                return rois_masks_R
+            else:
+                return rois_masks_L, rois_masks_R
 
-        if return_concat_hemis :
-            return roi_verts
-        elif return_hemi == 'hemi-L':
-            return rois_masks_L
-        elif return_hemi == 'hemi-R':
-            return rois_masks_R
         else:
-            return rois_masks_L, rois_masks_R
+            rois_idx_L = {roi: np.where(rois_masks_L[roi])[0] for roi in rois_masks_L}
+            rois_idx_R = {roi: np.where(rois_masks_R[roi])[0] for roi in rois_masks_R}
+
+            if return_concat_hemis :
+                return roi_verts
+            elif return_hemi == 'hemi-L':
+                return rois_idx_L
+            elif return_hemi == 'hemi-R':
+                return rois_idx_R
+            else:
+                return rois_idx_L, rois_idx_R
 
 
 
@@ -353,7 +366,7 @@ def make_image_pycortex(data,
     """
     from cifti_utils import from_59k_to_170k
     from surface_utils import make_surface_image 
-    import numpy as np
+  
     
 
     if img_L and img_R: 
@@ -373,6 +386,56 @@ def make_image_pycortex(data,
                                      maps_names=maps_names)
         return new_img
 
+def calculate_vertex_areas(surface, mask=None):
+    """
+    Calculate the area associated with each vertex on a surface.
+
+    Parameters:
+        surface: cortex.polyutils.Surface
+            The surface for which vertex areas will be calculated.
+        mask: bool or numpy.ndarray, optional
+            If provided, calculate vertex areas only for the specified vertices.
+            If True, calculates vertex areas for the entire surface.
+            If False or not provided, calculates vertex areas for the entire surface.
+
+    Returns:
+        numpy.ndarray: An array containing the area in mm2 associated with each vertex on the surface.
+    """
+    import numpy as np
+    from collections import defaultdict
+    
+        
+    vertex_areas = np.zeros(len(surface.pts))
+    vertex_triangle_map = defaultdict(list)
+    
+    # Create a mapping from each vertex to its adjacent triangles
+    for j, poly in enumerate(surface.polys):
+        for vertex_index in poly:
+            vertex_triangle_map[vertex_index].append(j)
+    
+    for i, (x, y, z) in enumerate(surface.pts):
+        connected_triangles = [surface.polys[j] for j in vertex_triangle_map[i]]
+        
+        total_area = 0
+        for poly in connected_triangles:
+            # Get the coordinates of the vertices of the triangle
+            v0 = surface.pts[poly[0]]
+            v1 = surface.pts[poly[1]]
+            v2 = surface.pts[poly[2]]
+            
+            # Calculate the area of the triangle using the cross product formula
+            area = 0.5 * np.linalg.norm(np.cross(v1 - v0, v2 - v0))
+            
+            # Add the area of the triangle to the total area
+            total_area += area
+        
+        # Divide the total area by 3 to account for each triangle being shared by 3 vertices
+        vertex_areas[i] = total_area / 3
+        
+    if mask is not None:
+        vertex_areas= vertex_areas[mask]
+            
+    return vertex_areas
 
 def set_pycortex_config_file(cortex_folder):
 
