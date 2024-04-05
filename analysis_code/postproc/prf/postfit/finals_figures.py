@@ -61,9 +61,9 @@ extensions = analysis_info['extensions']
 
 
 # Settings 
-ecc_th = [0, 15]
+ecc_th = [0, 20]
 size_th= [0.1, 20]
-rsq_th = [0.05, 1]
+rsq_th = [0, 1]
 pcm_th = [0, 20]
 
 for subject in subjects : 

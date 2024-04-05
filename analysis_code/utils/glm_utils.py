@@ -77,7 +77,24 @@ def eventsMatrix(design_file, task, tr):
             
             new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
             new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
-
+            
+    elif 'pRF' in task:
+        events_glm = events[['onset','duration','bar_direction']].copy(deep=True)
+        events_glm = events[['onset', 'duration', 'bar_direction']].replace({'bar_direction': {1: 'vision', 3: 'vision', 5: 'vision', 7: 'vision', 9: 'Fix'}}).rename(columns={'bar_direction': 'trial_type'})
+        
+        events_glm.onset = 0
+        
+        events_glm_groups = events_glm.groupby((events_glm.trial_type!=events_glm.trial_type.shift()).cumsum())
+        
+        new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
+        
+        for idx, group in enumerate(events_glm_groups):
+            onset = np.round(group[1]['onset'][group[1].index[0]],2)
+            dur = np.round(sum(group[1]['duration']),2)
+            ttype = group[1]['trial_type'][group[1].index[0]]
+        
+            new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
+            new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
     else:
         if 'VE' not in task: # Sac/Pur Loc

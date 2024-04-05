@@ -76,24 +76,28 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [x] Compute pRF CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 
-#### pCM analysis
+### **pCM analysis**
 - [x] Compute population cortical magnification [pcm_sbatch.py](analysis_code/postproc/pcm/pcm_sbatch.py)
 - [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
 
-#### Final pycortex maps 
+### **Final pycortex maps** 
 - [x] Make pRF derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 
-#### Final ploting
-- [x] Make sub-all tsv [make_group_tsv.py](analysis_code/postproc/prf/postfit/make_group_tsv.py)
-- [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
-
 ### **GLM analysis**
-- [x] Run Glm for the differents tasks [glm_fit.py](analysis_code/postproc/glm/glm_fit.py)
-- [x] Compute Glm derivatives [compute_glm_derivatives.py](analysis_code/postproc/glm/compute_glm_derivatives.py)
-- [x] Make GLM derivatives maps with pycortex [pycortex_maps_glm_final.py](analysis_code/postproc/glm/pycortex_maps_glm_final.py)
+- [x] Run Glm for the differents tasks [glm_sbatch.py](analysis_code/postproc/glm/glm_sbatch.py)
+
+### **Statistical analysis**
+- [x] Run Glm and pRF satistical analysis and combine results [final_stats_sbatch.py](analysis_code/postproc/stats/final_stats_sbatch.py)
+- [x] Make final satistiques maps maps with pycortex [pycortex_maps_stats_final.py](analysis_code/postproc/prf/postfit/pycortex_maps_stats_final.py)
 
 ### **Group analysis**
 - [x] Merge all subjects pycortex maps [pdf_maps.py](analysis_code/postproc/pdf_maps.py)
+- [x] Make group tsv [make_group_tsv.py](analysis_code/postproc/prf/postfit/make_group_tsv.py)
+
+### **Final ploting**
+- [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
+
+
 
 ## On working
 ---
