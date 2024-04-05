@@ -42,15 +42,11 @@ import json
 import glob
 import datetime
 import numpy as np
-import pandas as pd
 import nibabel as nb
-import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 # nilearn import
-from nilearn.glm import fdr_threshold
 from nilearn.plotting import plot_design_matrix 
-from nilearn.glm.contrasts import compute_contrast
 from nilearn.glm.first_level import make_first_level_design_matrix, run_glm
 
 # Personal imports
@@ -73,13 +69,11 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 TR = analysis_info['TR']
 TRs = analysis_info['TRs']
-glm_alpha = analysis_info['glm_alpha']
 tasks = analysis_info['task_glm']
-func_session = analysis_info['func_session'][0]
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 confounds_list = analysis_info['glm_confounds']
-
+func_session = analysis_info['func_session'][0]
 
 for format_, extension in zip(formats, extensions):
     # make folders
@@ -89,23 +83,13 @@ for format_, extension in zip(formats, extensions):
                                                                     format_)
     os.makedirs(glm_dir, exist_ok=True)
 
-    for task in tasks : 
-        # Contrast
-        if task == 'SacLoc':
-            cond1_label, cond2_label = ['Sac'], ['Fix']
-        elif task == 'PurLoc':
-            cond1_label, cond2_label = ['Pur'], ['Fix']
-            
+    for task in tasks :             
         # prepoc files name
-        preproc_fns = glob.glob('{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct/*task-{}*dct*.{}'.format(main_dir, 
-                                                                                                            project_dir, 
-                                                                                                            subject, 
-                                                                                                            format_, 
-                                                                                                            task, 
-                                                                                                            extension))
+        preproc_fns = glob.glob('{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg/*task-{}*dct_avg_loo*.{}'.format(main_dir, project_dir, subject, format_, task, extension))
+
         for preproc_fn in preproc_fns :
-            match = re.search(r'_run-(\d+)_', preproc_fn)
-            run_num = 'run-{}'.format(match.group(1))
+            match = re.search(r'_loo-(\d+)_', preproc_fn)
+            loo_num = 'loo-{}'.format(match.group(1))
         
         
         
@@ -126,20 +110,12 @@ for format_, extension in zip(formats, extensions):
                 
         
 
-            # Find the event files 
-            event_file = glob.glob("{}/{}_{}_task-{}_{}_events.tsv".format(event_dir, 
+            # # Find the event files 
+            event_file = glob.glob("{}/{}_{}_task-{}_run-01_events.tsv".format(event_dir, 
                                                                               subject, 
                                                                               func_session, 
-                                                                              task,
-                                                                              run_num))
-            # Finf the confounds files 
-            con_file = glob.glob('{}/{}_{}_task-{}_{}_desc-confounds_timeseries.tsv'.format(con_dir, 
-                                                                                 subject, 
-                                                                                 func_session, 
-                                                                                 task,
-                                                                                 run_num))
-            
-            confounds = pd.read_table(con_file[0])[confounds_list].dropna(axis=1)
+                                                                              task))
+
         
             # make the designe matrixe  
             events = eventsMatrix(design_file=event_file[0], task=task, tr=TR)
@@ -148,8 +124,9 @@ for format_, extension in zip(formats, extensions):
             design_matrix = make_first_level_design_matrix(frame_times,
                                                        events=events,
                                                        hrf_model='spm',
-                                                       drift_model=None,
-                                                       add_regs=confounds)
+                                                       drift_model=None)
+            
+            design_matrix = design_matrix.drop(columns='Fix')
             #  Save the designe matrix 
             dm_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/designe_matrix'.format(main_dir, 
                                                                                  project_dir, 
@@ -178,48 +155,12 @@ for format_, extension in zip(formats, extensions):
                                                         source_data=preproc_data)
         
             
-            # Compute the contrasts 
-            for contrast_num, contrast in enumerate(zip(cond1_label,cond2_label)):
-                # make contrasts
-                contrast_values = (design_matrix.columns == contrast[0]) * 1.0 -(design_matrix.columns == contrast[1])
-                # compute contrasts
-                eff = compute_contrast(labels, estimates, contrast_values,contrast_type='t')
-            
-                
-                # compute the derivatives               
-                z_map = eff.z_score()
-                z_p_map = 2*(1 - stats.norm.cdf(abs(z_map)))
-                fdr_th = fdr_threshold(z_map, glm_alpha)
-                fdr = z_map
-                fdr *= (z_map > fdr_th)
-                fdr_p_map = 2*(1 - stats.norm.cdf(abs(fdr)))
-                
-                if contrast_num:
-                    fit = np.vstack((fit,z_map,z_p_map,fdr,fdr_p_map))
-                else:                 
-                    fit = np.vstack((z_map,z_p_map,fdr,fdr_p_map,glm_r2))
-                    
-
-               
-                
-
-            
-            # export fit
-            maps_names = ['z_map','z_p_map','fdr','fdr_p_map','rsquare_map']
-
-            fit_img = make_surface_image(data=fit, 
-                                          source_img=preproc_img, 
-                                          maps_names=maps_names)
-
-            
-            nb.save(fit_img,'{}/{}'.format(glm_dir,glm_fit_fn)) 
-            
             # export pred
             pred_img = make_surface_image(data=glm_pred, 
                                           source_img=preproc_img)
 
-            nb.save(pred_img,'{}/{}'.format(glm_dir,glm_pred_fn)) 
-            
+            nb.save(pred_img,'{}/{}'.format(glm_dir, glm_pred_fn)) 
+             
             print('{} is done'.format(preproc_fn))
 
 

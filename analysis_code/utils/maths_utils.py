@@ -112,3 +112,124 @@ def r2_score_surf(bold_signal, model_prediction):
     r2_scores[valid_vertices] = r2_score(bold_signal[:, valid_vertices], model_prediction[:, valid_vertices], multioutput='raw_values')
     
     return r2_scores
+
+# def linear_regression_surf(bold_signal, model_prediction):
+#     """
+#     Perform linear regression analysis between model predictions and BOLD signals across vertices.
+
+#     Parameters:
+#     bold_signal (numpy.ndarray): Array of BOLD signal data with shape (time_points, vertices).
+#     model_prediction (numpy.ndarray): Array of model prediction data with shape (time_points, vertices).
+
+#     Returns:
+#     results (list): List containing the results of linear regression analysis for each vertex.
+#                     Each element in the list is a named tuple containing the following fields:
+#                     - slope: Slope of the regression line.
+#                     - intercept: Intercept of the regression line.
+#                     - rvalue: Correlation coefficient.
+#                     - pvalue: Two-sided p-value for a hypothesis test whose null hypothesis is
+#                               that the slope is zero, using Wald Test with t-distribution of the test statistic.
+#                     - stderr: Standard error of the estimated gradient.
+
+#     Note:
+#     The function checks for NaN values in both bold_signal and model_prediction.
+#     It also identifies and excludes vertices with identical values or containing NaNs.
+
+#     """
+
+#     # Import necessary libraries
+#     import numpy as np
+#     from scipy import stats
+
+#     # Check for NaN values in both bold_signal and model_prediction
+#     nan_mask = np.isnan(model_prediction).any(axis=0) | np.isnan(bold_signal).any(axis=0)
+
+#     # Mask for checking identical values along axis 0 in model_prediction
+#     identical_values_mask = (model_prediction[:-1] == model_prediction[1:]).all(axis=0)
+
+#     # Combining nan_mask and identical_values_mask
+#     invalid_mask = nan_mask | identical_values_mask
+
+#     valid_vertices = np.where(~invalid_mask)[0]
+
+#     results = []  # List to store the results for each vertex
+#     for vert in valid_vertices:
+#         result = stats.linregress(x=model_prediction[:, vert],
+#                                   y=bold_signal[:, vert],
+#                                   alternative='two-sided')
+#         results.append(result)
+
+#     return results
+
+def linear_regression_surf(bold_signal, model_prediction, correction='fdr_bh', alpha=0.01):
+    """
+    Perform linear regression analysis between model predictions and BOLD signals across vertices.
+
+    Parameters:
+    bold_signal (numpy.ndarray): Array of BOLD signal data with shape (time_points, vertices).
+    model_prediction (numpy.ndarray): Array of model prediction data with shape (time_points, vertices).
+    correction (str, optional): Type of multiple testing correction.
+                                Supported methods: 'bonferroni', 'sidak', 'holm-sidak',
+                                'holm', 'simes-hochberg', 'hommel', 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky'.
+                                Default is 'fdr_bh'.
+    alpha (float or list of floats, optional): The significance level(s) for the tests. Default is 0.01.
+
+    Returns:
+    vertex_results (numpy.ndarray): Array containing the results of linear regression analysis for each vertex.
+                                     The shape of the array is (n_output, n_vertex), where n_output = slope, intercept, rvalue, pvalue + p_values_corrected for each alpha.
+
+    Note:
+    The function checks for NaN values in both bold_signal and model_prediction.
+    It also identifies and excludes vertices with identical values or containing NaNs.
+    """
+
+    # Import 
+    import numpy as np
+    from scipy import stats
+    from statsmodels.stats.multitest import multipletests
+    
+    if not isinstance(alpha, list):
+        alpha = [alpha]
+        
+    # Check for NaN values in both bold_signal and model_prediction
+    nan_mask = np.isnan(model_prediction).any(axis=0) | np.isnan(bold_signal).any(axis=0)
+
+    # Mask for checking identical values along axis 0 in model_prediction
+    identical_values_mask = (model_prediction[:-1] == model_prediction[1:]).all(axis=0)
+
+    # Combining nan_mask and identical_values_mask
+    invalid_mask = nan_mask | identical_values_mask
+
+    valid_vertices = np.where(~invalid_mask)[0]
+
+    num_vertices = bold_signal.shape[1]
+    # Number of outputs per vertex (slope, intercept, rvalue, pvalue ) + the corrected p-values
+    num_output = 4 + len(alpha) 
+
+    # Array to store results for each vertex
+    vertex_results = np.full((num_output, num_vertices),np.nan)  
+
+    # Store p-values before correction
+    p_values = np.full(num_vertices,np.nan)
+
+    for i, vert in enumerate(valid_vertices):
+        result = stats.linregress(x=model_prediction[:, vert],
+                                  y=bold_signal[:, vert],
+                                  alternative='two-sided')
+        p_values[vert] = result.pvalue
+
+        # Store results in the array using index i
+        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue] + [np.nan]*len(alpha)  # Placeholder for p-value corrected
+
+    # Apply multiple testing correction
+    alpha_list = alpha
+    for n_alphas, alpha_val in enumerate(alpha_list):
+        p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
+        vertex_results[-1 - n_alphas, valid_vertices] = p_values_corrected
+    
+
+
+    return vertex_results
+
+
+

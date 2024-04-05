@@ -107,7 +107,7 @@ glm_files_list = [glm_fsnative_hemi_L,
 for glm_files in glm_files_list:
     
     img, data = load_surface(fn=glm_files[0])
-    final_map = np.zeros((1,data[fdr_p_map_idx].shape[0]))
+    final_map = np.zeros((8,data[fdr_p_map_idx].shape[0]))
     # final_map = np.full((1, data[fdr_p_map_idx].shape[0]), np.nan)
     if glm_files[0].find('hemi-L') != -1: hemi = 'hemi-L'
     elif glm_files[0].find('hemi-R') != -1: hemi = 'hemi-R'
@@ -160,12 +160,17 @@ for glm_files in glm_files_list:
 
         elif task == 'SacLoc':
             task_idx = 2
+            
+        elif task == 'pRF':
+            task_idx = 4
         
         for vert, fdr_value in enumerate(fdr_p_map):
             if fdr_value < glm_alpha:
-                final_map[:,vert] += task_idx
+                final_map[0,vert] += task_idx
+        
+
             
-    # final_map[final_map == 0] = np.nan
+
     # export final map
     if hemi:
         final_fn = "{}/{}/derivatives/pp_data/{}/fsnative/glm/glm_derivatives/{}_task-eyes-mvt_{}_space-fsnative_dct_glm-significant_map.func.gii".format(
@@ -174,8 +179,34 @@ for glm_files in glm_files_list:
     else:
         final_fn = "{}/{}/derivatives/pp_data/{}/170k/glm/glm_derivatives/{}_task-eyes-mvt_space-fsLR_den-170k_dct_glm-significant_map.dtseries.nii".format(
             main_dir, project_dir, subject, subject)
+    
+
+    
+    #  Make specifique maps 
+    for vert, final_value in enumerate(final_map[0,:]):
+        if final_value == 1 or final_value == 3:
+            final_map[1,vert] = 1
+            
+        elif final_value == 2 or final_value == 3:
+            final_map[2,vert] = 1
+            
+        elif final_value == 3 :
+            final_map[3,vert] = 1
+            
+        elif final_value == 4 :
+            final_map[4,vert] = 1
+            
+        elif final_value == 5 :
+            final_map[5,vert] = 1
+            
+        elif final_value == 6 :
+            final_map[6,vert] = 1
+            
+        elif final_value == 7 :
+            final_map[7,vert] = 1
         
-    maps_names_2 = ['significative_map']
+    
+    maps_names_2 = ['all','pursuit','saccade', 'pursuit_and_saccade', 'vision', 'vision_and_pursuite', 'vision_and_saccade', 'vision_and_pursuite_and_pursuit']
     final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names_2)
     nb.save(final_img, final_fn)
 

@@ -121,7 +121,7 @@ def prf_violins_plot(data, subject, ecc_th=[None,None], size_th=[None,None], rsq
         # Set axis titles only for the left-most column and bottom-most row
         fig.update_yaxes(range=[0,1],
                          nticks=5, 
-                         title_text='r2', 
+                         title_text='R<sup>2</sup>', 
                          row=1, col=1)
         
         fig.update_yaxes(range=[0,20], 

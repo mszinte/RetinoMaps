@@ -21,7 +21,7 @@ To run:
 >> python glm_sbatch.py [main directory] [project name] [subject num] [group] [server project]
 -----------------------------------------------------------------------------------------
 Exemple:
-python glm_sbatch.py /scratch/mszinte/data RetinoMaps sub-03 327 b327
+python glm_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
