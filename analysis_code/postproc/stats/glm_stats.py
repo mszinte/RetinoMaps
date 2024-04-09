@@ -43,11 +43,12 @@ import glob
 import json
 import numpy as np
 import nibabel as nb
+from scipy import stats
+
 
 # personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import data_from_rois
-from maths_utils import linear_regression_surf
+from maths_utils import linear_regression_surf, multipletests_surface
 from surface_utils import make_surface_image , load_surface
 
 # load settings
@@ -58,6 +59,7 @@ alpha = analysis_info['fdr_alpha']
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 tasks = analysis_info['task_glm']
+TRs = analysis_info['TRs']
 
 # Inputs
 main_dir = sys.argv[1]
@@ -65,7 +67,9 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
-maps_names = ['slope', 'intercept', 'rvalue', 'pvalue', 'pvalue_corrected_0.05', 'pvalue_corrected_0.01']
+maps_names = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr' , 'pvalue_corrected_0.05', 'pvalue_corrected_0.01']
+
+slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx  = 0,1,2,3,4
 
 for format_, extension in zip(formats, extensions): 
     for task in tasks:
@@ -89,15 +93,15 @@ for format_, extension in zip(formats, extensions):
             pred_img, pred_data = load_surface(glm_pred_loo_fn)
             bold_img, bold_data = load_surface(glm_bold_fn)
             
-            # load data
-            # pred_img, pred_data_all, pred_data, roi_idx_pred = data_from_rois(fn=glm_pred_loo_fn,  subject=subject, rois=rois)
-            # bold_img, bold_data_all, bold_data, roi_idx_bold = data_from_rois(fn=glm_bold_fn,  subject=subject, rois=rois)
-            # deb()
-            
+
             # Compute linear regression 
             print('compute {} {} linear regression'.format(glm_pred_loo_fn, glm_bold_fn))
-            # results_rois = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
+            
             results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
+
+
+            
+            
             
             # export results 
             stat_glm_loo_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/stats'.format(main_dir, project_dir, subject, format_)
@@ -105,12 +109,7 @@ for format_, extension in zip(formats, extensions):
             
             stat_glm_loo_fn = glm_pred_loo_fn.split('/')[-1].replace('pred', 'stats')
             
-            # results_brain = np.full((results_rois.shape[0],pred_data_all.shape[1]), np.nan, dtype=float)
-            # for vert, roi_idx in enumerate(roi_idx_pred):
-            #     results_brain[:,roi_idx] = results_rois[:,vert]
-            
-            
-            # stat_glm_loo_img = make_surface_image(data=results_brain, source_img=bold_img, maps_names=maps_names)
+
             stat_glm_loo_img = make_surface_image(data=results, source_img=bold_img, maps_names=maps_names)
             nb.save(stat_glm_loo_img, '{}/{}'.format(stat_glm_loo_dir, stat_glm_loo_fn))
       
@@ -172,13 +171,38 @@ for loo_stats_fns in loo_stats_fns_list:
             # load data 
             print('adding {} to loo computation'.format(loo_stats_fn))
             loo_stats_img, loo_stats_data = load_surface(fn=loo_stats_fn)
-
+            
             # Averagin
-            # loo_deriv_data_avg += loo_deriv_data/len(loo_deriv_fns)
             if n_run == 0:
                 loo_stats_data_avg = np.copy(loo_stats_data)
+
             else:
+                
                 loo_stats_data_avg = np.nanmean(np.array([loo_stats_data_avg, loo_stats_data]), axis=0)
+            
+        # Compute p-values en base om t-satistic and fdr-corrected p-values for averaged loo runs 
+        t_statistic = loo_stats_data_avg[slope_idx, :] / loo_stats_data_avg[stderr_idx, :]
+        
+        # compute two sided p-values
+        degrees_of_freedom = TRs - 2 
+        p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
+        
+        corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=alpha)
+        slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx 
+        
+        
+        loo_stats_data_avg = np.vstack((loo_stats_data_avg[slope_idx,:], 
+                                        loo_stats_data_avg[intercept_idx,:], 
+                                        loo_stats_data_avg[rvalue_idx,:], 
+                                        p_values, 
+                                        loo_stats_data_avg[stderr_idx,:], 
+                                        corrected_p_values))
+            
+
+
+        
+        
+        
         
         if hemi:
             avg_fn = '{}/{}/derivatives/pp_data/{}/fsnative/glm/stats/{}'.format(main_dir, project_dir, subject, loo_stats_avg_fn)
@@ -193,6 +217,6 @@ for loo_stats_fns in loo_stats_fns_list:
         loo_stats_img = make_surface_image(data=loo_stats_data_avg, source_img=loo_stats_img, maps_names=maps_names)
         nb.save(loo_stats_img, avg_fn)
 
-# Define permission cmd
-os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# # Define permission cmd
+# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

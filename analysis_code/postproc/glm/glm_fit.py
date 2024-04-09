@@ -76,6 +76,10 @@ extensions = analysis_info['extensions']
 confounds_list = analysis_info['glm_confounds']
 func_session = analysis_info['func_session'][0]
 
+#  Avoir problem with subject one
+if subject == 'sub-01':
+    func_session = 'ses-01'
+
 for format_, extension in zip(formats, extensions):
     # make folders
     glm_dir = '/{}/{}/derivatives/pp_data/{}/{}/glm/glm_fit'.format(main_dir, 
@@ -87,8 +91,9 @@ for format_, extension in zip(formats, extensions):
     
     if format_ == 'fsnative':
         rois = analysis_info['rois']
-    elif format_ == 'fsnative':
-        rois = analysis_info['rois']
+    elif format_ == '170k':
+        rois = analysis_info['mmp_rois']
+        
     for task in tasks :             
         # prepoc files name
         preproc_fns = glob.glob('{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg/*task-{}*dct_avg_loo*.{}'.format(main_dir, project_dir, subject, format_, task, extension))
