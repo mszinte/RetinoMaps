@@ -70,7 +70,7 @@ for format_, extension in zip(formats, extensions):
     prf_fit_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, project_dir, subject, format_)
     prf_bold_dir = '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg'.format(main_dir, project_dir, subject, format_)
     prf_pred_loo_fns_list = glob.glob('{}/*task-pRF*loo-*_prf-pred_css.{}'.format(prf_fit_dir,extension))
-
+    
     for prf_pred_loo_fn in prf_pred_loo_fns_list : 
         # Find the correponding bold signal to the loo prediction
         loo_number = re.search(r'loo-(\d+)', prf_pred_loo_fn).group(1)
@@ -86,7 +86,7 @@ for format_, extension in zip(formats, extensions):
         
         # Compute linear regression 
         print('compute {} {} linear regression'.format(prf_pred_loo_fn, prf_bold_fn))
-        results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_bh', alpha=alpha)
+        results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
         
         # export results 
         stat_prf_loo_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/stats'.format(main_dir, project_dir, subject, format_)

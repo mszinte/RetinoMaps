@@ -255,6 +255,7 @@ def get_rois(subject, return_concat_hemis=False, return_hemi=None, rois=None, ma
             rois_idx_R = {roi: np.where(rois_masks_R[roi])[0] for roi in rois_masks_R}
 
             if return_concat_hemis :
+                roi_verts = cortex.get_roi_verts(subject=subject, roi=rois, mask=False)
                 return roi_verts
             elif return_hemi == 'hemi-L':
                 return rois_idx_L

@@ -66,7 +66,6 @@ extensions = analysis_info['extensions']
 tasks = analysis_info['task_glm'] + ['pRF']
 fdr_alpha = analysis_info['fdr_alpha'][1]
 
-
 # find all the stats files 
 glm_stats_fns = []
 prf_stats_fns = []
@@ -226,8 +225,8 @@ for stats_files in stats_files_list:
     final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names)
     nb.save(final_img, '{}/{}'.format(final_stats_dir, final_stats_fn))
         
-# Define permission cmd
-os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir)) 
+# # Define permission cmd
+# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir)) 
     
     

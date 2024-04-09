@@ -199,7 +199,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             desc = 'ROI -> {} / Hemisphere -> {}'.format(roi, hemi)
             print(desc)
             for i, (vert_idx, surf_idx) in enumerate(zip(roi_vert_idx, roi_surf_idx)):
-    
+
                 if vert_rsq[surf_idx] > 0:
     
                     # get geodesic distances (mm)
