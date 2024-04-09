@@ -64,7 +64,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 #### Gaussian fit
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
 - [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py) 
-- [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
+- [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
 - [x] Make pRF derivatives maps with pycortex [pycortex_maps_gridfit.py](analysis_code/postproc/prf/postfit/pycortex_maps_gridfit.py)
 
 #### Rois
@@ -78,7 +78,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 ### **pCM analysis**
 - [x] Compute population cortical magnification [pcm_sbatch.py](analysis_code/postproc/pcm/pcm_sbatch.py)
-- [x] Average pRF derivatives subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
+- [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
 
 ### **Final pycortex maps** 
 - [x] Make pRF derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
@@ -88,15 +88,20 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 ### **Statistical analysis**
 - [x] Run Glm and pRF satistical analysis and combine results [final_stats_sbatch.py](analysis_code/postproc/stats/final_stats_sbatch.py)
-- [x] Make final satistiques maps maps with pycortex [pycortex_maps_stats_final.py](analysis_code/postproc/prf/postfit/pycortex_maps_stats_final.py)
+- [x] Average statisticales derivatives from all subjects in 170k template [170k_stats_averaging.py](analysis_code/postproc/stats/170k_stats_averaging.py) 
+- [x] Make final satistiques maps maps with pycortex [pycortex_maps_stats_final.py](analysis_code/postproc/stats/pycortex_maps_stats_final.py)
 
 ### **Group analysis**
-- [x] Merge all subjects pycortex maps [pdf_maps.py](analysis_code/postproc/pdf_maps.py)
-- [x] Make group tsv [make_group_tsv.py](analysis_code/postproc/prf/postfit/make_group_tsv.py)
+- [x] Merge all subjects pycortex maps [pdf_maps.py](analysis_code/postproc/group_analysis/pdf_maps.py)
+- [x] Make group tsv [make_group_tsv.py](analysis_code/postproc/group_analysis/make_group_tsv.py)
 
 ### **Final ploting**
-- [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/prf/postfit/finals_figures.py)
+- [x] Add vertex surface on tsvs [add_vertex_surface_to_tsv.py](analysis_code/postproc/result_analysis/add_vertex_surface_to_tsv.py)
+- [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/result_analysis/finals_figures.py)
 
+
+## Utils 
+- [x] Creat color map for pycortex [make_color_map.ipynb](analysis_code/utils/make_color_map.ipynb)
 
 
 ## On working

@@ -55,7 +55,7 @@ subject = sys.argv[3]
 group = sys.argv[4]
 
 
-fdr_p_map_idx = 5
+fdr_p_map_idx = 6
 
 # load settings
 with open('../../settings.json') as f:
@@ -225,8 +225,8 @@ for stats_files in stats_files_list:
     final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names)
     nb.save(final_img, '{}/{}'.format(final_stats_dir, final_stats_fn))
         
-# # Define permission cmd
-# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir)) 
+# Define permission cmd
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir)) 
     
     
