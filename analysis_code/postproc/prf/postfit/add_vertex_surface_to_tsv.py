@@ -17,7 +17,7 @@ To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 2. run python command
-python finals_figures.py [main directory] [project name] [subject] [group]
+python add_vertex_surface_to_tsv.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
 python add_vertex_surface_to_tsv.py /scratch/mszinte/data RetinoMaps sub-01 327
@@ -59,7 +59,11 @@ with open('../../../settings.json') as f:
 formats = analysis_info['formats']
 rois = analysis_info['rois']
 
-
+# sub-170k exeption
+if subject == 'sub-170k':
+    formats = ['170k']
+    extensions = ['dtseries.nii']
+    
 for format_ in formats : 
     print(format_)
     if format_ == 'fsnative':
@@ -118,6 +122,6 @@ for format_ in formats :
         print(prf_tsv_fn, 'is done')    
         tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
         
-# Define permission cmd
-os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(main_dir, project_dir, group))
+# # Define permission cmd
+# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))

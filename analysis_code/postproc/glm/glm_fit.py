@@ -53,6 +53,7 @@ from nilearn.glm.first_level import make_first_level_design_matrix, run_glm
 sys.path.append("{}/../../utils".format(os.getcwd()))
 from glm_utils import eventsMatrix, extract_predictions_r2
 from surface_utils import load_surface, make_surface_image
+from pycortex_utils import data_from_rois
 
 # Start counting the elapsed time for code execution
 start_time = datetime.datetime.now()
@@ -81,8 +82,13 @@ for format_, extension in zip(formats, extensions):
                                                                     project_dir, 
                                                                     subject, 
                                                                     format_)
-    os.makedirs(glm_dir, exist_ok=True)
 
+    os.makedirs(glm_dir, exist_ok=True)
+    
+    if format_ == 'fsnative':
+        rois = analysis_info['rois']
+    elif format_ == 'fsnative':
+        rois = analysis_info['rois']
     for task in tasks :             
         # prepoc files name
         preproc_fns = glob.glob('{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg/*task-{}*dct_avg_loo*.{}'.format(main_dir, project_dir, subject, format_, task, extension))
@@ -144,19 +150,24 @@ for format_, extension in zip(formats, extensions):
             glm_fit_fn = preproc_fn.split('/')[-1].replace('bold', 'glm-fit') 
 
             # Load data
-            preproc_img, preproc_data = load_surface(fn=preproc_fn)
+            # preproc_img, preproc_data = load_surface(fn=preproc_fn)
+            preproc_img, preproc_data_brain, preproc_data_rois, roi_idx = data_from_rois(fn=preproc_fn,  subject=subject, rois=rois)
 
             # Run the glm
-            labels, estimates = run_glm(preproc_data, design_matrix.values, noise_model="ols")
+            labels, estimates = run_glm(preproc_data_rois, design_matrix.values, noise_model="ols")
             
             # extract glm predictions and r2       
-            glm_pred, glm_r2 = extract_predictions_r2 (labels=labels,
+            glm_pred_rois, glm_r2 = extract_predictions_r2 (labels=labels,
                                                         estimate=estimates,
-                                                        source_data=preproc_data)
+                                                        source_data=preproc_data_rois)
+            
+            glm_pred_brain = np.full((preproc_data_brain.shape), np.nan, dtype=float)
+            for vert, roi_idx in enumerate(roi_idx):
+                glm_pred_brain[:,roi_idx] = glm_pred_rois[:,vert]
         
             
             # export pred
-            pred_img = make_surface_image(data=glm_pred, 
+            pred_img = make_surface_image(data=glm_pred_brain, 
                                           source_img=preproc_img)
 
             nb.save(pred_img,'{}/{}'.format(glm_dir, glm_pred_fn)) 

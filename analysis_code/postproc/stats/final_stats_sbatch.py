@@ -80,6 +80,7 @@ slurm_cmd = """\
            nb_procs=nb_procs, hour_proc=hour_proc, 
            subject=subject, memory_val=memory_val, log_dir=log_dir)
 
+
 glm_stats_cmd = "python glm_stats.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 prf_stats_cmd = "python prf_stats.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 final_stats_cmd = "python stats_final.py {} {} {} {}".format(main_dir, project_dir, subject, group)
@@ -93,6 +94,7 @@ sh_fn = "{}/{}_final_stats.sh".format(job_dir, subject)
 of = open(sh_fn, 'w')
 
 of.write("{} \n{} \n{} \n{} \n{} \n{}".format(slurm_cmd, glm_stats_cmd, prf_stats_cmd, final_stats_cmd, chmod_cmd, chgrp_cmd))
+
 of.close()
 
 

@@ -222,10 +222,11 @@ def linear_regression_surf(bold_signal, model_prediction, correction='fdr_bh', a
         vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue] + [np.nan]*len(alpha)  # Placeholder for p-value corrected
 
     # Apply multiple testing correction
-    alpha_list = alpha
-    for n_alphas, alpha_val in enumerate(alpha_list):
+    
+    for n_alphas, alpha_val in enumerate(alpha):
         p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
         vertex_results[-1 - n_alphas, valid_vertices] = p_values_corrected
+
     
 
 

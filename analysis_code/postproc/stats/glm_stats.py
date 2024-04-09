@@ -46,8 +46,9 @@ import nibabel as nb
 
 # personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from surface_utils import make_surface_image , load_surface
+from pycortex_utils import data_from_rois
 from maths_utils import linear_regression_surf
+from surface_utils import make_surface_image , load_surface
 
 # load settings
 with open('../../settings.json') as f:
@@ -72,32 +73,44 @@ for format_, extension in zip(formats, extensions):
         glm_fit_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/glm_fit'.format(main_dir, project_dir, subject, format_)
         glm_bold_dir = '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg'.format(main_dir, project_dir, subject, format_)
         glm_pred_loo_fns_list = glob.glob('{}/*task-{}*loo-*_glm-pred.{}'.format(glm_fit_dir, task, extension))
-
+        
         for glm_pred_loo_fn in glm_pred_loo_fns_list : 
             # Find the correponding bold signal to the loo prediction
             loo_number = re.search(r'loo-(\d+)', glm_pred_loo_fn).group(1)
             if format_ == 'fsnative': 
+                rois = analysis_info['rois']
                 hemi = re.search(r'hemi-(\w)', glm_pred_loo_fn).group(1)
                 glm_bold_fn = '{}/{}_task-{}_hemi-{}_fmriprep_dct_loo-{}_bold.{}'.format(glm_bold_dir, subject, task, hemi, loo_number, extension)
             elif format_ == '170k':
+                rois = analysis_info['mmp_rois']
                 glm_bold_fn = '{}/{}_task-{}_fmriprep_dct_loo-{}_bold.{}'.format(glm_bold_dir, subject, task, loo_number, extension)
             
             # load data  
             pred_img, pred_data = load_surface(glm_pred_loo_fn)
             bold_img, bold_data = load_surface(glm_bold_fn)
             
+            # load data
+            # pred_img, pred_data_all, pred_data, roi_idx_pred = data_from_rois(fn=glm_pred_loo_fn,  subject=subject, rois=rois)
+            # bold_img, bold_data_all, bold_data, roi_idx_bold = data_from_rois(fn=glm_bold_fn,  subject=subject, rois=rois)
+            # deb()
+            
             # Compute linear regression 
             print('compute {} {} linear regression'.format(glm_pred_loo_fn, glm_bold_fn))
-            results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_bh', alpha=alpha)
-
+            # results_rois = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
+            results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
+            
             # export results 
             stat_glm_loo_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/stats'.format(main_dir, project_dir, subject, format_)
             os.makedirs(stat_glm_loo_dir, exist_ok=True)
             
             stat_glm_loo_fn = glm_pred_loo_fn.split('/')[-1].replace('pred', 'stats')
             
+            # results_brain = np.full((results_rois.shape[0],pred_data_all.shape[1]), np.nan, dtype=float)
+            # for vert, roi_idx in enumerate(roi_idx_pred):
+            #     results_brain[:,roi_idx] = results_rois[:,vert]
             
             
+            # stat_glm_loo_img = make_surface_image(data=results_brain, source_img=bold_img, maps_names=maps_names)
             stat_glm_loo_img = make_surface_image(data=results, source_img=bold_img, maps_names=maps_names)
             nb.save(stat_glm_loo_img, '{}/{}'.format(stat_glm_loo_dir, stat_glm_loo_fn))
       

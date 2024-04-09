@@ -74,8 +74,8 @@ except ValueError:
        
 # Maps settings
 all_idx, pursuit_idx, saccade_idx, pursuit_and_saccade_idx, vision_idx, \
-    vision_and_pursuite_idx, vision_and_saccade_idx, \
-        vision_and_pursuite_and_saccade_idx = 0,1,2,3,4,5,6,7
+    vision_and_pursuit_idx, vision_and_saccade_idx, \
+        vision_and_pursuit_and_saccade_idx = 0,1,2,3,4,5,6,7
      
 cmap = 'stats_colors'
 col_offset = 1.0/14.0
@@ -169,13 +169,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     maps_names.append('vision')
     
     #  Creat the vision_and_pursuite flatmap
-    final_data = final_mat[vision_and_pursuite_idx,...]
-    param_vision_and_pursuite = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
+    final_data = final_mat[vision_and_pursuit_idx,...]
+    param_vision_and_pursuit = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
                                   'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
                                   'cortex_type': 'VertexRGB','description': 'final map',
                                   'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
                                   'cbar_label': '', 'with_labels': True}
-    maps_names.append('vision_and_pursuite')
+    maps_names.append('vision_and_pursuit')
     
     #  Creat the vision_and_saccade flatmap
     final_data = final_mat[vision_and_saccade_idx,...]
@@ -187,13 +187,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     maps_names.append('vision_and_saccade')
     
     #  Creat the vision_and_pursuite_and_pursuit flatmap
-    final_data = final_mat[vision_and_pursuite_and_saccade_idx,...]
-    param_vision_and_pursuite_and_saccade = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
+    final_data = final_mat[vision_and_pursuit_and_saccade_idx,...]
+    param_vision_and_pursuit_and_saccade = {'data': final_data, 'cmap': cmap, 'alpha': final_data, 
                                               'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
                                               'cortex_type': 'VertexRGB','description': 'final map',
                                               'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
                                               'cbar_label': '', 'with_labels': True}
-    maps_names.append('vision_and_pursuite_and_saccade')
+    maps_names.append('vision_and_pursuit_and_saccade')
 
     
     

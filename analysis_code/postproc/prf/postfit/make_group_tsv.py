@@ -64,7 +64,8 @@ pcm_th = [0, 30]
 n_th = [0, 10]
 
 # Define the types of data to process
-
+formats = ['170k']
+extensions = ['dtseries.nii']
 
 # Iterate over formats and data types
 for format_, extension in zip(formats, extensions):
@@ -91,7 +92,7 @@ for format_, extension in zip(formats, extensions):
             # Read data from the subject's file
             # data = pd.read_table('{}/{}_{}_{}'.format(tsv_dir, subject, data_type, format_))
             data = pd.read_table('{}/{}_css-prf_{}.tsv'.format(tsv_dir,subject,data_type))
-            
+            deb()
             # Apply thresholds to filter out invalid data
             data.loc[(data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) | 
                      (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) | 
