@@ -60,7 +60,7 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 subjects = analysis_info['subjects']
 tasks = analysis_info['task_glm'] + ['pRF']
-alpha = analysis_info['fdr_alpha'][1]
+fdr_alpha = analysis_info['fdr_alpha'][1]
 TRs = analysis_info['TRs']
 
 fdr_p_map_idx = 6
@@ -108,7 +108,7 @@ for n_task, task in enumerate(tasks) :
     degrees_of_freedom = TRs - 2 
     p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
     
-    corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=alpha)
+    corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=fdr_alpha)
     slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx 
     
     
@@ -165,7 +165,7 @@ for stats_file in stats_fns:
     fdr_p_map = stats_data_task[fdr_p_map_idx, :]
     
     for vert, fdr_value in enumerate(fdr_p_map):
-        if fdr_value < alpha:
+        if fdr_value < fdr_alpha:
             final_map[task_idx,vert] += task_idx
                     
 final_map[0,:] = np.sum(final_map, axis=0)                

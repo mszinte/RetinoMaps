@@ -55,7 +55,7 @@ from surface_utils import make_surface_image , load_surface
 with open('../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-alpha = analysis_info['fdr_alpha']
+fdr_alpha = analysis_info['fdr_alpha']
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 tasks = analysis_info['task_glm']
@@ -97,7 +97,7 @@ for format_, extension in zip(formats, extensions):
             # Compute linear regression 
             print('compute {} {} linear regression'.format(glm_pred_loo_fn, glm_bold_fn))
             
-            results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=alpha)
+            results = linear_regression_surf(bold_signal=bold_data, model_prediction=pred_data, correction='fdr_tsbh', alpha=fdr_alpha)
 
 
             
@@ -187,8 +187,8 @@ for loo_stats_fns in loo_stats_fns_list:
         degrees_of_freedom = TRs - 2 
         p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
         
-        corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=alpha)
-        slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx 
+        corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=fdr_alpha)
+
         
         
         loo_stats_data_avg = np.vstack((loo_stats_data_avg[slope_idx,:], 
