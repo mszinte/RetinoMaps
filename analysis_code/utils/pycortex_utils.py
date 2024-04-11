@@ -488,11 +488,12 @@ def set_pycortex_config_file(cortex_folder):
     os.rename(new_pycortex_config_file, pycortex_config_file)
     return None
 
-def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRGB',cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
-                alpha = None,depth = 1,thick = 1,height = 1024,sampler = 'nearest',\
-                with_curvature = True,with_labels = False,with_colorbar = False,\
-                with_borders = False,curv_brightness = 0.95,curv_contrast = 0.05,add_roi = False,\
-                roi_name = 'empty',col_offset = 0, zoom_roi = None, zoom_hem = None, zoom_margin = 0.0,cbar_label=''):
+def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB', cmap='Viridis',\
+                cbar = 'discrete', cmap_steps=255, xfmname=None,\
+                alpha=None, depth=1, thick=1, height=1024, sampler='nearest',\
+                with_curvature=True, with_labels=False, with_colorbar=False,\
+                with_borders=False, curv_brightness=0.95, curv_contrast=0.05, add_roi=False,\
+                roi_name='empty', col_offset=0, zoom_roi=None, zoom_hem=None, zoom_margin=0.0, cbar_label=''):
     """
     Plot brain data onto a previously saved flatmap.
     Parameters

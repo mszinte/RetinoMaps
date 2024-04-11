@@ -17,7 +17,7 @@ Pycortex flatmaps figures
 To run:
 0. TO RUN ON INVIBE SERVER (with Inkscape)
 1. cd to function
->> cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/preproc/functional/
+>> cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/preproc/functional/
 2. run python command
 >> python pycortex_corr_maps.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ Written by Martin Szinte (mail@martinszinte.net)
 import warnings
 warnings.filterwarnings("ignore")
 
-#  Debug import 
+# Debug import 
 import ipdb
 deb = ipdb.set_trace
 
@@ -45,15 +45,7 @@ import matplotlib.pyplot as plt
 
 # Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
-
-#Define analysis parameters
-with open('../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
-extensions = analysis_info['extensions']
-tasks = analysis_info['task_names']
+from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
 
 # Inputs
 main_dir = sys.argv[1]
@@ -69,6 +61,15 @@ try:
         raise ValueError
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
+
+# Define analysis parameters
+with open('../../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+if subject == 'sub-170k': formats = ['170k']
+else: formats = analysis_info['formats']
+extensions = analysis_info['extensions']
+tasks = analysis_info['task_names']
     
 # Maps settings
 cmap_corr = 'RdBu_r'
@@ -84,8 +85,6 @@ cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
 
-if subject == 'sub-170k':
-    formats = ['170k']
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     corr_dir = "{}/{}/derivatives/pp_data/{}/{}/corr/fmriprep_dct_corr".format(main_dir, project_dir, subject, format_)
@@ -117,11 +116,18 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         maps_names = []
         
         # correlation
-        param_correlations = {'data': corr_data, 'cmap': cmap_corr ,
-                      'vmin': corr_scale[0], 'vmax': corr_scale[1], 'cbar': 'discrete', 
-                      'cortex_type': 'Vertex', 'description': '{} {} correlation'.format(subject,task), 
-                      'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg, 'cbar_label': 'Pearson coefficient',
-                      'with_labels': True}
+        param_correlations = {'data': corr_data, 
+                              'cmap': cmap_corr ,
+                              'vmin': corr_scale[0], 
+                              'vmax': corr_scale[1], 
+                              'cbar': 'discrete', 
+                              'cortex_type': 'Vertex', 
+                              'description': '{} {} correlation'.format(subject, task), 
+                              'curv_brightness': 1, 
+                              'curv_contrast': 0.1, 
+                              'add_roi': save_svg, 
+                              'cbar_label': 'Pearson coefficient',
+                              'with_labels': True}
         maps_names.append('correlations')
         
         # draw flatmaps
@@ -130,11 +136,12 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         
             # create flatmap
             roi_name = '{}_{}'.format(task, maps_name)
-            roi_param = {'subject': pycortex_subject, 'xfmname': None, 'roi_name': roi_name}
+            roi_param = {'subject': pycortex_subject, 
+                         'roi_name': roi_name}
             print(roi_name)
             exec('param_{}.update(roi_param)'.format(maps_name))
-            exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name = maps_name))
-            exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(flatmaps_dir, subject, task,  maps_name, deriv_fn_label))
+            exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
+            exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(flatmaps_dir, subject, task, maps_name, deriv_fn_label))
             plt.close()
         
             # save flatmap as dataset
@@ -146,5 +153,3 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, task, deriv_fn_label)
         dataset = cortex.Dataset(data=volumes)
         dataset.save(dataset_file)
-    
-    

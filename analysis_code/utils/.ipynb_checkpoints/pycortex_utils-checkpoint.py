@@ -1,5 +1,5 @@
-import numpy as np
-def load_rois_atlas(atlas_name, surf_size, rois=None, mask=True, path_to_atlas=None):
+import numpy as np            
+def load_rois_atlas(atlas_name, surf_size, return_hemis=False, rois=None, mask=True, path_to_atlas=None):
     """
     Loads ROIs from an atlas.
 
@@ -9,6 +9,9 @@ def load_rois_atlas(atlas_name, surf_size, rois=None, mask=True, path_to_atlas=N
         The name of the atlas.
     surf_size : str
         Size of the surface, either '59k' or '170k'.
+    return_hemis : bool, optional
+        If True, returns ROIs for both hemispheres separately. If False, returns combined ROIs.
+        Default is False.
     rois : list of str, optional
         List of ROIs you want to extract. If None, all ROIs are returned. 
         Default is None.
@@ -21,8 +24,8 @@ def load_rois_atlas(atlas_name, surf_size, rois=None, mask=True, path_to_atlas=N
 
     Returns
     -------
-    rois_masks : dict
-        A dictionary where the keys represent the ROIs and the values correspond 
+    rois_masks : dict or tuple of dicts
+        A dictionary or tuple of dictionaries where the keys represent the ROIs and the values correspond 
         to the respective masks for each hemisphere.
 
     Raises
@@ -36,32 +39,57 @@ def load_rois_atlas(atlas_name, surf_size, rois=None, mask=True, path_to_atlas=N
     # Validating surf_size
     if surf_size not in ['59k', '170k']:
         raise ValueError("Invalid value for 'surf_size'. It should be either '59k' or '170k'.")
-        
+    
     # Loading data from the specified path or default directory
     if path_to_atlas:
-        data = np.load(path_to_atlas)
+        data_path = path_to_atlas
     else:    
         atlas_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../atlas/"))
+        data_path = atlas_dir
+    
+    if return_hemis:
+        filename_L = "{}_atlas_rois_{}_hemi-L.npz".format(atlas_name, surf_size)
+        data_L = np.load(os.path.join(data_path, filename_L))
+        rois_dict_L = dict(data_L)
+        
+        filename_R = "{}_atlas_rois_{}_hemi-R.npz".format(atlas_name, surf_size)
+        data_R = np.load(os.path.join(data_path, filename_R))
+        rois_dict_R = dict(data_R)
+        
+        # Handling the case where mask is False
+        if not mask:
+            rois_dict_L = {roi: np.where(rois_dict_L[roi])[0] for roi in rois_dict_L}
+            rois_dict_R = {roi: np.where(rois_dict_R[roi])[0] for roi in rois_dict_R}
+            
+        # Filtering ROIs if rois is provided
+        if rois is None:
+            return rois_dict_L, rois_dict_R
+        elif isinstance(rois, list):
+            filtered_rois_L = {roi: rois_dict_L[roi] for roi in rois if roi in rois_dict_L}
+            filtered_rois_R = {roi: rois_dict_R[roi] for roi in rois if roi in rois_dict_R}
+            return filtered_rois_L, filtered_rois_R
+        else:
+            raise ValueError("Invalid value for 'rois'. It should be either None or a list of ROI names.")
+    else: 
         filename = "{}_atlas_rois_{}.npz".format(atlas_name, surf_size)
-        data = np.load('{}/{}'.format(atlas_dir, filename))
-    
-    rois_dict = dict(data)
-    
-    # Handling the case where mask is False
-    if not mask:
-        # Returning indices where the masks are True
-        rois_dict = {roi: np.where(rois_dict[roi])[0] for roi in rois_dict}
+        data = np.load(os.path.join(data_path, filename))
+        rois_dict = dict(data)
         
-    # Filtering ROIs if rois is provided
-    if rois is None:
-        return rois_dict
-    elif isinstance(rois, list):
-        filtered_rois = {roi: rois_dict[roi] for roi in rois if roi in rois_dict}
-        return filtered_rois
-    else:
-        raise ValueError("Invalid value for 'rois'. It should be either None or a list of ROI names.")
-        
-def data_from_rois(fn, subject, rois, return_concat_hemis):
+        # Handling the case where mask is False
+        if not mask:
+            rois_dict = {roi: np.where(rois_dict[roi])[0] for roi in rois_dict}
+            
+        # Filtering ROIs if rois is provided
+        if rois is None:
+            return rois_dict
+        elif isinstance(rois, list):
+            filtered_rois = {roi: rois_dict[roi] for roi in rois if roi in rois_dict}
+            return filtered_rois
+        else:
+            raise ValueError("Invalid value for 'rois'. It should be either None or a list of ROI names.")
+
+            
+def data_from_rois(fn, subject, rois):
     """
     Load a surface, and returne vertex only data from the specified ROIs
     ----------
@@ -84,50 +112,54 @@ def data_from_rois(fn, subject, rois, return_concat_hemis):
     import cortex
     from surface_utils import load_surface
 
-    # import data 
+    # Import data
     img, data = load_surface(fn=fn)
     len_data = data.shape[1]
     
-    # get rois mask 
+    # Get regions of interest (ROIs) mask
     if fn.endswith('.gii'):
-        roi_verts = cortex.get_roi_verts(subject=subject, 
-                                         roi= rois, 
-                                         mask=True)
+        roi_verts = cortex.get_roi_verts(subject=subject, roi=rois, mask=True)
     elif fn.endswith('.nii'):
-        if len_data > 60000:
-            surf_size = '170k'
-        else:
-            surf_size = '59k'
-            
-        roi_verts = load_rois_atlas(atlas_name='mmp',surf_size=surf_size)
-    
+        surf_size = '170k' if len_data > 60000 else '59k'
+        roi_verts = load_rois_atlas(atlas_name='mmp', 
+                                    surf_size=surf_size, 
+                                    return_hemis=False,
+                                    rois=rois, 
+                                    mask=True)
+
+    # Create a brain mask
+    # na_vertices = np.where(np.isnan(data).any(axis=0))[0]
     na_vertices = np.isnan(data).any(axis=0)
-    
-    # create a brain mask  
     brain_mask = np.any(list(roi_verts.values()), axis=0)
-    
+        
     # create a hemi mask  
     if 'hemi-L' in fn:
         hemi_mask = brain_mask[:len_data]
-        for i, na_vertices in enumerate(na_vertices):
-            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
         
     elif 'hemi-R' in fn: 
         hemi_mask = brain_mask[-len_data:]
-        for i, na_vertices in enumerate(na_vertices):
-            hemi_mask[i] = not na_vertices and hemi_mask[i]
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
     else: 
-        for i, na_vertices in enumerate(na_vertices):
-            brain_mask[i] = not na_vertices and brain_mask[i]
-        
+        hemi_mask = brain_mask
+        for i, na_vertex in enumerate(na_vertices):
+            hemi_mask[i] = not na_vertex and hemi_mask[i]
+    
+    
+    # Get indices of regions of interest (ROIs)
     roi_idx = np.where(hemi_mask)[0]
     
-    data_roi = data[:,hemi_mask]
+    # Extract data corresponding to regions of interest (ROIs)
+    data_roi = data[:, hemi_mask]
 
         
     return img, data, data_roi, roi_idx
 
-def get_rois(subject, return_concat_hemis=False,rois=None, mask=True, atlas_name=None, surf_size=None):
+
+
+def get_rois(subject, return_concat_hemis=False, return_hemi=None, rois=None, mask=True, atlas_name=None, surf_size=None):
     """
     Accesses single hemisphere ROI masks for GIFTI and atlas ROI for CIFTI.
 
@@ -137,6 +169,8 @@ def get_rois(subject, return_concat_hemis=False,rois=None, mask=True, atlas_name
         Subject name in the pycortex database.
     return_concat_hemis : bool, optional
         Indicates whether to return concatenated hemisphere ROIs. Defaults to False.
+    return_hemi : str, optional
+        Indicates which hemisphere's ROI masks to return. Can be 'hemi-L' for the left hemisphere or 'hemi-R' for the right hemisphere.
     rois : list of str, optional
         List of ROIs you want to extract.
     mask : bool, optional
@@ -150,11 +184,27 @@ def get_rois(subject, return_concat_hemis=False,rois=None, mask=True, atlas_name
 
     Returns
     -------
-    rois_masks : dict
-        A dictionary where the keys represent the ROIs and the values correspond to the respective masks for each hemisphere.
-    """
+    rois_masks : dict or tuple of dicts
+        A dictionary or tuple of dictionaries containing the ROI masks.
+        If `atlas_name` is provided, returns ROIs from the specified atlas.
+        If `atlas_name` is None, returns subject-specific ROIs from pycortex.
+        
+        If `atlas_name` is provided:
+        - If `return_concat_hemis` is True, returns a single dictionary with concatenated hemisphere ROIs.
+        - If `return_hemi` is specified, returns ROIs for the specified hemisphere.
+        - If neither `return_concat_hemis` nor `return_hemi` is specified, returns ROIs for both hemispheres in a tuple of dictionaries.
+        
+        If `atlas_name` is None:
+        - If `return_concat_hemis` is True, returns a single dictionary with concatenated hemisphere ROIs.
+        - If `return_hemi` is specified, returns ROIs for the specified hemisphere.
+        - If neither `return_concat_hemis` nor `return_hemi` is specified, returns ROIs for both hemispheres in a tuple of dictionaries.
+
+    Notes
+    -----
+    For both cases (`atlas_name` provided or not), ROI masks are represented as dictionaries where the keys represent the ROI names and 
+    the values correspond to the respective masks for each hemisphere. Each mask is an array of vertex indices indicating the locations of the ROI on the cortical surface.
+    """ 
     import cortex
-    from surface_utils import load_surface
     
     surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
     surf_lh, surf_rh = surfs[0], surfs[1]
@@ -165,22 +215,56 @@ def get_rois(subject, return_concat_hemis=False,rois=None, mask=True, atlas_name
     if atlas_name :
         roi_verts = load_rois_atlas(atlas_name=atlas_name, 
                                     surf_size=surf_size,
+                                    return_hemis=False,
                                     rois=rois, 
                                     mask=mask)
-        return roi_verts
+        
+        if return_concat_hemis :
+            return roi_verts
+        
+        
+        elif return_hemi == 'hemi-L':
+            roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
+            return roi_verts_L
+        elif return_hemi == 'hemi-R':
+            roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
+            return roi_verts_R
+        else:
+            roi_verts_L, roi_verts_R = load_rois_atlas(atlas_name=atlas_name, surf_size=surf_size, return_hemis=True, rois=rois, mask=mask)
+            return roi_verts_L, roi_verts_R
 
     else:
         roi_verts = cortex.get_roi_verts(subject=subject, 
-                                         roi=rois, 
-                                         mask=mask)
-    
-    rois_masks_L = {roi: data[:lh_vert_num] for roi, data in roi_verts.items()}
-    rois_masks_R = {roi: data[-rh_vert_num:] for roi, data in roi_verts.items()}
+                                          roi=rois, 
+                                          mask=True)
+        rois_masks_L = {roi: data[:lh_vert_num] for roi, data in roi_verts.items()}
+        rois_masks_R = {roi: data[-rh_vert_num:] for roi, data in roi_verts.items()}
+        
+        if mask==True:
+            if return_concat_hemis :
+                return roi_verts
+            elif return_hemi == 'hemi-L':
+                return rois_masks_L
+            elif return_hemi == 'hemi-R':
+                return rois_masks_R
+            else:
+                return rois_masks_L, rois_masks_R
 
-    if return_concat_hemis :
-        return roi_verts
-    else:
-        return rois_masks_L, rois_masks_R
+        else:
+            rois_idx_L = {roi: np.where(rois_masks_L[roi])[0] for roi in rois_masks_L}
+            rois_idx_R = {roi: np.where(rois_masks_R[roi])[0] for roi in rois_masks_R}
+
+            if return_concat_hemis :
+                roi_verts = cortex.get_roi_verts(subject=subject, roi=rois, mask=False)
+                return roi_verts
+            elif return_hemi == 'hemi-L':
+                return rois_idx_L
+            elif return_hemi == 'hemi-R':
+                return rois_idx_R
+            else:
+                return rois_idx_L, rois_idx_R
+
+
 
 def load_surface_pycortex(L_fn=None, R_fn=None, brain_fn=None, return_img=False, 
                           return_hemi_len=False, return_59k_mask=False, return_source_data=False):
@@ -283,7 +367,7 @@ def make_image_pycortex(data,
     """
     from cifti_utils import from_59k_to_170k
     from surface_utils import make_surface_image 
-    import numpy as np
+  
     
 
     if img_L and img_R: 
@@ -303,6 +387,56 @@ def make_image_pycortex(data,
                                      maps_names=maps_names)
         return new_img
 
+def calculate_vertex_areas(surface, mask=None):
+    """
+    Calculate the area associated with each vertex on a surface.
+
+    Parameters:
+        surface: cortex.polyutils.Surface
+            The surface for which vertex areas will be calculated.
+        mask: bool or numpy.ndarray, optional
+            If provided, calculate vertex areas only for the specified vertices.
+            If True, calculates vertex areas for the entire surface.
+            If False or not provided, calculates vertex areas for the entire surface.
+
+    Returns:
+        numpy.ndarray: An array containing the area in mm2 associated with each vertex on the surface.
+    """
+    import numpy as np
+    from collections import defaultdict
+    
+        
+    vertex_areas = np.zeros(len(surface.pts))
+    vertex_triangle_map = defaultdict(list)
+    
+    # Create a mapping from each vertex to its adjacent triangles
+    for j, poly in enumerate(surface.polys):
+        for vertex_index in poly:
+            vertex_triangle_map[vertex_index].append(j)
+    
+    for i, (x, y, z) in enumerate(surface.pts):
+        connected_triangles = [surface.polys[j] for j in vertex_triangle_map[i]]
+        
+        total_area = 0
+        for poly in connected_triangles:
+            # Get the coordinates of the vertices of the triangle
+            v0 = surface.pts[poly[0]]
+            v1 = surface.pts[poly[1]]
+            v2 = surface.pts[poly[2]]
+            
+            # Calculate the area of the triangle using the cross product formula
+            area = 0.5 * np.linalg.norm(np.cross(v1 - v0, v2 - v0))
+            
+            # Add the area of the triangle to the total area
+            total_area += area
+        
+        # Divide the total area by 3 to account for each triangle being shared by 3 vertices
+        vertex_areas[i] = total_area / 3
+        
+    if mask is not None:
+        vertex_areas= vertex_areas[mask]
+            
+    return vertex_areas
 
 def set_pycortex_config_file(cortex_folder):
 
@@ -354,11 +488,12 @@ def set_pycortex_config_file(cortex_folder):
     os.rename(new_pycortex_config_file, pycortex_config_file)
     return None
 
-def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRGB',cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
-                alpha = None,depth = 1,thick = 1,height = 1024,sampler = 'nearest',\
-                with_curvature = True,with_labels = False,with_colorbar = False,\
-                with_borders = False,curv_brightness = 0.95,curv_contrast = 0.05,add_roi = False,\
-                roi_name = 'empty',col_offset = 0, zoom_roi = None, zoom_hem = None, zoom_margin = 0.0,cbar_label=''):
+def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB', cmap='Viridis',\
+                cbar = 'discrete', cmap_steps=255, xfmname=None,\
+                alpha=None, depth=1, thick=1, height=1024, sampler='nearest',\
+                with_curvature=True, with_labels=False, with_colorbar=False,\
+                with_borders=False, curv_brightness=0.95, curv_contrast=0.05, add_roi=False,\
+                roi_name='empty', col_offset=0, zoom_roi=None, zoom_hem=None, zoom_margin=0.0, cbar_label=''):
     """
     Plot brain data onto a previously saved flatmap.
     Parameters
@@ -411,7 +546,7 @@ def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRG
     
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
-    colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val), N = cmap_steps)
+    colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
     
     if cortex_type=='VolumeRGB':
         # convert data to RGB
@@ -537,6 +672,51 @@ def draw_cortex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRG
         cbar_axis.set_yticklabels(np.linspace(vmax[1],vmin[1],3))
         cbar_axis.set_xlabel(cbar_label[0], size='x-large')
         cbar_axis.set_ylabel(cbar_label[1], size='x-large')
+        
+    elif cbar == 'glm':
+        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+        
+        val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
+
+        # Exclure les valeurs proches du blanc
+        val = val[val > 0.25]
+        
+        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        
+        colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        colorbar_location = [0.85, 0.02, 0.04, 0.2]
+        bounds_label = ['Both','Saccade','Pursuit']  
+        bounds = np.linspace(vmin, vmax, colmap.N) 
+        ticks_positions = [0.5, 1.5, 2.5]  
+        norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
+        cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmapglm.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
+        cb.set_ticklabels(bounds_label)
+        cb.ax.tick_params(size=0,labelsize=20) 
+    elif cbar == 'stats':
+        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+        
+        val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
+
+        
+        val = val[val > 0.13]
+        
+        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        
+        colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        colorbar_location = [0.05, 0.02, 0.04, 0.2]
+        bounds_label = ['pursuit', 'saccade', 'pursuit_and_saccade', 'vision', 'vision_and_pursuit', 'vision_and_saccade', 'vision_and_saccade_and_pursuite']  
+        bounds = np.linspace(vmin, vmax, colmap.N) 
+        ticks_positions = [6.5, 5.5, 4.5, 3.5, 2.5, 1.5, 0.5] 
+        norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
+        cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmapglm.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
+        cb.set_ticklabels(bounds_label)
+        cb.ax.tick_params(size=0,labelsize=20) 
+        
+        
+        
+
 
     
     # add to overlay
