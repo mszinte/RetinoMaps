@@ -119,7 +119,7 @@ for format_, extension in zip(formats, extensions):
                                       confounds=high_pass_set)
            
             # Compute the Z-score 
-            surf_data =  (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
+            surf_data = (surf_data - np.mean(surf_data, axis=0)) / np.std(surf_data, axis=0)
             
             # Make an image with the preproceced data
             filtered_img = make_surface_image(data=surf_data, source_img=surf_img)
@@ -195,7 +195,7 @@ for preproc_files in preproc_files_list:
             preproc_img, preproc_data = load_surface(fn=preproc_files_task[0])
             data_loo_avg = np.zeros(preproc_data.shape)
         
-            # compute leave on out averagin
+            # compute leave-one-out averaging
             for avg_run in avg_runs:
                 print('loo_avg-{} add: {}'.format(loo_num+1, avg_run))
                 preproc_img, preproc_data = load_surface(fn=avg_run)
@@ -242,7 +242,7 @@ for preproc_files in preproc_files_list:
         # compute the combination 
         combis = list(it.combinations(preproc_files_task, 2))
 
-        # load data and comute the correaltions
+        # load data and compute the correlations
         cor_final = np.zeros((1, preproc_data.shape[1]))
         for combi in combis:
             task_cor = np.zeros((preproc_data.shape[1]))
