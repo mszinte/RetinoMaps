@@ -161,7 +161,7 @@ def r2_score_surf(bold_signal, model_prediction):
 
 #     return results
 
-def linear_regression_surf(bold_signal, model_prediction, correction='fdr_bh', alpha=0.01):
+def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha=None):
     """
     Perform linear regression analysis between model predictions and BOLD signals across vertices.
 
@@ -204,7 +204,7 @@ def linear_regression_surf(bold_signal, model_prediction, correction='fdr_bh', a
 
     num_vertices = bold_signal.shape[1]
     # Number of outputs per vertex (slope, intercept, rvalue, pvalue ) + the corrected p-values
-    num_output = 4 + len(alpha) 
+    num_output = 5 + len(alpha) 
 
     # Array to store results for each vertex
     vertex_results = np.full((num_output, num_vertices),np.nan)  
@@ -218,19 +218,62 @@ def linear_regression_surf(bold_signal, model_prediction, correction='fdr_bh', a
                                   alternative='two-sided')
         p_values[vert] = result.pvalue
 
-        # Store results in the array using index i
-        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue] + [np.nan]*len(alpha)  # Placeholder for p-value corrected
-
+        # Store results in the array
+        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue, result.stderr] + [np.nan]*len(alpha)  # Placeholder for p-value corrected
+    
+    if not correction :
+        return vertex_results
     # Apply multiple testing correction
+    else :
+        for n_alphas, alpha_val in enumerate(alpha):
+            p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
+            vertex_results[-1 - n_alphas, valid_vertices] = p_values_corrected
     
-    for n_alphas, alpha_val in enumerate(alpha):
-        p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
-        vertex_results[-1 - n_alphas, valid_vertices] = p_values_corrected
-
+        
     
+    
+        return vertex_results
 
 
-    return vertex_results
+def multipletests_surface(pvals, correction='fdr_tsbh', alpha=0.01):
+    """
+    Perform multiple testing correction for surface data.
 
+    Parameters:
+        pvals (numpy.ndarray): Array of p-values.
+        correction (str, optional): Method of multiple testing correction. Default is 'fdr_tsbh'.
+        alpha (float or list of float, optional): Significance level(s) for the correction.
+            Can be a single float or a list of floats for multiple levels. Default is 0.01.
 
+    Returns:
+        numpy.ndarray: Array of corrected p-values corresponding to the input p-values.
+    """
+    # Import
+    import numpy as np
+    from statsmodels.stats.multitest import multipletests
+    
+    # If alpha is not already a list, convert it into a list
+    if not isinstance(alpha, list):
+        alpha_list = [alpha]
+    else:
+        alpha_list = alpha
 
+    # Check for NaN values in pvals
+    nan_mask = np.isnan(pvals)
+    valid_vertices = np.where(~nan_mask)[0]
+
+    # Initialize array to store corrected p-values
+    corrected_pvals = np.full((len(alpha_list), pvals.shape[0]), np.nan)
+
+    # Perform correction for each specified alpha level
+    for n_alpha, alpha_val in enumerate(alpha_list):
+        # Perform multiple testing correction and retrieve corrected p-values
+        _, p_values_corrected, _, _ = multipletests(pvals[valid_vertices], method=correction, alpha=alpha_val)
+        corrected_pvals[n_alpha, valid_vertices] = p_values_corrected
+
+    return corrected_pvals
+
+        
+   
+ 
+    
