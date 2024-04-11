@@ -164,7 +164,10 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     loo_rsq_data = deriv_mat[loo_rsq_idx,...]
     alpha_range = analysis_info["alpha_range"]
     alpha = (loo_rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
+    
     alpha[alpha>1]=1
+    deb()
+
     
     param_loo_rsq_css = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': loo_rsq_data, 
                           'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 

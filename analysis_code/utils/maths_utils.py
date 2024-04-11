@@ -219,7 +219,7 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
         p_values[vert] = result.pvalue
 
         # Store results in the array
-        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue, result.stderr] + [np.nan]*len(alpha)  # Placeholder for p-value corrected
+        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue, result.stderr] + [np.nan]*len(alpha)  
     
     if not correction :
         return vertex_results
@@ -227,7 +227,7 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
     else :
         for n_alphas, alpha_val in enumerate(alpha):
             p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
-            vertex_results[-1 - n_alphas, valid_vertices] = p_values_corrected
+            vertex_results[5 + n_alphas, valid_vertices] = p_values_corrected
     
         
     

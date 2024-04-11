@@ -117,6 +117,9 @@ for subject in subjects :
     
             figure.write_image("{}/{}_subplot_polar_{}.pdf".format(fig_dir, subject, hemi))
 
+formats = analysis_info['formats']
+extensions = analysis_info['extensions']
+
 categories_to_plot = ['vision',  'vision_and_pursuit_and_saccade','pursuit_and_saccade']
 
 for subject in subjects : 
@@ -137,11 +140,11 @@ for subject in subjects :
                                                                    subject, 
                                                                    format_)
         
-        fig_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/figures'.format(main_dir, 
-                                                                       project_dir, 
-                                                                       subject, 
-                                                                       format_)
-        os.makedirs(fig_dir, exist_ok=True)
+        # fig_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/figures'.format(main_dir, 
+        #                                                                project_dir, 
+        #                                                                subject, 
+        #                                                                format_)
+        # os.makedirs(fig_dir, exist_ok=True)
         
         # make figures 
         data = pd.read_table('{}/{}_css-prf_{}.tsv'.format(tsv_dir,subject, tsv_suffix))
@@ -176,6 +179,7 @@ for subject in subjects :
     
             try:
                 fig1 = prf_violins_plot(df_categorie, subject,fig_height=1080, fig_width=1920, ecc_th=ecc_th, size_th=size_th, rsq_th=rsq_th, pcm_th=pcm_th)
+                print('write {}/{}_prf_rsq_size_n_pcm_{}.pdf'.format(fig_dir, subject, categorie_to_plot))
                 fig1.write_image("{}/{}_prf_rsq_size_n_pcm_{}.pdf".format(fig_dir, subject, categorie_to_plot))
             except Exception:
                 pass
