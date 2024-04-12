@@ -179,7 +179,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     print('Creating flatmaps...')
 
     maps_names = []
-#     test
+
     # threshold data
     # final_mat_th = final_mat
 
