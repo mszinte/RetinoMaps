@@ -67,7 +67,6 @@ n_batches = n_jobs
 verbose = True
 gauss_params_num = 8
 
-
 # Analysis parameters
 with open('../../../settings.json') as f:
     json_s = f.read()
@@ -79,7 +78,7 @@ vdm_width = analysis_info['vdm_size_pix'][0]
 vdm_height = analysis_info['vdm_size_pix'][1]
 gauss_grid_nr = analysis_info['gauss_grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
-
+prf_task_name = analysis_info['prf_task_name']
 
 # Define directories
 if input_fn.endswith('.nii'):
@@ -92,19 +91,15 @@ elif input_fn.endswith('.gii'):
         main_dir,project_dir,subject)
     os.makedirs(prf_fit_dir, exist_ok=True)
 
-
-
-
-
 fit_fn_gauss_gridfit = input_fn.split('/')[-1]
 fit_fn_gauss_gridfit = fit_fn_gauss_gridfit.replace('bold', 'prf-fit_gauss_gridfit')
 
 pred_fn_gauss_gridfit = input_fn.split('/')[-1]
 pred_fn_gauss_gridfit = pred_fn_gauss_gridfit.replace('bold', 'prf-pred_gauss_gridfit')
 
-vdm_fn = "{}/{}/derivatives/vdm/vdm_pRF_{}_{}.npy".format(main_dir, project_dir, vdm_width, vdm_height)
-
 # Get task specific visual design matrix
+vdm_fn = "{}/{}/derivatives/vdm/vdm_{}_{}_{}.npy".format(
+    main_dir, project_dir, prf_task_name, vdm_width, vdm_height)
 vdm = np.load(vdm_fn)
 
 # defind model parameter grid range
