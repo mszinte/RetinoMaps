@@ -26,6 +26,7 @@ Exemple:
 python pycortex_maps_gridfit.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 # Stop warnings
@@ -78,7 +79,8 @@ prf_task_name = analysis_info['prf_task_name']
 # Maps settings
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
     amp_idx, baseline_idx, x_idx, y_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8
-      cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
+
+cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
 col_offset = 1.0/14.0
 cmap_steps = 255
 

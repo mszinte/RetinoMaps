@@ -695,14 +695,9 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         cb.ax.tick_params(size=0,labelsize=20) 
     elif cbar == 'stats':
         # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
-        
         val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
-
-        
         val = val[val > 0.13]
-        
         colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
-        
         colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
         colorbar_location = [0.05, 0.02, 0.04, 0.2]
         bounds_label = ['pursuit', 'saccade', 'pursuit_and_saccade', 'vision', 'vision_and_pursuit', 'vision_and_saccade', 'vision_and_saccade_and_pursuite']  
@@ -711,6 +706,21 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
         cbar_axis = braindata_fig.add_axes(colorbar_location)
         cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmapglm.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
+        cb.set_ticklabels(bounds_label)
+        cb.ax.tick_params(size=0,labelsize=20) 
+    elif cbar == 'rois':
+        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+        val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
+        val = val[val > 0.08]
+        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        colmaprois = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        colorbar_location = [0.05, 0.02, 0.04, 0.3]
+        bounds_label = ["V1", "V2", "V3", "V3AB", "LO", "VO", "hMT+", "iIPS", "sIPS", "iPCS", "sPCS", "mPCS"]
+        bounds = np.linspace(vmin, vmax, colmap.N) 
+        ticks_positions = [11.5,10.5,9.5,8.5,7.5,6.5, 5.5, 4.5, 3.5, 2.5, 1.5, 0.5] 
+        norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
+        cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmaprois.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
         cb.set_ticklabels(bounds_label)
         cb.ax.tick_params(size=0,labelsize=20) 
         
