@@ -101,8 +101,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     rois_dir = "{}/{}/derivatives/pp_data/{}/{}/rois".format(main_dir, project_dir, subject,format_)
 
-    flatmaps_dir = '{}/pycortex/flatmaps_avg_gauss_gridfit'.format(rois_dir)
-    datasets_dir = '{}/pycortex/datasets_avg_gauss_gridfit'.format(rois_dir)
+    flatmaps_dir = '{}/pycortex/flatmaps_rois'.format(rois_dir)
+    datasets_dir = '{}/pycortex/datasets_rois'.format(rois_dir)
     
     os.makedirs(flatmaps_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
