@@ -54,7 +54,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Load freesurfer and import subject in pycortex db [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 - [x] High-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [x] Average inter-run correlations of each subject in 170k template [170k_corr_averaging.py](analysis_code/preproc/functional/170k_corr_averaging.py) 
-- [x] Make timeseries inter-run correlations maps with pycortex [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
+- [x] Make timeseries inter-run correlations flatmaps with pycortex [pycortex_maps_run_cor.py](analysis_code/preproc/functional/pycortex_maps_run_cor.py)
 
 ## Post-processing
 ---
@@ -71,7 +71,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Draw ROIs on individual fsnative using Inkscape
 - [x] Import ROIs from the MMP atlas for the hcp 170k template [create_hcp_rois.ipynb](analysis_code/atlas/dev/create_hcp_rois.ipynb)
 - [x] Create 170k MMP rois masks [create_mmp_rois_atlas.py](analysis_code/atlas/create_mmp_rois_atlas.py)
-- [ ] Create flatmaps of ROIs
+- [ ] Create flatmaps of ROIs 
 
 #### Css fit
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)

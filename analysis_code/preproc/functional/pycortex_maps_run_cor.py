@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-pycortex_corr_maps.py
+pycortex_maps_run_cor.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Create flatmap plots and dataset
+Create flatmap plots of inter-run correlation
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -19,12 +19,13 @@ To run:
 1. cd to function
 >> cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/preproc/functional/
 2. run python command
->> python pycortex_corr_maps.py [main directory] [project name] [subject num] [save_svg_in]
+>> python pycortex_maps_run_cor.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_corr_maps.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_run_cor.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
 # Stop warnings
