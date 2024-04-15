@@ -6,7 +6,7 @@
     "anat_session": ["ses-01"], 
     "func_session": ["ses-02"], 
     "task_names": ["rest", "pMF", "pRF", "PurLoc", "SacLoc", "PurVELoc", "SacVELoc"],
-    "prf_task_name": "prf",
+    "prf_task_name": "pRF",
     "task_glm": ["PurLoc", "SacLoc"],
     "cluster_name": "skylake",
     "TR": 1.2,
