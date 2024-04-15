@@ -58,10 +58,10 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 ## Post-processing
 ---
-### **pRF analysis**
-- [x] Create the visual matrix design [vdm_builder.ipynb](analysis_code/postproc/prf/fit/vdm_builder.ipynb)
+### PRF analysis
 
 #### Gaussian fit
+- [x] Create the visual matrix design [vdm_builder.ipynb](analysis_code/postproc/prf/fit/vdm_builder.ipynb)
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
 - [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py) 
 - [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
@@ -69,9 +69,9 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 #### Rois
 - [x] Draw ROIs on individual fsnative using Inkscape
-- [x] Import ROIs from the MMP atlas for the hcp 170k template [creat_hcp_rois.ipynb](analysis_code/atlas/creat_hcp_rois.ipynb)
-- [x] Create 170k MMP rois masks [create_170k_mmp_rois_mask.ipynb](analysis_code/atlas/create_170k_mmp_rois_mask.ipynb)
-- [ ] Draw ROIs on flatmaps
+- [x] Import ROIs from the MMP atlas for the hcp 170k template [create_hcp_rois.ipynb](analysis_code/atlas/dev/create_hcp_rois.ipynb)
+- [x] Create 170k MMP rois masks [create_mmp_rois_atlas.py](analysis_code/atlas/create_mmp_rois_atlas.py)
+- [ ] Create flatmaps of ROIs
 
 #### Css fit
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
