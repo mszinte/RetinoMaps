@@ -22,7 +22,7 @@ To run:
 >> python pycortex_maps_rois.py [main directory] [project name] [subject num] [save_in_svg]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_rois.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_rois.py ~/disks/meso_S/Data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -94,52 +94,46 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         results = load_surface_pycortex(L_fn=roi_fn_L, 
                                         R_fn=roi_fn_R)
         roi_mat = results['data_concat']
+        alpha_mat = roi_mat*0+0.5
         
     elif format_ == '170k':
         roi_fn = '{}/{}_rois.dtseries.nii'.format(rois_dir, subject)
         results = load_surface_pycortex(brain_fn=roi_fn)
         roi_mat = results['data_concat']
+        alpha_mat = roi_mat*0+0.5
     
     print('Creating flatmaps...')
-    maps_names = []
 
     # rois
+    roi_name = '{}_rois'.format(prf_task_name)
     param_rois = {'subject': subject,
                   'data': roi_mat, 
                   'cmap': 'rois_colors', 
-                  'alpha': roi_mat, 
+                  'alpha': alpha_mat, 
                   'vmin': 0, 
                   'vmax': 12, 
                   'cbar': 'rois', 
                   'cortex_type': 'VertexRGB',
-                  'description': '',
+                  'description': 'pRF ROIs',
                   'curv_brightness': 1, 
-                  'curv_contrast': 0.1, 
+                  'curv_contrast': 0.25,
                   'add_roi': save_svg,
                   'cbar_label': '',
-                  'with_labels': True}
-    maps_names.append('rois')
-
+                  'with_labels': True,
+                  'subject': pycortex_subject, 
+                  'roi_name': roi_name}
+                  
     # draw flatmaps
+    volume_roi = draw_cortex(**param_rois)
+    plt.savefig('{}/{}_task-{}_rois.pdf'.format(flatmaps_dir, subject, prf_task_name))
+    plt.close()
+
+    # save flatmap as dataset
     volumes = {}
-    for maps_name in maps_names:
-    
-        # create flatmap
-        roi_name = '{}_{}'.format(prf_task_name, maps_name)
-        roi_param = {'subject': pycortex_subject, 
-                     'roi_name': roi_name}
-        print(roi_name)
-        exec('param_{}.update(roi_param)'.format(maps_name))
-        exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
-        exec("plt.savefig('{}/{}_task-{}_rois.pdf')".format(flatmaps_dir, subject, prf_task_name))
-        plt.close()
-    
-        # save flatmap as dataset
-        exec('vol_description = param_{}["description"]'.format(maps_name))
-        exec('volume = volume_{}'.format(maps_name))
-        volumes.update({vol_description:volume})
+    vol_description = param_rois["description"]
+    volumes.update({vol_description:volume_roi})
 
     # save dataset
-    dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, prf_task_name, deriv_fn_label)
+    dataset_file = "{}/{}_task-{}_rois.hdf".format(datasets_dir, subject, prf_task_name)
     dataset = cortex.Dataset(data=volumes)
     dataset.save(dataset_file)
