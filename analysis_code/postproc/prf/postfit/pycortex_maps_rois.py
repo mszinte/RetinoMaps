@@ -19,11 +19,9 @@ To run:
 1. cd to function
 >> cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/postproc/prf/postfit/
 2. run python command
->> python pycpycortex_maps_roisortex_rois.py [main directory] [project name] 
-                                    [subject num] [save_in_svg]
+>> python pycortex_maps_rois.py [main directory] [project name] [subject num] [save_in_svg]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python pycortex_maps_rois.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
@@ -75,23 +73,6 @@ if subject == 'sub-170k': formats = ['170k']
 else: formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 
-
-# Maps settings
-rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8
-
-cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
-col_offset = 1.0/14.0
-cmap_steps = 255
-
-description_end = 'avg gridfit'
-deriv_fn_label = 'avg-gridfit'
-
-# plot scales
-rsq_scale = [0, 1]
-ecc_scale = [0, 7.5]
-size_scale = [0, 7.5]
-
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
@@ -100,7 +81,6 @@ importlib.reload(cortex)
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     rois_dir = "{}/{}/derivatives/pp_data/{}/{}/rois".format(main_dir, project_dir, subject,format_)
-
     flatmaps_dir = '{}/pycortex/flatmaps_rois'.format(rois_dir)
     datasets_dir = '{}/pycortex/datasets_rois'.format(rois_dir)
     
@@ -110,25 +90,18 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     if format_ == 'fsnative':
         roi_fn_L = '{}/{}_hemi-L_rois.func.gii'.format(rois_dir, subject)
         roi_fn_R = '{}/{}_hemi-R_rois.func.gii'.format(rois_dir, subject)
-        
-        
-
         results = load_surface_pycortex(L_fn=roi_fn_L, 
                                         R_fn=roi_fn_R)
         roi_mat = results['data_concat']
         
     elif format_ == '170k':
         roi_fn = '{}/{}_rois.dtseries.nii'.format(rois_dir, subject)
-
         results = load_surface_pycortex(brain_fn=roi_fn)
         roi_mat = results['data_concat']
     
     print('Creating flatmaps...')
-    
     maps_names = []
-    
 
-    
     # rois
     param_rois = {'subject': subject,
                   'data': roi_mat, 
@@ -145,9 +118,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'cbar_label': '',
                   'with_labels': True}
     maps_names.append('rois')
-    
 
-    
     # draw flatmaps
     volumes = {}
     for maps_name in maps_names:
@@ -166,8 +137,3 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         exec('vol_description = param_{}["description"]'.format(maps_name))
         exec('volume = volume_{}'.format(maps_name))
         volumes.update({vol_description:volume})
-    
-    # # save dataset
-    # dataset_file = "{}/{}_rois.hdf".format(datasets_dir, subject)
-    # dataset = cortex.Dataset(data=volumes)
-    # dataset.save(dataset_file)

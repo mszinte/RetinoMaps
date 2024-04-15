@@ -69,11 +69,9 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 #### Rois
 - [x] Draw ROIs on individual fsnative using Inkscape
-- [x] Import ROIs from the MMP atlas for the hcp 170k template [creat_hcp_rois.ipynb](analysis_code/atlas/creat_hcp_rois.ipynb)
-- [x] Create 170k MMP rois masks [create_170k_mmp_rois_mask.ipynb](analysis_code/atlas/create_170k_mmp_rois_mask.ipynb)
-- [x] Make ROIs images [make_rois_img.py](analysis_code/postproc/prf/postfit/make_rois_img.py)
-- [x] Draw ROIs on flatmaps[pycortex_maps_rois.py](analysis_code/postproc/prf/postfit/pycortex_maps_rois.py)
-
+- [x] Import ROIs from the MMP atlas for the hcp 170k template [create_hcp_rois.ipynb](analysis_code/atlas/dev/create_hcp_rois.ipynb)
+- [x] Create 170k MMP rois masks [create_mmp_rois_atlas.py](analysis_code/atlas/create_mmp_rois_atlas.py)
+- [x] Create flatmaps of ROIs [pycortex_maps_rois.py](analysis_code/postproc/prf/postfit/pycortex_maps_rois.py)
 
 #### Css fit
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)

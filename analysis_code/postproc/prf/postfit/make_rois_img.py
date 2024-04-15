@@ -8,23 +8,23 @@ Make Cifti and Gifti object with rois
 Input(s):
 sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
-sys.argv[3]: subject name (e.g. sub-01)
-sys.argv[4]: group (e.g. 327)
+sys.argv[2]: subject (e.g. sub-01)
+sys.argv[3]: group (e.g. 327)
 -----------------------------------------------------------------------------------------
 Output(s):
 Combined estimate nifti file and pRF derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit
+>> cd ~/projects/[PROJECT]/analysis_code/postproc/prf/postfit
 2. run python command
 >> python make_rois_img.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python make_rois_img.py /scratch/mszinte/data RetinoMaps 327
+python make_rois_img.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
-Written by Martin Szinte (martin.szinte@gmail.com)
-Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
+Written by Uriel Lascombes (uriel.lascombes@laposte.net)
+Edited by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 # Stop warnings
@@ -54,86 +54,78 @@ rois = analysis_info["rois"]
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 prf_task_name = analysis_info['prf_task_name']
-subjects = analysis_info['subjects']
 
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
-group = sys.argv[3]
+subject = sys.argv[3]
+group = sys.argv[4]
 
-
-for subject in subjects :
-    print(subject)
-    for format_, extension in zip(formats, extensions): 
-        print(format_)
-        rois_dir = '{}/{}/derivatives/pp_data/{}/{}/rois'.format(main_dir, project_dir, subject, format_)
-        os.makedirs(rois_dir, exist_ok=True)
+for format_, extension in zip(formats, extensions): 
+    print(format_)
+    rois_dir = '{}/{}/derivatives/pp_data/{}/{}/rois'.format(
+        main_dir, project_dir, subject, format_)
+    os.makedirs(rois_dir, exist_ok=True)
+    
+    if format_ == 'fsnative':
+        # Load rois 
+        roi_verts_dict_L, roi_verts_dict_R = get_rois(subject, 
+                                          return_concat_hemis=False, 
+                                          rois=rois, 
+                                          mask=True, 
+                                          atlas_name=None, 
+                                          surf_size=None)
         
-        if format_ == 'fsnative':
-            # Load rois 
-            roi_verts_dict_L, roi_verts_dict_R = get_rois(subject, 
-                                              return_concat_hemis=False, 
-                                              rois=rois, 
-                                              mask=True, 
-                                              atlas_name=None, 
-                                              surf_size=None)
-            for hemi in ['hemi-L','hemi-R']:
-                if hemi == 'hemi-L':roi_verts_dict = roi_verts_dict_L
-                elif hemi == 'hemi-R':roi_verts_dict = roi_verts_dict_R
-                array_rois = np.zeros(len(next(iter(roi_verts_dict.values()))), dtype=int)  
-                for i, (key, mask) in enumerate(roi_verts_dict.items(), 1):
-                    array_rois[mask] = i
-                    
-                # Load data to have source img
-                data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, 
-                                                                            project_dir, 
-                                                                            subject, 
-                                                                            format_)
-
-
-                
-                data_fn = '{}_task-{}_{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, hemi, extension)
-                img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
-                
-                # Exporte data 
-                rois_fn = '{}_{}_rois.{}'.format(subject, hemi, extension)
-                array_rois = array_rois.reshape(1, -1)
-                rois_img = make_surface_image(data=array_rois, source_img=img, maps_names=['rois'])
-                nb.save(rois_img, '{}/{}'.format(rois_dir, rois_fn))
-   
-                
-                
-
-                
-        elif format_ == '170k':
-            roi_verts_dict = get_rois(subject, 
-                                      return_concat_hemis=True, 
-                                      rois=rois, 
-                                      mask=True, 
-                                      atlas_name='mmp_group', 
-                                      surf_size='170k')
-
+        for hemi in ['hemi-L','hemi-R']:
+            if hemi == 'hemi-L':roi_verts_dict = roi_verts_dict_L
+            elif hemi == 'hemi-R':roi_verts_dict = roi_verts_dict_R
             array_rois = np.zeros(len(next(iter(roi_verts_dict.values()))), dtype=int)  
             for i, (key, mask) in enumerate(roi_verts_dict.items(), 1):
                 array_rois[mask] = i
-
+                
             # Load data to have source img
             data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, 
                                                                         project_dir, 
                                                                         subject, 
                                                                         format_)
 
-
-            
-            data_fn = '{}_task-{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, extension)
+            data_fn = '{}_task-{}_{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, hemi, extension)
             img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
             
-            # Exporte data 
-            rois_fn = '{}_rois.{}'.format(subject, extension)
+            # Export data 
+            rois_fn = '{}_{}_rois.{}'.format(subject, hemi, extension)
             array_rois = array_rois.reshape(1, -1)
             rois_img = make_surface_image(data=array_rois, source_img=img, maps_names=['rois'])
             nb.save(rois_img, '{}/{}'.format(rois_dir, rois_fn))
+            
+    elif format_ == '170k':
+        roi_verts_dict = get_rois(subject, 
+                                  return_concat_hemis=True, 
+                                  rois=rois, 
+                                  mask=True, 
+                                  atlas_name='mmp_group', 
+                                  surf_size='170k')
 
-# # Define permission cmd
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+        array_rois = np.zeros(len(next(iter(roi_verts_dict.values()))), dtype=int)  
+        for i, (key, mask) in enumerate(roi_verts_dict.items(), 1):
+            array_rois[mask] = i
+
+        # Load data to have source img
+        data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, 
+                                                                    project_dir, 
+                                                                    subject, 
+                                                                    format_)
+        
+        data_fn = '{}_task-{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, extension)
+        img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
+        
+        # Export data 
+        rois_fn = '{}_rois.{}'.format(subject, extension)
+        array_rois = array_rois.reshape(1, -1)
+        rois_img = make_surface_image(data=array_rois, source_img=img, maps_names=['rois'])
+        nb.save(rois_img, '{}/{}'.format(rois_dir, rois_fn))
+
+# Change permission
+print('Changing permission in {}/{}'.format(main_dir, project_dir))
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
