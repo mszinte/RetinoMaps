@@ -53,7 +53,6 @@ from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 from pycortex_utils import get_rois, set_pycortex_config_file
 
-
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]

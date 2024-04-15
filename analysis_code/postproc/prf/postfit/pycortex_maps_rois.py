@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
+from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
 
 # Inputs
 main_dir = sys.argv[1]
@@ -72,6 +72,7 @@ with open('../../../settings.json') as f:
 if subject == 'sub-170k': formats = ['170k']
 else: formats = analysis_info['formats']
 extensions = analysis_info['extensions']
+prf_task_name = analysis_info['prf_task_name']
 
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
@@ -124,16 +125,21 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     for maps_name in maps_names:
     
         # create flatmap
-        roi_name = 'pRF_{}'.format(maps_name)
+        roi_name = '{}_{}'.format(prf_task_name, maps_name)
         roi_param = {'subject': pycortex_subject, 
                      'roi_name': roi_name}
         print(roi_name)
         exec('param_{}.update(roi_param)'.format(maps_name))
         exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
-        exec("plt.savefig('{}/{}_rois.pdf')".format(flatmaps_dir, subject))
+        exec("plt.savefig('{}/{}_task-{}_rois.pdf')".format(flatmaps_dir, subject, prf_task_name))
         plt.close()
     
         # save flatmap as dataset
         exec('vol_description = param_{}["description"]'.format(maps_name))
         exec('volume = volume_{}'.format(maps_name))
         volumes.update({vol_description:volume})
+
+    # save dataset
+    dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, prf_task_name, deriv_fn_label)
+    dataset = cortex.Dataset(data=volumes)
+    dataset.save(dataset_file)

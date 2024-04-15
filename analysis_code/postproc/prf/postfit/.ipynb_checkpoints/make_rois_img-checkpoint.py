@@ -37,6 +37,8 @@ deb = ipdb.set_trace
 
 # General imports
 import os
+import importlib
+import cortex
 import sys
 import json
 import numpy as np
@@ -45,7 +47,7 @@ import nibabel as nb
 # personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from surface_utils import make_surface_image, load_surface
-from pycortex_utils import get_rois
+from pycortex_utils import get_rois, set_pycortex_config_file
 
 with open('../../../settings.json') as f:
     json_s = f.read()
@@ -61,6 +63,12 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
 
+# Set pycortex db and colormaps
+cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+set_pycortex_config_file(cortex_dir)
+importlib.reload(cortex)
+
+# Create roi image files
 for format_, extension in zip(formats, extensions): 
     print(format_)
     rois_dir = '{}/{}/derivatives/pp_data/{}/{}/rois'.format(
@@ -92,11 +100,14 @@ for format_, extension in zip(formats, extensions):
             data_fn = '{}_task-{}_{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, hemi, extension)
             img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
             
-            # Export data 
+            # Define filename
             rois_fn = '{}_{}_rois.{}'.format(subject, hemi, extension)
+
+            # Saving file
             array_rois = array_rois.reshape(1, -1)
             rois_img = make_surface_image(data=array_rois, source_img=img, maps_names=['rois'])
             nb.save(rois_img, '{}/{}'.format(rois_dir, rois_fn))
+            print('Saving {}/{}'.format(rois_dir, rois_fn))
             
     elif format_ == '170k':
         roi_verts_dict = get_rois(subject, 
@@ -119,11 +130,14 @@ for format_, extension in zip(formats, extensions):
         data_fn = '{}_task-{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, extension)
         img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
         
-        # Export data 
+        # Define filename
         rois_fn = '{}_rois.{}'.format(subject, extension)
+
+        # Saving file
         array_rois = array_rois.reshape(1, -1)
         rois_img = make_surface_image(data=array_rois, source_img=img, maps_names=['rois'])
         nb.save(rois_img, '{}/{}'.format(rois_dir, rois_fn))
+        print('Saving {}/{}'.format(rois_dir, rois_fn))
 
 # Change permission
 print('Changing permission in {}/{}'.format(main_dir, project_dir))
