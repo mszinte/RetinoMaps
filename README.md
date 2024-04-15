@@ -54,14 +54,14 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Load freesurfer and import subject in pycortex db [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 - [x] High-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [x] Average inter-run correlations of each subject in 170k template [170k_corr_averaging.py](analysis_code/preproc/functional/170k_corr_averaging.py) 
-- [x] Make timeseries inter-run correlations maps with pycortex [pycortex_corr_maps.py](analysis_code/preproc/functional/pycortex_corr_maps.py)
+- [x] Make timeseries inter-run correlations flatmaps with pycortex [pycortex_maps_run_cor.py](analysis_code/preproc/functional/pycortex_maps_run_cor.py)
 
 ## Post-processing
 ---
-### **pRF analysis**
-- [x] Create the visual matrix design [vdm_builder.ipynb](analysis_code/postproc/prf/fit/vdm_builder.ipynb)
+### PRF analysis
 
 #### Gaussian fit
+- [x] Create the visual matrix design [vdm_builder.ipynb](analysis_code/postproc/prf/fit/vdm_builder.ipynb)
 - [x] Run pRF gaussian grid fit [prf_submit_gridfit_jobs.py](analysis_code/postproc/prf/fit/prf_submit_gridfit_jobs.py)
 - [x] Compute pRF gaussian grid fit derivatives [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py) 
 - [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
@@ -73,6 +73,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Create 170k MMP rois masks [create_170k_mmp_rois_mask.ipynb](analysis_code/atlas/create_170k_mmp_rois_mask.ipynb)
 - [x] Make ROIs images [make_rois_img.py](analysis_code/postproc/prf/postfit/make_rois_img.py)
 - [x] Draw ROIs on flatmaps[pycortex_maps_rois.py](analysis_code/postproc/prf/postfit/pycortex_maps_rois.py)
+
 
 #### Css fit
 - [x] Run pRF CSS fit only on the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
