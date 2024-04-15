@@ -71,6 +71,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Draw ROIs on individual fsnative using Inkscape
 - [x] Import ROIs from the MMP atlas for the hcp 170k template [create_hcp_rois.ipynb](analysis_code/atlas/dev/create_hcp_rois.ipynb)
 - [x] Create 170k MMP rois masks [create_mmp_rois_atlas.py](analysis_code/atlas/create_mmp_rois_atlas.py)
+- [x] Make ROIS files [make_rois_img.py](analysis_code/postproc/prf/postfit/make_rois_img.py)
 - [x] Create flatmaps of ROIs [pycortex_maps_rois.py](analysis_code/postproc/prf/postfit/pycortex_maps_rois.py)
 
 #### Css fit
@@ -102,7 +103,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 
 ## Utils 
-- [x] Creat color map for pycortex [make_color_map.ipynb](analysis_code/utils/make_color_map.ipynb)
+
 
 
 ## On working

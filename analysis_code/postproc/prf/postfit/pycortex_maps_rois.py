@@ -24,8 +24,8 @@ To run:
 Exemple:
 python pycortex_maps_rois.py ~/disks/meso_S/Data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
-Written by Martin Szinte (mail@martinszinte.net)
-Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
+Written by Uriel Lascombes (uriel.lascombes@laposte.net)
+Edited by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
 # Stop warnings
@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
+from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex, create_colormap
 
 # Inputs
 main_dir = sys.argv[1]
@@ -79,6 +79,26 @@ cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 importlib.reload(cortex)
 
+# Define/create colormap
+colormap_name = 'rois_colors'
+colormap_dict = {'n/a': (255, 255, 255), 
+                 'V1': (243, 231, 155),
+                 'V2': (250, 196, 132),
+                 'V3': (248, 160, 126),
+                 'V3AB': (235, 127, 134),
+                 'LO': (150, 0, 90), 
+                 'VO': (0, 0, 200),
+                 'hMT+': (0, 25, 255),
+                 'iIPS': (0, 152, 255),
+                 'sIPS': (44, 255, 150),
+                 'iPCS': (151, 255, 0),
+                 'sPCS': (255, 234, 0),
+                 'mPCS': (255, 111, 0)}
+create_colormap(cortex_dir=cortex_dir, 
+                colormap_name=colormap_name, 
+                colormap_dict=colormap_dict)
+
+# Create flatmaps
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     rois_dir = "{}/{}/derivatives/pp_data/{}/{}/rois".format(main_dir, project_dir, subject,format_)
@@ -108,7 +128,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     roi_name = '{}_rois'.format(prf_task_name)
     param_rois = {'subject': subject,
                   'data': roi_mat, 
-                  'cmap': 'rois_colors', 
+                  'cmap': colormap_name,
                   'alpha': alpha_mat, 
                   'vmin': 0, 
                   'vmax': 12, 

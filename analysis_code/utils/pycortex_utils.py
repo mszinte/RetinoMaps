@@ -496,6 +496,7 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
                 roi_name='empty', col_offset=0, zoom_roi=None, zoom_hem=None, zoom_margin=0.0, cbar_label=''):
     """
     Plot brain data onto a previously saved flatmap.
+    
     Parameters
     ----------
     subject             : subject id (e.g. 'sub-001')
@@ -526,6 +527,7 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
     zoom_roi            : name of the roi on which to zoom on
     zoom_hem            : hemifield fo the roi zoom
     zoom_margin         : margin in mm around the zoom
+    
     Returns
     -------
     braindata - pycortex volumr or vertex file
@@ -745,3 +747,35 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
                                 curvature_contrast = curv_contrast)
 
     return braindata
+
+def create_colormap(cortex_dir, colormap_name, colormap_dict):
+    """
+    Add a 1 dimensional colormap in pycortex dataset
+    
+    Parameters
+    ----------
+    cortex_colormaps_dir:          directory of the pycortex dataset colormaps folder
+    colormap_name:                 name of the colormap
+    colormap_dict:                 dict containing keys of the color refence and tuple of the color list
+    
+    Returns
+    -------
+    colormap PNG in pycortex dataset colormaps folder
+    """
+    from PIL import Image
+    import os
+    import ipdb
+    deb=ipdb.set_trace
+
+    colormap_fn = '{}/colormaps/{}.png'.format(cortex_dir, colormap_name)
+
+    # Create image of the colormap
+    if os.path.isfile(colormap_fn) == False:
+        image = Image.new("RGB", (len(colormap_dict), 1))
+        i = 0
+        for color in colormap_dict.values():
+            image.putpixel((i, 0), color)
+            i +=1
+        image.save(colormap_fn)
+
+    return None

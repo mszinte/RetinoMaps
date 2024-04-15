@@ -18,7 +18,7 @@ To run:
 1. cd to function
 >> cd ~/projects/[PROJECT]/analysis_code/postproc/prf/postfit
 2. run python command
->> python make_rois_img.py [main directory] [project name] [subject num] [group]
+>> python make_rois_img.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
 python make_rois_img.py /scratch/mszinte/data RetinoMaps sub-01 327
