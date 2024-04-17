@@ -767,6 +767,8 @@ def create_colormap(cortex_dir, colormap_name, colormap_dict):
         for color in colormap_dict.values():
             image.putpixel((i, 0), color)
             i +=1
+        print('saving new colormap: {}'.format(colormap_fn))
         image.save(colormap_fn)
+        
 
     return None
