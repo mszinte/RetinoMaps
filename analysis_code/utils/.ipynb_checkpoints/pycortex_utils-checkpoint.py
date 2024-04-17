@@ -489,7 +489,7 @@ def set_pycortex_config_file(cortex_folder):
     return None
 
 def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB', cmap='Viridis',\
-                cbar = 'discrete', cmap_steps=255, xfmname=None,\
+                cbar = 'discrete', cmap_dict=None, cmap_steps=255, xfmname=None, \
                 alpha=None, depth=1, thick=1, height=1024, sampler='nearest',\
                 with_curvature=True, with_labels=False, with_colorbar=False,\
                 with_borders=False, curv_brightness=0.95, curv_contrast=0.05, add_roi=False,\
@@ -503,6 +503,7 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
     xfmname             : xfm transform
     data                : the data you would like to plot on a flatmap
     cmap                : colormap that shoudl be used for plotting
+    cmap_dict           : colormap dict of label and color for personalized colormap
     vmins               : minimal values of 1D 2D colormap [0] = 1D, [1] = 2D
     vmaxs               : minimal values of 1D/2D colormap [0] = 1D, [1] = 2D
     description         : plot title
@@ -659,7 +660,6 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         bounds = np.linspace(vmin, vmax, cmap_steps + 1)  
         bounds_label = np.linspace(vmin, vmax, 3)
         norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
-
         cbar_axis = braindata_fig.add_axes(colorbar_location)
         cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmap, norm=norm, ticks=bounds_label, boundaries=bounds,orientation='horizontal')
         cb.set_label(cbar_label,size='x-large')
@@ -675,16 +675,27 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         cbar_axis.set_xlabel(cbar_label[0], size='x-large')
         cbar_axis.set_ylabel(cbar_label[1], size='x-large')
         
+    elif cbar == 'discrete_personalized':
+        colorbar_location = [0.05, 0.02, 0.04, 0.3]
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
+        norm = mpl.colors.BoundaryNorm(np.linspace(1, len(cmap_dict), len(cmap_dict)),
+                                       len(cmap_dict))
+
+        cb = mpl.colorbar.ColorbarBase(cbar_axis,
+                                       cmap=base.reversed(),
+                                       norm=norm, 
+                                       ticks=(np.arange(0, len(cmap_dict), 1) + 0.5),
+                                       orientation='vertical')
+        cb.set_ticklabels(list(reversed(cmap_dict.keys())))
+        cb.ax.tick_params(size=0, labelsize=15) 
+        
     elif cbar == 'glm':
         # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
-        
         val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
 
         # Exclure les valeurs proches du blanc
         val = val[val > 0.25]
-        
         colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
-        
         colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
         colorbar_location = [0.85, 0.02, 0.04, 0.2]
         bounds_label = ['Both','Saccade','Pursuit']  
@@ -710,26 +721,6 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmapglm.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
         cb.set_ticklabels(bounds_label)
         cb.ax.tick_params(size=0,labelsize=20) 
-    elif cbar == 'rois':
-        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
-        val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
-        val = val[val > 0.08]
-        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
-        colmaprois = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
-        colorbar_location = [0.05, 0.02, 0.04, 0.3]
-        bounds_label = ["V1", "V2", "V3", "V3AB", "LO", "VO", "hMT+", "iIPS", "sIPS", "iPCS", "sPCS", "mPCS"]
-        bounds = np.linspace(vmin, vmax, colmap.N) 
-        ticks_positions = [11.5,10.5,9.5,8.5,7.5,6.5, 5.5, 4.5, 3.5, 2.5, 1.5, 0.5] 
-        norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
-        cbar_axis = braindata_fig.add_axes(colorbar_location)
-        cb = mpl.colorbar.ColorbarBase(cbar_axis, cmap=colmaprois.reversed(), norm=norm, ticks=ticks_positions, orientation='vertical')
-        cb.set_ticklabels(bounds_label)
-        cb.ax.tick_params(size=0,labelsize=20) 
-        
-        
-        
-
-
     
     # add to overlay
     if add_roi == True:
@@ -768,7 +759,7 @@ def create_colormap(cortex_dir, colormap_name, colormap_dict):
     deb=ipdb.set_trace
 
     colormap_fn = '{}/colormaps/{}.png'.format(cortex_dir, colormap_name)
-
+    
     # Create image of the colormap
     if os.path.isfile(colormap_fn) == False:
         image = Image.new("RGB", (len(colormap_dict), 1))

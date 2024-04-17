@@ -22,7 +22,7 @@ To run:
 >> python pycortex_maps_rois.py [main directory] [project name] [subject num] [save_in_svg]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_rois.py ~/disks/meso_S/Data RetinoMaps sub-01 n
+python pycortex_maps_rois.py ~/disks/meso_S/data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
@@ -81,7 +81,7 @@ importlib.reload(cortex)
 
 # Define/create colormap
 colormap_name = 'rois_colors'
-colormap_dict = {'n/a': (255, 255, 255), 
+colormap_dict = {'n/a': (255, 255, 255),
                  'V1': (243, 231, 155),
                  'V2': (250, 196, 132),
                  'V3': (248, 160, 126),
@@ -114,14 +114,15 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         results = load_surface_pycortex(L_fn=roi_fn_L, 
                                         R_fn=roi_fn_R)
         roi_mat = results['data_concat']
-        alpha_mat = roi_mat*0+0.5
         
     elif format_ == '170k':
         roi_fn = '{}/{}_rois.dtseries.nii'.format(rois_dir, subject)
         results = load_surface_pycortex(brain_fn=roi_fn)
         roi_mat = results['data_concat']
-        alpha_mat = roi_mat*0+0.5
-    
+
+    rois_opacity = 1
+    alpha_mat = roi_mat*0+rois_opacity
+    alpha_mat[roi_mat==0]=0
     print('Creating flatmaps...')
 
     # rois
@@ -129,16 +130,16 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_rois = {'subject': subject,
                   'data': roi_mat, 
                   'cmap': colormap_name,
-                  'alpha': alpha_mat, 
-                  'vmin': 0, 
-                  'vmax': 12, 
-                  'cbar': 'rois', 
+                  'alpha': alpha_mat,
+                  'cbar': 'discrete_personalized', 
+                  'vmin': 0,
+                  'vmax': 12,
+                  'cmap_dict': colormap_dict,
                   'cortex_type': 'VertexRGB',
                   'description': 'pRF ROIs',
                   'curv_brightness': 1, 
                   'curv_contrast': 0.25,
                   'add_roi': save_svg,
-                  'cbar_label': '',
                   'with_labels': True,
                   'subject': pycortex_subject, 
                   'roi_name': roi_name}
