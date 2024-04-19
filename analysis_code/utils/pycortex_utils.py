@@ -442,50 +442,55 @@ def set_pycortex_config_file(cortex_folder):
 
     # Import necessary modules
     import os
+    import sys
     import cortex
     from pathlib import Path
+    import ipdb
+    deb = ipdb.set_trace
 
-    # Define the new database and colormaps folder
-    pycortex_db_folder = "{}/db/".format(cortex_folder)
-    pycortex_cm_folder = "{}/colormaps/".format(cortex_folder)
-    
     # Get pycortex config file location
     pycortex_config_file  = cortex.options.usercfg
 
-    # Create name of new config file that will be written
-    new_pycortex_config_file = pycortex_config_file[:-4] + '_new.cfg'
-
-    # Create the new config file
-    Path(new_pycortex_config_file).touch()
-
-    # Open the config file in read mode and the newly created one in write mode.
-    # Loop over every line in the original file and copy it into the new one.
-    # For the lines containing either 'filestore' or 'colormap', it will
-    # change the saved folder path to the newly created one above (e.g. pycortex_db_folder)
+    # Define the filestore and colormaps path
+    filestore_line = 'filestore={}/db/\n'.format(cortex_folder)
+    colormaps_line = 'colormaps={}/colormaps/\n'.format(cortex_folder)
+    
+    # Check if path correct
     with open(pycortex_config_file, 'r') as fileIn:
-        with open(new_pycortex_config_file, 'w') as fileOut:
-
-            for line in fileIn:
-
-                if 'filestore' in line:
-                    newline = 'filestore=' + pycortex_db_folder
-                    fileOut.write(newline)
-                    newline = '\n'
-
-                elif 'colormaps' in line:
-                    newline = 'colormaps=' + pycortex_cm_folder
-                    fileOut.write(newline)
-                    newline = '\n'
-
-                else:
-                    newline = line
-
-                fileOut.write(newline)
+        for line in fileIn:
+            if 'filestore' in line:
+                if line==filestore_line: correct_filestore = True
+                else: correct_filestore = False
+            elif 'colormaps' in line:
+                if line==colormaps_line: correct_colormaps = True
+                else: correct_colormaps = False
+                    
 
     
-    # Renames the original config file als '_old' and the newly created one to the original name
-    os.rename(pycortex_config_file, pycortex_config_file[:-4] + '_old.cfg')
-    os.rename(new_pycortex_config_file, pycortex_config_file)
+    # Change config file
+    if correct_filestore==False or correct_colormaps==False:
+
+        # Create name of new config file that will be written
+        new_pycortex_config_file = pycortex_config_file[:-4] + '_new.cfg'
+    
+        # Create the new config file
+        Path(new_pycortex_config_file).touch()
+    
+        # Write back the two lines
+        with open(pycortex_config_file, 'r') as fileIn:
+            with open(new_pycortex_config_file, 'w') as fileOut:
+                for line in fileIn:
+                    if 'filestore' in line:
+                        fileOut.write(filestore_line)
+                    elif 'colormaps' in line:
+                        fileOut.write(colormaps_line)
+                    else:
+                        fileOut.write(line)
+                        
+        # Renames the original config file
+        os.rename(new_pycortex_config_file, pycortex_config_file)
+        sys.exit('Pycortex config file changed: please restart your code')
+
     return None
 
 def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB', cmap='Viridis',\
@@ -548,8 +553,10 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
     except: base = cortex.utils.get_cmap(cmap)
     
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
-    val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
+    val = np.linspace(0, 1, cmap_steps, endpoint=False)
+    
     colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+
     
     if cortex_type=='VolumeRGB':
         # convert data to RGB
@@ -616,7 +623,6 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         except: base = cortex.utils.get_cmap(cmap)
         val = np.arange(1,cmap_steps+1)/cmap_steps - (1/(cmap_steps*2))
         val = np.fmod(val+col_offset,1)
-        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
         cbar_axis = braindata_fig.add_axes([0.5, 0.07, 0.8, 0.2], projection='polar')
         norm = colors.Normalize(0, 2*np.pi)
         t = np.linspace(0,2*np.pi,200,endpoint=True)
@@ -678,9 +684,9 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
     elif cbar == 'discrete_personalized':
         colorbar_location = [0.05, 0.02, 0.04, 0.3]
         cbar_axis = braindata_fig.add_axes(colorbar_location)
-        norm = mpl.colors.BoundaryNorm(np.linspace(1, len(cmap_dict), len(cmap_dict)),
+        norm = mpl.colors.BoundaryNorm(np.linspace(0, len(cmap_dict), len(cmap_dict)+1),
                                        len(cmap_dict))
-
+        
         cb = mpl.colorbar.ColorbarBase(cbar_axis,
                                        cmap=base.reversed(),
                                        norm=norm, 
@@ -690,12 +696,12 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         cb.ax.tick_params(size=0, labelsize=15) 
         
     elif cbar == 'glm':
-        # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
+        
         val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
 
         # Exclure les valeurs proches du blanc
         val = val[val > 0.25]
-        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        
         colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
         colorbar_location = [0.85, 0.02, 0.04, 0.2]
         bounds_label = ['Both','Saccade','Pursuit']  
@@ -710,7 +716,7 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
         # colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=cmap_steps)
         val = np.linspace(0, 1, cmap_steps + 1, endpoint=False)
         val = val[val > 0.13]
-        colmap = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
+        
         colmapglm = colors.LinearSegmentedColormap.from_list('my_colmap', base(val), N=len(val))
         colorbar_location = [0.05, 0.02, 0.04, 0.2]
         bounds_label = ['pursuit', 'saccade', 'pursuit_and_saccade', 'vision', 'vision_and_pursuit', 'vision_and_saccade', 'vision_and_saccade_and_pursuite']  
@@ -739,7 +745,7 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
 
     return braindata
 
-def create_colormap(cortex_dir, colormap_name, colormap_dict):
+def create_colormap(cortex_dir, colormap_name, colormap_dict, recreate=False):
     """
     Add a 1 dimensional colormap in pycortex dataset
     
@@ -761,13 +767,13 @@ def create_colormap(cortex_dir, colormap_name, colormap_dict):
     colormap_fn = '{}/colormaps/{}.png'.format(cortex_dir, colormap_name)
     
     # Create image of the colormap
-    if os.path.isfile(colormap_fn) == False:
+    if (os.path.isfile(colormap_fn) == False) or recreate: 
         image = Image.new("RGB", (len(colormap_dict), 1))
         i = 0
         for color in colormap_dict.values():
             image.putpixel((i, 0), color)
             i +=1
-        print('saving new colormap: {}'.format(colormap_fn))
+        print('Saving new colormap: {}'.format(colormap_fn))
         image.save(colormap_fn)
         
 

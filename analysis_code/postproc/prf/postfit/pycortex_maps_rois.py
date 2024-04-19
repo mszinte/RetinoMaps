@@ -134,6 +134,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'cbar': 'discrete_personalized', 
                   'vmin': 0,
                   'vmax': 12,
+                  'cmap_steps': len(colormap_dict),
                   'cmap_dict': colormap_dict,
                   'cortex_type': 'VertexRGB',
                   'description': 'pRF ROIs',
