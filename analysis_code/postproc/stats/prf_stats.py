@@ -3,7 +3,7 @@
 prf_stats.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Compute pRF derivatives from the pRF grid gauss fit
+Compute the linear regression between the pRF prediction and the bold signal
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -12,7 +12,7 @@ sys.argv[3]: subject name (e.g. sub-01)
 sys.argv[4]: group (e.g. 327)
 -----------------------------------------------------------------------------------------
 Output(s):
-Combined estimate nifti file and pRF derivative nifti file
+results of linear regression 
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
