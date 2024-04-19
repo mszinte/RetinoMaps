@@ -34,7 +34,6 @@ import sys
 import cortex
 import numpy as np
 import ipdb
-import importlib
 deb = ipdb.set_trace
 
 # Personals Import 
@@ -61,7 +60,6 @@ project_dir = sys.argv[3]
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
-importlib.reload(cortex)
 
 _170k_dir_ ='{}/{}/derivatives/pp_data/cortex/db/sub-170k'.format(
     main_dir, project_dir)

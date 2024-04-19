@@ -41,7 +41,6 @@ import os
 import sys
 import json
 import cortex
-import importlib
 import matplotlib.pyplot as plt
 
 # Personal imports
@@ -77,7 +76,6 @@ prf_task_name = analysis_info['prf_task_name']
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
-importlib.reload(cortex)
 
 # Define/create colormap
 colormap_name = 'rois_colors'

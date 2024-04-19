@@ -445,8 +445,6 @@ def set_pycortex_config_file(cortex_folder):
     import sys
     import cortex
     from pathlib import Path
-    import ipdb
-    deb = ipdb.set_trace
 
     # Get pycortex config file location
     pycortex_config_file  = cortex.options.usercfg
@@ -465,8 +463,6 @@ def set_pycortex_config_file(cortex_folder):
                 if line==colormaps_line: correct_colormaps = True
                 else: correct_colormaps = False
                     
-
-    
     # Change config file
     if correct_filestore==False or correct_colormaps==False:
 
