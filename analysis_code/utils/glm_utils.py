@@ -115,40 +115,76 @@ def eventsMatrix(design_file, task, tr):
 
 
         elif 'SacVE' in task: # Sac/Pur Loc: # Visual-Endogenous Sac/Pur Loc 
-            
-            events_glm = events[['onset','duration','trial_type', 'eyemov_vis_end']].copy(deep=True)
-            events_glm.replace({'trial_type': {3: 'Fix', 1: 'Sac', 2: 'Pur'}},inplace=True)
-            events_glm.replace({'eyemov_vis_end': {3: 'Fix', 1: 'SacExo', 2: 'SacEndo'}},inplace=True)
-            events_glm.duration = tr_dur
-            events_glm.onset = 0
-            events_glm_groups = events_glm.groupby((events_glm.eyemov_vis_end!=events_glm.eyemov_vis_end.shift()).cumsum())
+            ###### OLD way ####
+            # events_glm = events[['onset','duration','trial_type', 'eyemov_vis_end']].copy(deep=True)
+            # events_glm.replace({'trial_type': {3: 'Fix', 1: 'Sac', 2: 'Pur'}},inplace=True)
+            # events_glm.replace({'eyemov_vis_end': {3: 'Fix', 1: 'SacExo', 2: 'SacEndo'}},inplace=True)
+            # events_glm.duration = tr_dur
+            # events_glm.onset = 0
+            # events_glm_groups = events_glm.groupby((events_glm.eyemov_vis_end!=events_glm.eyemov_vis_end.shift()).cumsum())
 
+            # new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
+            
+            # for idx, group in enumerate(events_glm_groups):
+            #     onset = np.round(group[1]['onset'][group[1].index[0]],2)
+            #     dur = np.round(sum(group[1]['duration']),2)
+            #     ttype = group[1]['trial_type'][group[1].index[0]]
+            #     vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
+
+            #     new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+            #     new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
+            
+            ###### New way ####
+            events_glm = events[['onset','duration','eyemov_vis_end']].copy(deep=True)
+            events_glm = events[['onset', 'duration', 'eyemov_vis_end']].replace({'eyemov_vis_end': {3: 'Fix', 1: 'SacExo', 2: 'SacEndo'}}).rename(columns={'eyemov_vis_end': 'trial_type'})
+            
+            events_glm.onset = 0
+            
+            events_glm_groups = events_glm.groupby((events_glm.trial_type!=events_glm.trial_type.shift()).cumsum())
+            
             new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
             
             for idx, group in enumerate(events_glm_groups):
                 onset = np.round(group[1]['onset'][group[1].index[0]],2)
                 dur = np.round(sum(group[1]['duration']),2)
-                vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
-
-                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+                ttype = group[1]['trial_type'][group[1].index[0]]
+            
+                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
                 new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
+                        
 
         elif 'PurVE' in task: # Sac/Pur Loc: # Visual-Endogenous Sac/Pur Loc 
-            events_glm = events[['onset','duration','trial_type', 'eyemov_vis_end']].copy(deep=True)
-            events_glm.replace({'trial_type': {3: 'Fix', 1: 'Sac', 2: 'Pur'}},inplace=True)
-            events_glm.replace({'eyemov_vis_end': {3: 'Fix', 1: 'PurExo', 2: 'PurEndo'}},inplace=True)
-            events_glm.duration = tr_dur
-            events_glm.onset = 0
-            events_glm_groups = events_glm.groupby((events_glm.eyemov_vis_end!=events_glm.eyemov_vis_end.shift()).cumsum())
+            # events_glm = events[['onset','duration','trial_type', 'eyemov_vis_end']].copy(deep=True)
+            # events_glm.replace({'trial_type': {3: 'Fix', 1: 'Sac', 2: 'Pur'}},inplace=True)
+            # events_glm.replace({'eyemov_vis_end': {3: 'Fix', 1: 'PurExo', 2: 'PurEndo'}},inplace=True)
+            # events_glm.duration = tr_dur
+            # events_glm.onset = 0
+            # events_glm_groups = events_glm.groupby((events_glm.eyemov_vis_end!=events_glm.eyemov_vis_end.shift()).cumsum())
 
-            new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type', 'vis_end'])
+            # new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type', 'vis_end'])
+            # for idx, group in enumerate(events_glm_groups):
+            #     onset = np.round(group[1]['onset'][group[1].index[0]],2)
+            #     dur = np.round(sum(group[1]['duration']),2)
+            #     ttype = group[1]['trial_type'][group[1].index[0]]
+            #     vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
+
+            #     new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+            #     new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
+            events_glm = events[['onset','duration','eyemov_vis_end']].copy(deep=True)
+            events_glm = events[['onset', 'duration', 'eyemov_vis_end']].replace({'eyemov_vis_end': {3: 'Fix', 1: 'PurExo', 2: 'PurEndo'}}).rename(columns={'eyemov_vis_end': 'trial_type'})
+            
+            events_glm.onset = 0
+            
+            events_glm_groups = events_glm.groupby((events_glm.trial_type!=events_glm.trial_type.shift()).cumsum())
+            
+            new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
+            
             for idx, group in enumerate(events_glm_groups):
                 onset = np.round(group[1]['onset'][group[1].index[0]],2)
                 dur = np.round(sum(group[1]['duration']),2)
                 ttype = group[1]['trial_type'][group[1].index[0]]
-                vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
-
-                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'vis_end'])
+            
+                new_row = pd.Series([onset, dur, ttype], index=['onset', 'duration', 'trial_type'])
                 new_events_glm = pd.concat([new_events_glm, new_row.to_frame().T], ignore_index=True)
 
     for idx in new_events_glm.index:
