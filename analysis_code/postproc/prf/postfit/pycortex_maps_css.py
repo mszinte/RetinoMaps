@@ -17,12 +17,12 @@ Pycortex flatmaps figures and dataset
 To run:
 0. TO RUN ON INVIBE SERVER (with Inkscape)
 1. cd to function
->> cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
+>> cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/postproc/prf/postfit/
 2. run python command
->> python pycortex_maps_css.py [main directory] [project name] [subject num] [save_svg_in]
+>> python pycortex_maps_css.py [main directory] [project] [subject] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 y
+python pycortex_maps_css.py ~/disks/meso_S/data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -72,8 +72,6 @@ with open('../../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 prf_task_name = analysis_info['prf_task_name']
-description_end = 'avg css'
-deriv_fn_label = 'avg-css'
 
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
@@ -82,7 +80,9 @@ set_pycortex_config_file(cortex_dir)
 # Maps settings 
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx, \
     size_idx, amp_idx, baseline_idx, x_idx, y_idx, \
-    n_idx, loo_rsq_idx, pcm_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13
+    n_idx, loo_rsq_idx, pcm_idx, slope_idx, intercept_idx, \
+    rvalue_idx, pvalue_idx, stderr_idx, pvalue_corrected_5pt_idx,  \
+    pvalue_corrected_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
 
 cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
 col_offset = 1.0/14.0
@@ -90,12 +90,10 @@ cmap_steps = 255
 
 # plot scales
 rsq_scale = [0, 1]
-stats_scale = [0, 1]
-ecc_scale = [0, 5]
-size_scale = [0, 4]
-n_scale = [0,2]
-pcm_scale = [0,10]
-
+ecc_scale = [0, 8]
+size_scale = [0, 5]
+n_scale = [0, 2]
+pcm_scale = [0, 10]
 
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
@@ -107,152 +105,139 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     
     os.makedirs(flatmaps_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
-    
+
+    # Load all data
     if format_ == 'fsnative':
-        # derivatives
+        # Derivatives
         deriv_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-deriv-loo-avg_css.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
         deriv_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-deriv-loo-avg_css.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
-        deriv_results = load_surface_pycortex(L_fn=deriv_avg_fn_L, 
-                                              R_fn=deriv_avg_fn_R)
-
+        deriv_results = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
+        deriv_mat = deriv_results['data_concat']
+        
         # pcm 
         pcm_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
         pcm_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
-        pcm_results = load_surface_pycortex(L_fn=pcm_avg_fn_L, 
-                                            R_fn=pcm_avg_fn_R)
+        pcm_results = load_surface_pycortex(L_fn=pcm_avg_fn_L, R_fn=pcm_avg_fn_R)
+        pcm_mat = pcm_results['data_concat']
         
-        pcm_mat = results['data_concat']
-
-        # stats
-        pcm_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+        # Stats
+        stats_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
-        pcm_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+        stats_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(
             prf_deriv_dir, subject, prf_task_name)
-        pcm_results = load_surface_pycortex(L_fn=pcm_avg_fn_L, 
-                                            R_fn=pcm_avg_fn_R)
-    
-    
+        stats_results = load_surface_pycortex(L_fn=stats_avg_fn_L, R_fn=stats_avg_fn_R)
+        stats_mat = stats_results['data_concat']
+        
     elif format_ == '170k':
-        deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_prf-derivs_pcm-loo-avg_css.dtseries.nii'.format(
+        # Derivatives
+        deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_prf-deriv-loo-avg_css.dtseries.nii'.format(
             prf_deriv_dir, subject, prf_task_name)
-        results = load_surface_pycortex(brain_fn=deriv_avg_fn)
-        deriv_mat = results['data_concat']
+        deriv_results = load_surface_pycortex(brain_fn=deriv_avg_fn)
+        deriv_mat = deriv_results['data_concat']
+
+        # pcm
+        pcm_avg_fn = '{}/{}_task-{}_fmriprep_dct_prf-pcm-loo-avg_css.dtseries.nii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        pcm_results = load_surface_pycortex(brain_fn=pcm_avg_fn)
+        pcm_mat = pcm_results['data_concat']
+
+        # Stats
+        stats_avg_fn = '{}/{}_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        stats_results = load_surface_pycortex(brain_fn=stats_avg_fn)
+        stats_mat = stats_results['data_concat']
         
-    print('Creating flatmaps...')
+    # Combine mat
+    all_deriv_mat = np.concatenate((deriv_mat, pcm_mat, stats_mat))
     
+    # Threshold mat
+    all_deriv_mat_th = all_deriv_mat
+    amp_down = all_deriv_mat_th[amp_idx,...] > 0
+    rsq_down = all_deriv_mat_th[loo_rsq_idx,...] >= 0
+    size_th_down = all_deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
+    size_th_up = all_deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
+    ecc_th_down = all_deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
+    ecc_th_up = all_deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
+    if analysis_info['stats_th'] == 0.05: stats_th_down = all_deriv_mat_th[pvalue_corrected_5pt_idx,...] <= 0.05
+    elif analysis_info['stats_th'] == 0.01: stats_th_down = all_deriv_mat_th[pvalue_corrected_1pt_idx,...] <= 0.01
+    all_th = np.array((amp_down, 
+                       rsq_down,
+                       size_th_down,size_th_up, 
+                       ecc_th_down, ecc_th_up,
+                       stats_th_down)) 
+    all_deriv_mat[loo_rsq_idx, np.logical_and.reduce(all_th)==False]=0 # put this to zero to not plot it
+
+    # Create flatmaps
     maps_names = []
     
-    # threshold data
-    deriv_mat_th = deriv_mat
-    
-    amp_down =  deriv_mat_th[amp_idx,...] > 0
-    rsqr_th_down = deriv_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
-    rsqr_th_up = deriv_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
-    
-    loo_rsqr_th_down = deriv_mat_th[loo_rsq_idx,...] >= analysis_info['rsqr_th'][0]
-    loo_rsqr_th_up = deriv_mat_th[loo_rsq_idx,...] <= analysis_info['rsqr_th'][1]
-
-    size_th_down = deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
-    size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
-    ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
-    ecc_th_up = deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
-    all_th = np.array((amp_down, 
-                       rsqr_th_down, 
-                       rsqr_th_up, 
-                       loo_rsqr_th_down, 
-                       loo_rsqr_th_up, 
-                       size_th_down, 
-                       size_th_up, 
-                       ecc_th_down, 
-                       ecc_th_up)) 
-    deriv_mat[loo_rsq_idx,np.logical_and.reduce(all_th)==False]=0
-    
-    # loo r-square
-    loo_rsq_data = deriv_mat[loo_rsq_idx,...]
+    # Loo r-square and alpha
+    loo_rsq_data = all_deriv_mat[loo_rsq_idx,...]
+    alpha = loo_rsq_data
     alpha_range = analysis_info["alpha_range"]
-    alpha = (loo_rsq_data - alpha_range[0])/(alpha_range[1]-alpha_range[0])
-    
+    alpha = (loo_rsq_data - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
     alpha[alpha>1]=1
-    deb()
 
+    param_loo_rsq = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': alpha, 
+                     'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
+                     'cortex_type': 'VertexRGB','description': 'pRF loo rsquare',
+                     'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
+                     'cbar_label': 'pRF loo R2', 'with_labels': True}
+    maps_names.append('loo_rsq')
     
-    param_loo_rsq_css = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': loo_rsq_data, 
-                          'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
-                          'cortex_type': 'VertexRGB','description': 'pRF loo rsquare',
-                          'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
-                          'cbar_label': 'pRF loo R2', 'with_labels': True}
-    maps_names.append('loo_rsq_css')
-    # r-square
-    rsq_data = deriv_mat[rsq_idx,...]
-    param_rsq_css = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 
-                  'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
-                  'cortex_type': 'VertexRGB','description': 'pRF rsquare',
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
-                  'cbar_label': 'pRF R2', 'with_labels': True}
-    maps_names.append('rsq_css')
     
-    # polar angle
-    pol_comp_num = deriv_mat[polar_real_idx,...] + 1j * deriv_mat[polar_imag_idx,...]
+    # Polar angle
+    pol_comp_num = all_deriv_mat[polar_real_idx,...] + 1j * all_deriv_mat[polar_imag_idx,...]
     polar_ang = np.angle(pol_comp_num)
     ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
     ang_norm = np.fmod(ang_norm + col_offset,1)
-    param_polar_css = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
+    param_polar = {'data': ang_norm.astype('float32'), 'cmap': cmap_polar, 'alpha': alpha.astype('float32'), 
                     'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
                     'cbar': 'polar', 'col_offset': col_offset, 
-                    'description': 'pRF polar:{:3.0f} steps{}'.format(cmap_steps, description_end), 
+                    'description': 'pRF polar:{:3.0f} steps'.format(cmap_steps), 
                     'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
                     'with_labels': True}
-    exec('param_polar_{cmap_steps}_css = param_polar_css'.format(cmap_steps = int(cmap_steps)))
-    exec('maps_names.append("polar_{cmap_steps}_css")'.format(cmap_steps = int(cmap_steps)))
+    exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
+    exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
     
-    # eccentricity
-    ecc_data = deriv_mat[ecc_idx,...]
-    param_ecc_css = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
+    # Eccentricity
+    ecc_data = all_deriv_mat[ecc_idx,...]
+    param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
                   'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
-                  'description': 'pRF eccentricity{}'.format(description_end), 'curv_brightness': 1,
+                  'description': 'pRF eccentricity', 'curv_brightness': 1,
                   'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
+    maps_names.append('ecc')
     
-    maps_names.append('ecc_css')
-    
-    # size
-    size_data = deriv_mat[size_idx,...]
-    param_size_css = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+    # Size
+    size_data = all_deriv_mat[size_idx,...]
+    param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
                   'vmin': size_scale[0], 'vmax': size_scale[1], 'cbar': 'discrete', 
-                  'cortex_type': 'VertexRGB', 'description': 'pRF size{}'.format(description_end), 
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size',
+                  'cortex_type': 'VertexRGB', 'description': 'pRF size', 
+                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size (dva)',
                   'with_labels': True}
-    maps_names.append('size_css')
+    maps_names.append('size')
     
     # n
-    n_data = deriv_mat[n_idx,...]
-    param_n_css = {'data': n_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-                  'vmin': n_scale[0], 'vmax': n_scale[1], 'cbar': 'discrete', 
-                  'cortex_type': 'VertexRGB', 'description': 'css n{}'.format(description_end), 
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'css n',
+    n_data = all_deriv_mat[n_idx,...]
+    param_n = {'data': n_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+               'vmin': n_scale[0], 'vmax': n_scale[1], 'cbar': 'discrete', 
+               'cortex_type': 'VertexRGB', 'description': 'n',
+               'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'n',
+               'with_labels': True}
+    maps_names.append('n')
+    
+    # pcm
+    pcm_data = all_deriv_mat[pcm_idx,...]
+    param_pcm = {'data': pcm_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
+                  'vmin': pcm_scale[0], 'vmax': pcm_scale[1], 'cbar': 'discrete', 
+                  'cortex_type': 'VertexRGB', 'description': 'pcm', 
+                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pCM (mm/dva)',
                   'with_labels': True}
-    maps_names.append('n_css')
-    
-    # # pcm
-    # pcm_data = deriv_mat[pcm_idx,...]
-    # param_pcm_css = {'data': pcm_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-    #               'vmin': pcm_scale[0], 'vmax': pcm_scale[1], 'cbar': 'discrete', 
-    #               'cortex_type': 'VertexRGB', 'description': 'css pcm{}'.format(description_end), 
-    #               'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pCM',
-    #               'with_labels': True}
-    # maps_names.append('pcm_css')
-    
-    pcm_data = deriv_mat[pcm_idx,...]
-    param_pcm_css = {'data': pcm_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-                  'vmin': pcm_scale[0], 'vmax': pcm_scale[1], 'cbar': 'ecc', 
-                  'cortex_type': 'VertexRGB', 'description': 'pcm{}'.format(description_end), 
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pCM',
-                  'with_labels': True}
-    maps_names.append('pcm_css')
-    
+    maps_names.append('pcm')
+        
     # draw flatmaps
     volumes = {}
     for maps_name in maps_names:
@@ -263,7 +248,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         print(roi_name)
         exec('param_{}.update(roi_param)'.format(maps_name))
         exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
-        exec("plt.savefig('{}/{}_task-pRF_{}_{}.pdf')".format(flatmaps_dir, subject, maps_name, deriv_fn_label))
+        exec("plt.savefig('{}/{}_task-{}_{}_css.pdf')".format(flatmaps_dir, subject, prf_task_name, maps_name))
         plt.close()
     
         # save flatmap as dataset
@@ -272,8 +257,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         volumes.update({vol_description:volume})
     
     # save dataset
-    dataset_file = "{}/{}_task-pRF_{}.hdf".format(datasets_dir, subject, deriv_fn_label)
+    dataset_file = "{}/{}_task-{}_css.hdf".format(datasets_dir, subject, prf_task_name)
     dataset = cortex.Dataset(data=volumes)
     dataset.save(dataset_file)
-
-    

@@ -226,7 +226,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         exec('param_{}.update(roi_param)'.format(maps_name))
         exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
         exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(
-            flatmaps_dir, subject, maps_name, deriv_fn_label, prf_task_name))
+            flatmaps_dir, subject, prf_task_name, maps_name, deriv_fn_label))
         plt.close()
     
         # save flatmap as dataset

@@ -37,6 +37,7 @@
     "ecc_th": [0.05, 20],
     "size_th": [0.05, 20.0],
     "rsqr_th": [0.06, 1],
+    "stats_th": 0.05,
     "alpha_range":[0, 0.4],
     "rsq_iterative_th": 0.01,
     "glm_alpha": 0.01,
