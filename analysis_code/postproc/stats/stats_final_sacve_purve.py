@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-stats_final.py
+stats_final_sacve_purve.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-add the surface of each vertex on the final tsv 
+Make final img with significant vertex 
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -11,16 +11,16 @@ sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: group of shared data (e.g. 327)
 -----------------------------------------------------------------------------------------
 Output(s):
-# sub-all tsv
+img with significant vertex 
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
 >> cd ~/projects/RetinoMaps/analysis_code/postproc/stats/
 2. run python command
-python stats_final.py [main directory] [project name] [subject] [group]
+python stats_final_sacve_purve.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python stats_final.py /scratch/mszinte/data RetinoMaps sub-01 327
+python stats_final_sacve_purve.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
