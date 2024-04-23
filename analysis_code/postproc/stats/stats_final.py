@@ -3,7 +3,7 @@
 stats_final.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-add the surface of each vertex on the final tsv 
+Make final img with significant vertex 
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -11,7 +11,7 @@ sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: group of shared data (e.g. 327)
 -----------------------------------------------------------------------------------------
 Output(s):
-# sub-all tsv
+img with significant vertex 
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
