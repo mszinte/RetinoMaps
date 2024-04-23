@@ -16,7 +16,7 @@ results of linear regression
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd ~/projects/[PROJECT]/analysis_code/postproc/stats/
+>> cd ~/projects/[PROJECT]/analysis_code/postproc/prf/postfit/
 2. run python command
 >> python compute_css_stats.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
@@ -27,6 +27,7 @@ Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
+
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -44,13 +45,13 @@ import ipdb
 deb = ipdb.set_trace
 
 # Personal imports
-sys.path.append("{}/../../utils".format(os.getcwd()))
+sys.path.append("{}/../../../utils".format(os.getcwd()))
 from pycortex_utils import set_pycortex_config_file
 from surface_utils import make_surface_image , load_surface
 from maths_utils import linear_regression_surf, multipletests_surface
 
 # load settings
-with open('../../settings.json') as f:
+with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 fdr_alpha = analysis_info['fdr_alpha']
@@ -73,14 +74,15 @@ set_pycortex_config_file(cortex_dir)
 # Index
 slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx = 0, 1, 2, 3, 4
 
+pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 for format_, extension in zip(formats, extensions): 
     print(format_)
     
     # Find pRF fit files 
-    prf_fit_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(
-        main_dir, project_dir, subject, format_)
-    prf_bold_dir = '{}/{}/derivatives/pp_data/{}/{}/func/fmriprep_dct_loo_avg'.format(
-        main_dir, project_dir, subject, format_)
+    prf_fit_dir = '{}/{}/{}/prf/fit'.format(
+        pp_dir, subject, format_)
+    prf_bold_dir = '{}/{}/{}/func/fmriprep_dct_loo_avg'.format(
+        pp_dir, subject, format_)
     prf_pred_loo_fns_list = glob.glob('{}/*task-{}*loo-*_prf-pred_css.{}'.format(
         prf_fit_dir, prf_task_name, extension))
     
@@ -105,24 +107,22 @@ for format_, extension in zip(formats, extensions):
                                          correction='fdr_tsbh', 
                                          alpha=fdr_alpha)
         
-        # Save results 
-        stat_prf_loo_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/stats'.format(
-            main_dir, project_dir, subject, format_)
-        os.makedirs(stat_prf_loo_dir, exist_ok=True)
+        # Save results
+        prf_deriv_dir = "{}/{}/{}/prf/prf_derivatives".format(
+            pp_dir, subject, format_)
         stat_prf_loo_fn = prf_pred_loo_fn.split('/')[-1].replace('pred_css', 'stats')
-        
         stat_prf_loo_img = make_surface_image(data=results, 
                                               source_img=bold_img, 
                                               maps_names=maps_names)
-        print('Saving: {}/{}'.format(stat_prf_loo_dir, stat_prf_loo_fn))
-        nb.save(stat_prf_loo_img, '{}/{}'.format(stat_prf_loo_dir, stat_prf_loo_fn))
+        print('Saving: {}/{}'.format(prf_deriv_dir, stat_prf_loo_fn))
+        nb.save(stat_prf_loo_img, '{}/{}'.format(prf_deriv_dir, stat_prf_loo_fn))
         
 # Compute average across LOO
 # Get files
 prf_stats_loo_fns_list = []
 for format_, extension in zip(formats, extensions):
-    list_ = glob.glob("{}/{}/derivatives/pp_data/{}/{}/prf/stats/*loo-*_prf-stats.{}".format(
-        main_dir, project_dir, subject, format_, extension))
+    list_ = glob.glob("{}/{}/{}/prf/prf_derivatives/*loo-*_prf-stats.{}".format(
+        pp_dir, subject, format_, extension))
     list_ = [item for item in list_ if "loo-avg" not in item]
     prf_stats_loo_fns_list.extend(list_)
             
@@ -180,12 +180,12 @@ for loo_stats_fns in loo_stats_fns_list:
                                     loo_stats_data_avg[stderr_idx,:], 
                                     corrected_p_values))
     if hemi:
-        avg_fn = '{}/{}/derivatives/pp_data/{}/fsnative/prf/stats/{}'.format(
-            main_dir, project_dir, subject, loo_stats_avg_fn)
+        avg_fn = '{}/{}/fsnative/prf/prf_derivatives/{}'.format(
+            pp_dir, subject, loo_stats_avg_fn)
         hemi_data_avg[hemi] = loo_stats_data_avg
     else:
-        avg_fn = '{}/{}/derivatives/pp_data/{}/170k/prf/stats/{}'.format(
-            main_dir, project_dir, subject, loo_stats_avg_fn)
+        avg_fn = '{}/{}/170k/prf/prf_derivatives/{}'.format(
+            pp_dir, subject, loo_stats_avg_fn)
         hemi_data_avg['170k'] = loo_stats_data_avg
 
     # Saving averaged data in surface format

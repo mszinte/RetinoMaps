@@ -3,7 +3,7 @@
 pycortex_maps_rois.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Create flatmap plots and dataset
+Create flatmap plots and dataset of ROIs
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory

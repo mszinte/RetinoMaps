@@ -3,15 +3,16 @@
 pycortex_maps_css.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Create flatmap plots and dataset
+Create flatmap plots and dataset of css results
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: subject name (e.g. sub-01)
+sys.argv[4]: save in svg (e.g. no)
 -----------------------------------------------------------------------------------------
 Output(s):
-Pycortex flatmaps figures
+Pycortex flatmaps figures and dataset
 -----------------------------------------------------------------------------------------
 To run:
 0. TO RUN ON INVIBE SERVER (with Inkscape)
@@ -40,29 +41,18 @@ import os
 import sys
 import json
 import cortex
-import importlib
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
-
-
-
-#Define analysis parameters
-with open('../../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
-extensions = analysis_info['extensions']
+from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex, create_colormap
 
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 save_svg_in = sys.argv[4]
-
 try:
     if save_svg_in == 'yes' or save_svg_in == 'y':
         save_svg = True
@@ -72,37 +62,43 @@ try:
         raise ValueError
 except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
-       
-# Maps settings 
-rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, x_idx, y_idx, n_idx, loo_rsq_idx, pcm_idx = 0,1,2,3,4,5,6,7,8,11,12,13
+if subject == 'sub-170k': save_svg = save_svg
+else: save_svg = False
 
+# Define analysis parameters
+with open('../../../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+formats = analysis_info['formats']
+extensions = analysis_info['extensions']
+prf_task_name = analysis_info['prf_task_name']
+description_end = 'avg css'
+deriv_fn_label = 'avg-css'
+
+# Set pycortex db and colormaps
+cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
+set_pycortex_config_file(cortex_dir)
+
+# Maps settings 
+rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx, \
+    size_idx, amp_idx, baseline_idx, x_idx, y_idx, \
+    n_idx, loo_rsq_idx, pcm_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13
 
 cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
 col_offset = 1.0/14.0
 cmap_steps = 255
 
-description_end = 'avg css'
-deriv_fn_label = 'avg-css'
-
 # plot scales
 rsq_scale = [0, 1]
+stats_scale = [0, 1]
 ecc_scale = [0, 5]
 size_scale = [0, 4]
 n_scale = [0,2]
 pcm_scale = [0,10]
 
 
-# Set pycortex db and colormaps
-cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
-set_pycortex_config_file(cortex_dir)
-importlib.reload(cortex)
- 
-
-
-if subject == 'sub-170k':
-    formats = ['170k']
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
+    
     # Define directories and fn
     prf_dir = "{}/{}/derivatives/pp_data/{}/{}/prf".format(main_dir, project_dir, subject, format_)
     prf_deriv_dir = "{}/prf_derivatives".format(prf_dir)
@@ -113,38 +109,53 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     os.makedirs(datasets_dir, exist_ok=True)
     
     if format_ == 'fsnative':
-        deriv_avg_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_prf-derivs_pcm-loo-avg_css.func.gii'.format(prf_deriv_dir, subject)
-        deriv_avg_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_prf-derivs_pcm-loo-avg_css.func.gii'.format(prf_deriv_dir, subject)
-        results = load_surface_pycortex(L_fn=deriv_avg_fn_L, R_fn=deriv_avg_fn_R)
-        deriv_mat = results['data_concat']
+        # derivatives
+        deriv_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-deriv-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        deriv_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-deriv-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        deriv_results = load_surface_pycortex(L_fn=deriv_avg_fn_L, 
+                                              R_fn=deriv_avg_fn_R)
+
+        # pcm 
+        pcm_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        pcm_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        pcm_results = load_surface_pycortex(L_fn=pcm_avg_fn_L, 
+                                            R_fn=pcm_avg_fn_R)
+        
+        pcm_mat = results['data_concat']
+
+        # stats
+        pcm_avg_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        pcm_avg_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_prf-pcm-loo-avg_css.func.gii'.format(
+            prf_deriv_dir, subject, prf_task_name)
+        pcm_results = load_surface_pycortex(L_fn=pcm_avg_fn_L, 
+                                            R_fn=pcm_avg_fn_R)
+    
     
     elif format_ == '170k':
-        deriv_avg_fn = '{}/{}_task-pRF_fmriprep_dct_prf-derivs_pcm-loo-avg_css.dtseries.nii'.format(prf_deriv_dir, subject)
+        deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_prf-derivs_pcm-loo-avg_css.dtseries.nii'.format(
+            prf_deriv_dir, subject, prf_task_name)
         results = load_surface_pycortex(brain_fn=deriv_avg_fn)
         deriv_mat = results['data_concat']
         
-        if subject == 'sub-170k':
-            save_svg = save_svg
-        else: 
-            save_svg = False
-        
-        
-    
     print('Creating flatmaps...')
     
     maps_names = []
     
     # threshold data
     deriv_mat_th = deriv_mat
+    
     amp_down =  deriv_mat_th[amp_idx,...] > 0
     rsqr_th_down = deriv_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
     rsqr_th_up = deriv_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
     
     loo_rsqr_th_down = deriv_mat_th[loo_rsq_idx,...] >= analysis_info['rsqr_th'][0]
     loo_rsqr_th_up = deriv_mat_th[loo_rsq_idx,...] <= analysis_info['rsqr_th'][1]
-    
-    
-    
+
     size_th_down = deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
     size_th_up = deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
     ecc_th_down = deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]

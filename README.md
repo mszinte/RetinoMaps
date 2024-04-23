@@ -78,7 +78,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [ ] CSS fit within the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [ ] Compute CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 - [ ] Compute CSS population cortical magnification [compute_css_pcm.py](analysis_code/postproc/prf/postfit/compute_css_pcm.py)
-- [ ] Compute CSS statistics [compute_css_stats.py](analysis_code/postproc/stats/compute_css_stats.py)
+- [ ] Compute CSS statistics [compute_css_stats.py](analysis_code/postproc/prf/postfit/compute_css_stats.py)
 
 #### For later
 - [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
