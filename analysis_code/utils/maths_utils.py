@@ -81,9 +81,6 @@ def bootstrap_ci_mean(data, n_bootstrap=1000, ci_level=0.95):
     upper_ci = np.percentile(means, (1 + ci_level) / 2 * 100)
     return lower_ci, upper_ci
 
-
-
-
 def r2_score_surf(bold_signal, model_prediction):
     """
     Compute r2 between bold signal and model. The gestion of nan values 
@@ -113,54 +110,6 @@ def r2_score_surf(bold_signal, model_prediction):
     
     return r2_scores
 
-# def linear_regression_surf(bold_signal, model_prediction):
-#     """
-#     Perform linear regression analysis between model predictions and BOLD signals across vertices.
-
-#     Parameters:
-#     bold_signal (numpy.ndarray): Array of BOLD signal data with shape (time_points, vertices).
-#     model_prediction (numpy.ndarray): Array of model prediction data with shape (time_points, vertices).
-
-#     Returns:
-#     results (list): List containing the results of linear regression analysis for each vertex.
-#                     Each element in the list is a named tuple containing the following fields:
-#                     - slope: Slope of the regression line.
-#                     - intercept: Intercept of the regression line.
-#                     - rvalue: Correlation coefficient.
-#                     - pvalue: Two-sided p-value for a hypothesis test whose null hypothesis is
-#                               that the slope is zero, using Wald Test with t-distribution of the test statistic.
-#                     - stderr: Standard error of the estimated gradient.
-
-#     Note:
-#     The function checks for NaN values in both bold_signal and model_prediction.
-#     It also identifies and excludes vertices with identical values or containing NaNs.
-
-#     """
-
-#     # Import necessary libraries
-#     import numpy as np
-#     from scipy import stats
-
-#     # Check for NaN values in both bold_signal and model_prediction
-#     nan_mask = np.isnan(model_prediction).any(axis=0) | np.isnan(bold_signal).any(axis=0)
-
-#     # Mask for checking identical values along axis 0 in model_prediction
-#     identical_values_mask = (model_prediction[:-1] == model_prediction[1:]).all(axis=0)
-
-#     # Combining nan_mask and identical_values_mask
-#     invalid_mask = nan_mask | identical_values_mask
-
-#     valid_vertices = np.where(~invalid_mask)[0]
-
-#     results = []  # List to store the results for each vertex
-#     for vert in valid_vertices:
-#         result = stats.linregress(x=model_prediction[:, vert],
-#                                   y=bold_signal[:, vert],
-#                                   alternative='two-sided')
-#         results.append(result)
-
-#     return results
-
 def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha=None):
     """
     Perform linear regression analysis between model predictions and BOLD signals across vertices.
@@ -176,7 +125,8 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
 
     Returns:
     vertex_results (numpy.ndarray): Array containing the results of linear regression analysis for each vertex.
-                                     The shape of the array is (n_output, n_vertex), where n_output = slope, intercept, rvalue, pvalue + p_values_corrected for each alpha.
+                                     The shape of the array is (n_output, n_vertex), 
+                                     where n_output = slope, intercept, rvalue, pvalue + p_values_corrected for each alpha.
 
     Note:
     The function checks for NaN values in both bold_signal and model_prediction.
@@ -199,18 +149,18 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
 
     # Combining nan_mask and identical_values_mask
     invalid_mask = nan_mask | identical_values_mask
-
     valid_vertices = np.where(~invalid_mask)[0]
 
+    # Define output size
     num_vertices = bold_signal.shape[1]
-    # Number of outputs per vertex (slope, intercept, rvalue, pvalue ) + the corrected p-values
-    num_output = 5 + len(alpha) 
+    num_base_output = 5                         # Number of outputs per vertex (slope, intercept, rvalue, pvalue )
+    num_output = num_base_output + len(alpha)   # Add the desired corrected p-values
 
     # Array to store results for each vertex
-    vertex_results = np.full((num_output, num_vertices),np.nan)  
+    vertex_results = np.full((num_output, num_vertices), np.nan)  
 
     # Store p-values before correction
-    p_values = np.full(num_vertices,np.nan)
+    p_values = np.full(num_vertices, np.nan)
 
     for i, vert in enumerate(valid_vertices):
         result = stats.linregress(x=model_prediction[:, vert],
@@ -219,21 +169,21 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
         p_values[vert] = result.pvalue
 
         # Store results in the array
-        vertex_results[:, vert] = [result.slope, result.intercept, result.rvalue, result.pvalue, result.stderr] + [np.nan]*len(alpha)  
-    
-    if not correction :
-        return vertex_results
-    # Apply multiple testing correction
-    else :
-        for n_alphas, alpha_val in enumerate(alpha):
-            p_values_corrected = multipletests(p_values[valid_vertices], method=correction, alpha=alpha_val)[1]
-            vertex_results[5 + n_alphas, valid_vertices] = p_values_corrected
-    
-        
-    
-    
-        return vertex_results
+        vertex_results[:, vert] = [result.slope, 
+                                   result.intercept, 
+                                   result.rvalue, 
+                                   result.pvalue, 
+                                   result.stderr] + [np.nan]*len(alpha)  
 
+    # Apply multiple testing correction
+    if correction:
+        for n_alphas, alpha_val in enumerate(alpha):
+            p_values_corrected = multipletests(p_values[valid_vertices], 
+                                               method=correction, 
+                                               alpha=alpha_val)[1]
+            vertex_results[num_base_output + n_alphas, valid_vertices] = p_values_corrected
+    
+    return vertex_results
 
 def multipletests_surface(pvals, correction='fdr_tsbh', alpha=0.01):
     """
@@ -272,8 +222,3 @@ def multipletests_surface(pvals, correction='fdr_tsbh', alpha=0.01):
         corrected_pvals[n_alpha, valid_vertices] = p_values_corrected
 
     return corrected_pvals
-
-        
-   
- 
-    
