@@ -21,7 +21,6 @@ To run:
 >> python compute_css_stats.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python compute_css_stats.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -73,7 +72,8 @@ cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 
 # Index
-slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx = 0, 1, 2, 3, 4
+slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx, \
+    trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7
 
 pp_dir = "{}/{}/derivatives/pp_data".format(main_dir, project_dir)
 for format_, extension in zip(formats, extensions): 
@@ -130,56 +130,45 @@ for format_, extension in zip(formats, extensions):
 # Split files depending of their nature
 stats_fsnative_hemi_L, stats_fsnative_hemi_R, stats_170k = [], [], []
 for subtype in prf_stats_loo_fns_list:
-    if "hemi-L" in subtype:
-        stats_fsnative_hemi_L.append(subtype)
-    elif "hemi-R" in subtype:
-        stats_fsnative_hemi_R.append(subtype)
-    else :
-        stats_170k.append(subtype)
+    if "hemi-L" in subtype: stats_fsnative_hemi_L.append(subtype)
+    elif "hemi-R" in subtype: stats_fsnative_hemi_R.append(subtype)
+    else : stats_170k.append(subtype)
 loo_stats_fns_list = [stats_fsnative_hemi_L, stats_fsnative_hemi_R, stats_170k]
 hemi_data_avg = {'hemi-L': [], 'hemi-R': [], '170k': []}
 
 # Averaging
 for loo_stats_fns in loo_stats_fns_list:
-    if loo_stats_fns[0].find('hemi-L') != -1: 
-        hemi = 'hemi-L'
-    elif loo_stats_fns[0].find('hemi-R') != -1: 
-        hemi = 'hemi-R'
-    else: 
-        hemi = None
+    if loo_stats_fns[0].find('hemi-L') != -1:  hemi = 'hemi-L'
+    elif loo_stats_fns[0].find('hemi-R') != -1: hemi = 'hemi-R'
+    else: hemi = None
 
-    # Averaging computation
+    # Averaging
     stats_img, stats_data = load_surface(fn=loo_stats_fns[0])
     loo_stats_data_avg = np.zeros(stats_data.shape)
     
     for n_run, loo_stats_fn in enumerate(loo_stats_fns):
         loo_stats_avg_fn = loo_stats_fn.split('/')[-1]
         loo_stats_avg_fn = re.sub(r'avg_loo-\d+_prf-stats', 'loo-avg_prf-stats', loo_stats_avg_fn)
-        
+
         # Load data 
-        print('adding {} to loo computation'.format(loo_stats_fn))
+        print('adding {} to averaging'.format(loo_stats_fn))
         loo_stats_img, loo_stats_data = load_surface(fn=loo_stats_fn)
 
         # Averaging
         if n_run == 0: loo_stats_data_avg = np.copy(loo_stats_data)
         else: loo_stats_data_avg = np.nanmean(np.array([loo_stats_data_avg, loo_stats_data]), axis=0)
             
-    # Compute p-values en base on t-satistic and fdr-corrected p-values for averaged loo runs 
+    # Compute two sided corrected p-values
     t_statistic = loo_stats_data_avg[slope_idx, :] / loo_stats_data_avg[stderr_idx, :]
-    
-    # compute two sided p-values
-    degrees_of_freedom = TRs - 2 
+    degrees_of_freedom = loo_stats_data_avg[strs_idx, 0] - 2
     p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
-    
-    corrected_p_values = multipletests_surface(pvals=p_values, correction='fdr_tsbh', alpha=fdr_alpha)
-    slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx 
-    
-    loo_stats_data_avg = np.vstack((loo_stats_data_avg[slope_idx,:], 
-                                    loo_stats_data_avg[intercept_idx,:], 
-                                    loo_stats_data_avg[rvalue_idx,:], 
-                                    p_values, 
-                                    loo_stats_data_avg[stderr_idx,:], 
-                                    corrected_p_values))
+    corrected_p_values = multipletests_surface(pvals=p_values, 
+                                               correction='fdr_tsbh', 
+                                               alpha=fdr_alpha)
+    loo_stats_data_avg[pvalue_idx, :] = p_values
+    loo_stats_data_avg[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
+    loo_stats_data_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
+
     if hemi:
         avg_fn = '{}/{}/fsnative/prf/prf_derivatives/{}'.format(
             pp_dir, subject, loo_stats_avg_fn)

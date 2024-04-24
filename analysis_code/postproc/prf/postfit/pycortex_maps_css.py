@@ -22,8 +22,7 @@ To run:
 >> python pycortex_maps_css.py [main directory] [project] [subject] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
-python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_css.py ~/disks/meso_S/data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -179,7 +178,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     loo_rsq_data = all_deriv_mat[loo_rsq_idx,...]
     alpha = loo_rsq_data
     alpha_range = analysis_info["alpha_range"]
-    alpha = (loo_rsq_data - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
+    alpha = (alpha - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
     alpha[alpha>1]=1
 
     param_loo_rsq = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': alpha, 

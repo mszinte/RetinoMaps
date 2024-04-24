@@ -54,7 +54,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Load freesurfer and import subject in pycortex db [freesurfer_import_pycortex.py](analysis_code/preproc/functional/freesurfer_import_pycortex.py)
 - [x] High-pass, z-score, run correlations, average and leave-one-out average [preproc_end_sbatch.py](analysis_code/preproc/functional/preproc_end_sbatch.py) 
 - [x] Average inter-run correlations of each subject in 170k template [170k_corr_averaging.py](analysis_code/preproc/functional/170k_corr_averaging.py) 
-- [x] Make timeseries inter-run correlations flatmaps with pycortex [pycortex_maps_run_cor.py](analysis_code/preproc/functional/pycortex_maps_run_cor.py)
+- [x] Make timeseries inter-run correlations flatmaps with pycortex [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py)
 
 ## Post-processing
 ---
@@ -77,7 +77,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 #### Css fit
 - [ ] CSS fit within the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
 - [ ] Compute CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
-- [ ] Compute CSS population cortical magnification [css_pcm_sbatch.py](analysis_code/postproc/prf/postfit/css_pcm_sbatch.py)
+- [ ] Compute CSS population cortical magnification [compute_css_pcm.py](analysis_code/postproc/prf/postfit/compute_css_pcm.py)
 - [ ] Compute CSS statistics [compute_css_stats.py](analysis_code/postproc/prf/postfit/compute_css_stats.py)
 
 #### For later

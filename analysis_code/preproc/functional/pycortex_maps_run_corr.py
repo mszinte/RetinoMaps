@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-pycortex_maps_run_cor.py
+pycortex_maps_run_corr.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Create flatmap plots of inter-run correlation
+Create flatmap plots of inter-run correlations
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -22,7 +22,7 @@ To run:
 >> python pycortex_maps_run_cor.py [main directory] [project name] [subject num] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_run_cor.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_run_cor.py ~/disks/meso_S/data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -40,13 +40,15 @@ deb = ipdb.set_trace
 import os
 import sys
 import json
+import numpy as np
+import copy
 import cortex
 import importlib
 import matplotlib.pyplot as plt
 
 # Personal imports
 sys.path.append("{}/../../utils".format(os.getcwd()))
-from pycortex_utils import draw_cortex, set_pycortex_config_file, load_surface_pycortex
+from pycortex_utils import draw_cortex, set_pycortex_config_file,load_surface_pycortex
 
 # Inputs
 main_dir = sys.argv[1]
@@ -71,13 +73,17 @@ if subject == 'sub-170k': formats = ['170k']
 else: formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 tasks = analysis_info['task_names']
-    
+alpha_range = analysis_info["alpha_range"]
+
 # Maps settings
 cmap_corr = 'RdBu_r'
 
-# plot scales
+# Index
+slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx, \
+    trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7
+
+# Plot scales
 corr_scale = [-1, 1]
-deriv_fn_label = 'corr'
  
 # Define directories and fn
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
@@ -102,39 +108,73 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             corr_fn_L = "{}/{}_task-{}_hemi-L_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             corr_fn_R = "{}/{}_task-{}_hemi-R_fmriprep_dct_corr_bold.func.gii".format(corr_dir, subject, task)
             results = load_surface_pycortex(L_fn=corr_fn_L, R_fn=corr_fn_R)
-            corr_data = results['data_concat']
-            
         elif format_ == '170k':
             cor_fn = '{}/{}_task-{}_fmriprep_dct_corr_bold.dtseries.nii'.format(corr_dir, subject, task)
             results = load_surface_pycortex(brain_fn=cor_fn)
-            corr_data = results['data_concat']
             if subject == 'sub-170k':
                 save_svg = save_svg
             else: 
                 save_svg = False
-
-        print('Creating flatmaps...')
-        maps_names = []
+        corr_mat = results['data_concat']
+        maps_names = []        
         
-        # correlation
-        param_correlations = {'data': corr_data, 
+        # Correlation uncorrected
+        corr_mat_uncorrected = corr_mat[rvalue_idx, :]
+
+        # Compute alpha
+        alpha_uncorrected = np.abs(corr_mat_uncorrected)
+        alpha_uncorrected = (alpha_uncorrected - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
+        alpha_uncorrected[alpha_uncorrected>1]=1
+    
+        # correlation corrected
+        param_run_corr = {'data': corr_mat_uncorrected, 
+                          'alpha': alpha_uncorrected,
+                          'cmap': cmap_corr,
+                          'vmin': corr_scale[0], 
+                          'vmax': corr_scale[1], 
+                          'cbar': 'discrete', 
+                          'cortex_type': 'VertexRGB', 
+                          'description': '{} {} inter-run correlation'.format(subject, task), 
+                          'curv_brightness': 1, 
+                          'curv_contrast': 0.1, 
+                          'add_roi': save_svg, 
+                          'cbar_label': 'Pearson coefficient',
+                          'with_labels': True}
+        maps_names.append('run_corr')
+
+        # Correlation corrected mat
+        corr_mat_corrected = copy.copy(corr_mat)
+        corr_mat_corrected_th = corr_mat_corrected
+        if analysis_info['stats_th'] == 0.05: stats_th_down = corr_mat_corrected_th[corr_pvalue_5pt_idx,...] <= 0.05
+        elif analysis_info['stats_th'] == 0.01: stats_th_down = corr_mat_corrected_th[corr_pvalue_1pt_idx,...] <= 0.01
+        corr_mat_corrected[rvalue_idx, stats_th_down==False]=0 # put this to zero to not plot it
+        corr_mat_corrected = corr_mat_corrected[rvalue_idx, :]
+
+        # Compute alpha
+        alpha_corrected = np.abs(corr_mat_corrected)
+        alpha_corrected = (alpha_corrected - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
+        alpha_corrected[alpha_corrected>1]=1
+    
+        # correlation corrected
+        param_run_corr_stats = {'data': corr_mat_corrected, 
+                              'alpha': alpha_corrected,
                               'cmap': cmap_corr ,
                               'vmin': corr_scale[0], 
                               'vmax': corr_scale[1], 
                               'cbar': 'discrete', 
-                              'cortex_type': 'Vertex', 
-                              'description': '{} {} correlation'.format(subject, task), 
+                              'cortex_type': 'VertexRGB', 
+                              'description': '{} {} inter-run correlation'.format(subject, task), 
                               'curv_brightness': 1, 
                               'curv_contrast': 0.1, 
                               'add_roi': save_svg, 
                               'cbar_label': 'Pearson coefficient',
                               'with_labels': True}
-        maps_names.append('correlations')
-        
+        maps_names.append('run_corr_stats')
+
         # draw flatmaps
         volumes = {}
         for maps_name in maps_names:
-        
+            
             # create flatmap
             roi_name = '{}_{}'.format(task, maps_name)
             roi_param = {'subject': pycortex_subject, 
@@ -142,7 +182,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             print(roi_name)
             exec('param_{}.update(roi_param)'.format(maps_name))
             exec('volume_{maps_name} = draw_cortex(**param_{maps_name})'.format(maps_name=maps_name))
-            exec("plt.savefig('{}/{}_task-{}_{}_{}.pdf')".format(flatmaps_dir, subject, task, maps_name, deriv_fn_label))
+            exec("plt.savefig('{}/{}_task-{}_{}.pdf')".format(flatmaps_dir, subject, task, maps_name))
             plt.close()
         
             # save flatmap as dataset
@@ -151,6 +191,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             volumes.update({vol_description:volume})
         
         # save dataset
-        dataset_file = "{}/{}_task-{}_{}.hdf".format(datasets_dir, subject, task, deriv_fn_label)
+        dataset_file = "{}/{}_task-{}.hdf".format(datasets_dir, subject, task)
         dataset = cortex.Dataset(data=volumes)
         dataset.save(dataset_file)

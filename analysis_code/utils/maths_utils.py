@@ -126,7 +126,8 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
     Returns:
     vertex_results (numpy.ndarray): Array containing the results of linear regression analysis for each vertex.
                                      The shape of the array is (n_output, n_vertex), 
-                                     where n_output = slope, intercept, rvalue, pvalue + p_values_corrected for each alpha.
+                                     where n_output = slope, intercept, rvalue, pvalue, stderr, trs
+                                     + p_values_corrected for each alpha.
 
     Note:
     The function checks for NaN values in both bold_signal and model_prediction.
@@ -137,6 +138,8 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
     import numpy as np
     from scipy import stats
     from statsmodels.stats.multitest import multipletests
+    import ipdb
+    deb = ipdb.set_trace
     
     if not isinstance(alpha, list):
         alpha = [alpha]
@@ -153,7 +156,7 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
 
     # Define output size
     num_vertices = bold_signal.shape[1]
-    num_base_output = 5                         # Number of outputs per vertex (slope, intercept, rvalue, pvalue )
+    num_base_output = 6                         # Number of outputs per vertex (slope, intercept, rvalue, pvalue, trs)
     num_output = num_base_output + len(alpha)   # Add the desired corrected p-values
 
     # Array to store results for each vertex
@@ -167,19 +170,21 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
                                   y=bold_signal[:, vert],
                                   alternative='two-sided')
         p_values[vert] = result.pvalue
+        trs = model_prediction.shape[0]
 
         # Store results in the array
         vertex_results[:, vert] = [result.slope, 
                                    result.intercept, 
                                    result.rvalue, 
                                    result.pvalue, 
-                                   result.stderr] + [np.nan]*len(alpha)  
+                                   result.stderr,
+                                   trs] + [np.nan]*len(alpha)
 
     # Apply multiple testing correction
     if correction:
         for n_alphas, alpha_val in enumerate(alpha):
             p_values_corrected = multipletests(p_values[valid_vertices], 
-                                               method=correction, 
+                                               method=correction,
                                                alpha=alpha_val)[1]
             vertex_results[num_base_output + n_alphas, valid_vertices] = p_values_corrected
     
