@@ -24,8 +24,7 @@ To run:
 >> python compute_pcm.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit
-python compute_css_pcm.py /scratch/mszinte/data RetinoMaps sub-01 327
+python compute_css_pcm.py /scratch/mszinte/data amblyo_prf sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
