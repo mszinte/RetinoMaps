@@ -126,7 +126,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     # rois
     roi_name = '{}_rois'.format(prf_task_name)
-    param_rois = {'subject': subject,
+    param_rois = {'subject': pycortex_subject,
                   'data': roi_mat, 
                   'cmap': colormap_name,
                   'alpha': alpha_mat,
@@ -141,7 +141,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'curv_contrast': 0.25,
                   'add_roi': save_svg,
                   'with_labels': True,
-                  'subject': pycortex_subject, 
                   'roi_name': roi_name}
                   
     # draw flatmaps
