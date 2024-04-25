@@ -131,18 +131,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         
         results_prf = load_surface_pycortex(L_fn=prf_stats_fn_L, R_fn=prf_stats_fn_R)
         prf_mat = results_prf['data_concat']
-        prf_mat = np.nan_to_num(prf_mat, nan=0)
 
-        
-        
         results_sac = load_surface_pycortex(L_fn=sac_stats_fn_L, R_fn=sac_stats_fn_R)
         sac_mat = results_sac['data_concat']
-        sac_mat = np.nan_to_num(sac_mat, nan=0)
 
-        
         results_pur = load_surface_pycortex(L_fn=pur_stats_fn_L, R_fn=pur_stats_fn_R)
         pur_mat = results_pur['data_concat']
-        pur_mat = np.nan_to_num(pur_mat, nan=0)
+
 
         
     elif format_ == '170k':
@@ -155,20 +150,15 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         results_stats = load_surface_pycortex(brain_fn=stats_avg_fn)
         final_mat = results_stats['data_concat']
 
-        
         results_prf = load_surface_pycortex(brain_fn=prf_stats_avg_fn)
         prf_mat = results_prf['data_concat']
-        prf_mat = np.nan_to_num(prf_mat, nan=0)
-
         
         results_sac = load_surface_pycortex(brain_fn=sac_stats_avg_fn)
         sac_mat = results_sac['data_concat']
-        sac_mat = np.nan_to_num(sac_mat, nan=0)
 
-        
         results_pur = load_surface_pycortex(brain_fn=pur_stats_avg_fn)
         pur_mat = results_pur['data_concat']
-        pur_mat = np.nan_to_num(pur_mat, nan=0)
+
 
         
         if subject == 'sub-170k':
@@ -176,25 +166,28 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         else: 
             save_svg = False
     
-    print('Creating flatmaps...')
 
-    maps_names = []
-
-    # threshold data
-    # final_mat_th = final_mat
-
-    # rsqr_th_down = final_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
-    # rsqr_th_up = final_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+    # Compute R2
+    prf_mat[rsq_idx,:] = prf_mat[rsq_idx,:]**2
+    sac_mat[rsq_idx,:] = sac_mat[rsq_idx,:]**2
+    pur_mat[rsq_idx,:] = pur_mat[rsq_idx,:]**2
     
-    # all_th = np.array((rsqr_th_down, 
-    #                    rsqr_th_up)) 
-    # final_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
+    
+    # threshold data
+    prf_mat_th = prf_mat
+    rsqr_th_down = prf_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
+    rsqr_th_up = prf_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+    
+    all_th = np.array((rsqr_th_down, 
+                        rsqr_th_up)) 
+    
+
+    prf_mat_th[rsq_idx,np.logical_and.reduce(all_th)==False]=0
 
 
     #  Creat the all flatmap
     rsq_all = np.zeros((final_mat[all_idx,...].shape))
     for vert, categorie in enumerate(final_mat[all_idx,...]):
-        
         if categorie == 1: 
             rsq_all[vert] = pur_mat[rsq_idx,vert]
         elif categorie == 2: 
@@ -251,7 +244,9 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
         
         
-        
+    print('Creating flatmaps...')
+
+    maps_names = []        
     
     
     

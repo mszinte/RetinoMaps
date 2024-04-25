@@ -22,6 +22,7 @@ To run:
 >> python preproc_end_sbatch.py [main directory] [project] [subject] [group [server num]
 -----------------------------------------------------------------------------------------
 Exemple:
+cd ~/projects/RetinoMaps/analysis_code/preproc/functional
 python preproc_end_sbatch.py /scratch/mszinte/data RetinoMaps sub-01 327 b327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)

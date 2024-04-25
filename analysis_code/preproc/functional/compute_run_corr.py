@@ -21,6 +21,7 @@ To run:
 python compute_run_corr.py [main directory] [project name] [subject name] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
+cd ~/projects/RetinoMaps/analysis_code/preproc/functional/
 python compute_run_corr.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)

@@ -21,6 +21,7 @@ To run:
 >> python compute_css_stats.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python compute_css_stats.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -185,7 +186,7 @@ for loo_stats_fns in loo_stats_fns_list:
     print('Saving avg: {}'.format(avg_fn))
     nb.save(loo_stats_img, avg_fn)
 
-# Define permission cmd
-print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
+# # Define permission cmd
+# print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
+# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
