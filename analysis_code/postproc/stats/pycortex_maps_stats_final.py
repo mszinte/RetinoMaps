@@ -54,13 +54,10 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
-
-# formats = ['fsnative']
-# extensions = ['func.gii']
-
+prf_task_name = analysis_info['prf_task_name']
 tasks = analysis_info['task_glm']
-# alpha_range = analysis_info["alpha_range"]
-alpha_range = [0,0.5]
+alpha_range = analysis_info["alpha_range"]
+
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
@@ -78,9 +75,9 @@ except ValueError:
     sys.exit('Error: incorrect input (Yes, yes, y or No, no, n)')
        
 # Maps settings
-all_idx, pursuit_idx, saccade_idx, pursuit_and_saccade_idx, vision_idx, \
-    vision_and_pursuit_idx, vision_and_saccade_idx, \
-        vision_and_pursuit_and_saccade_idx = 0,1,2,3,4,5,6,7
+all_idx, pur_idx, sac_idx, pur_sac_idx, prf_idx, \
+    prf_pur_idx, prf_sac_idx, \
+        prf_pur_sac_idx = 0,1,2,3,4,5,6,7
 
 rsq_idx = 2
 
@@ -99,7 +96,7 @@ if subject == 'sub-170k':
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
     stats_dir = "{}/{}/derivatives/pp_data/{}/{}/final_stats".format(main_dir, project_dir, subject,format_)
-    prf_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/prf/stats".format(main_dir, project_dir, subject,format_)
+    prf_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives".format(main_dir, project_dir, subject,format_)
     glm_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/glm/stats".format(main_dir, project_dir, subject,format_)
     stats_results_dir = "{}/results".format(stats_dir)
     
@@ -115,8 +112,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         deriv_stats_fn_L = '{}/{}_hemi-L_final-stats.func.gii'.format(stats_results_dir, subject)
         deriv_stats_fn_R = '{}/{}_hemi-R_final-stats.func.gii'.format(stats_results_dir, subject)
         
-        prf_stats_fn_L = '{}/{}_task-pRF_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject)
-        prf_stats_fn_R = '{}/{}_task-pRF_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject)
+        prf_stats_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject, prf_task_name)
+        prf_stats_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject, prf_task_name)
         
         sac_stats_fn_L = '{}/{}_task-SacLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
         sac_stats_fn_R = '{}/{}_task-SacLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
@@ -142,10 +139,9 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         
     elif format_ == '170k':
         stats_avg_fn = '{}/{}_final-stats.dtseries.nii'.format(stats_results_dir, subject)
-        prf_stats_avg_fn = '{}/{}_task-pRF_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(prf_stats_dir, subject)
+        prf_stats_avg_fn = '{}/{}_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(prf_stats_dir, subject, prf_task_name)
         sac_stats_avg_fn = '{}/{}_task-SacLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, subject)
         pur_stats_avg_fn = '{}/{}_task-PurLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, subject)
-        
         
         results_stats = load_surface_pycortex(brain_fn=stats_avg_fn)
         final_mat = results_stats['data_concat']
@@ -159,216 +155,261 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         results_pur = load_surface_pycortex(brain_fn=pur_stats_avg_fn)
         pur_mat = results_pur['data_concat']
 
-
-        
         if subject == 'sub-170k':
             save_svg = save_svg
         else: 
             save_svg = False
     
 
-    # Compute R2
+    # Compute R2 from R
     prf_mat[rsq_idx,:] = prf_mat[rsq_idx,:]**2
     sac_mat[rsq_idx,:] = sac_mat[rsq_idx,:]**2
     pur_mat[rsq_idx,:] = pur_mat[rsq_idx,:]**2
-    
+
     
     # threshold data
+    # pRF
     prf_mat_th = prf_mat
     rsqr_th_down = prf_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
     rsqr_th_up = prf_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+
+    all_th = np.array((rsqr_th_down, rsqr_th_up)) 
+    prf_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
     
-    all_th = np.array((rsqr_th_down, 
-                        rsqr_th_up)) 
+    # SacLoc
+    sac_mat_th = sac_mat
+    rsqr_th_down = sac_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
+    rsqr_th_up = sac_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
+
+    all_th = np.array((rsqr_th_down, rsqr_th_up)) 
+    sac_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
     
+    # PurLoc
+    pur_mat_th = pur_mat
+    rsqr_th_down = pur_mat_th[rsq_idx,...] >= analysis_info['rsqr_th'][0]
+    rsqr_th_up = pur_mat_th[rsq_idx,...] <= analysis_info['rsqr_th'][1]
 
-    prf_mat_th[rsq_idx,np.logical_and.reduce(all_th)==False]=0
+    all_th = np.array((rsqr_th_down, rsqr_th_up)) 
+    pur_mat[rsq_idx,np.logical_and.reduce(all_th)==False]=0
 
 
-    #  Creat the all flatmap
+
+    #  Creat R2 for the all flatmap
     rsq_all = np.zeros((final_mat[all_idx,...].shape))
     for vert, categorie in enumerate(final_mat[all_idx,...]):
-        if categorie == 1: 
-            rsq_all[vert] = pur_mat[rsq_idx,vert]
-        elif categorie == 2: 
-            rsq_all[vert] = sac_mat[rsq_idx,vert]
-        elif categorie == 3: 
-            rsq_all[vert] = np.nanmean([pur_mat[rsq_idx,vert], sac_mat[rsq_idx,vert]],axis=0)
-        elif categorie == 4: 
-            rsq_all[vert] = prf_mat[rsq_idx,vert]
-        elif categorie == 5: 
-            rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], pur_mat[rsq_idx,vert]],axis=0)
-        elif categorie == 6: 
-            rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], sac_mat[rsq_idx,vert]],axis=0)
-        elif categorie == 7: 
-            rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], sac_mat[rsq_idx,vert], pur_mat[rsq_idx,vert]],axis=0)
+        if categorie == 1: rsq_all[vert] = pur_mat[rsq_idx,vert]
+        elif categorie == 2: rsq_all[vert] = sac_mat[rsq_idx,vert]
+        elif categorie == 3: rsq_all[vert] = np.nanmean([pur_mat[rsq_idx,vert], 
+                                                         sac_mat[rsq_idx,vert]],
+                                                        axis=0)
+        elif categorie == 4: rsq_all[vert] = prf_mat[rsq_idx,vert]
+        elif categorie == 5: rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], 
+                                                         pur_mat[rsq_idx,vert]],
+                                                        axis=0)
+        elif categorie == 6: rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], 
+                                                         sac_mat[rsq_idx,vert]],
+                                                        axis=0)
+        elif categorie == 7: rsq_all[vert] = np.nanmean([prf_mat[rsq_idx,vert], 
+                                                         sac_mat[rsq_idx,vert], 
+                                                         pur_mat[rsq_idx,vert]], 
+                                                        axis=0)
             
+    #  Creat R2 for the pur_sac flatmap       
+    rsq_pur_sac = np.zeros((final_mat[pur_sac_idx,...].shape))
+    for vert, categorie in enumerate(final_mat[pur_sac_idx,...]):
+        if categorie == 3: rsq_pur_sac[vert] = np.nanmean([pur_mat[rsq_idx,vert], 
+                                                           sac_mat[rsq_idx,vert]], 
+                                                          axis=0)
+            
+    #  Creat R2 for the prf_pur flatmap               
+    rsq_prf_pur = np.zeros((final_mat[prf_pur_idx,...].shape))
+    for vert, categorie in enumerate(final_mat[prf_pur_idx,...]):
+        if categorie == 5: rsq_prf_pur[vert] = np.nanmean([pur_mat[rsq_idx,vert], 
+                                                           sac_mat[rsq_idx,vert]], 
+                                                          axis=0)
+            
+    #  Creat R2 for the prf_sac flatmap               
+    rsq_prf_sac = np.zeros((final_mat[prf_sac_idx,...].shape))
+    for vert, categorie in enumerate(final_mat[prf_sac_idx,...]):
+        if categorie == 6: rsq_prf_sac[vert] = np.nanmean([prf_mat[rsq_idx,vert], 
+                                                           sac_mat[rsq_idx,vert]], 
+                                                          axis=0)
     
-    rsq_pur = np.zeros((final_mat[pursuit_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[pursuit_idx,...]):
-        if categorie == 1:
-            rsq_pur[vert] = pur_mat[rsq_idx,vert]
-    
-    rsq_sac = np.zeros((final_mat[saccade_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[saccade_idx,...]):
-        if categorie == 2:
-            rsq_sac[vert] = sac_mat[rsq_idx,vert]
-            
-    rsq_pur_sac = np.zeros((final_mat[pursuit_and_saccade_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[pursuit_and_saccade_idx,...]):
-        if categorie == 3:
-            rsq_pur_sac[vert] = np.nanmean([pur_mat[rsq_idx,vert], sac_mat[rsq_idx,vert]],axis=0)
-            
-    rsq_prf = np.zeros((final_mat[vision_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[vision_idx,...]):
-        if categorie == 4:
-            rsq_prf[vert] = prf_mat[rsq_idx,vert]
-            
-    rsq_prf_pur = np.zeros((final_mat[vision_and_pursuit_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[vision_and_pursuit_idx,...]):
-        if categorie == 5:
-            rsq_prf_pur[vert] = np.nanmean([pur_mat[rsq_idx,vert], sac_mat[rsq_idx,vert]],axis=0)
-            
-    rsq_prf_sac = np.zeros((final_mat[vision_and_saccade_idx,...].shape))
-    for vert, categorie in enumerate(final_mat[vision_and_saccade_idx,...]):
-        if categorie == 6:
-            rsq_prf_sac[vert] = np.nanmean([prf_mat[rsq_idx,vert], sac_mat[rsq_idx,vert]],axis=0)
-            
+    #  Creat R2 for the prf_pur_sac flatmap               
     rsq_prf_pur_sac = np.zeros((final_mat[all_idx,...].shape))
     for vert, categorie in enumerate(final_mat[all_idx,...]):
-        if categorie == 7:
-            rsq_prf_pur_sac[vert] = np.nanmean([prf_mat[rsq_idx,vert], sac_mat[rsq_idx,vert], pur_mat[rsq_idx,vert]],axis=0)
+        if categorie == 7: rsq_prf_pur_sac[vert] = np.nanmean([prf_mat[rsq_idx,vert], 
+                                                               sac_mat[rsq_idx,vert], 
+                                                               pur_mat[rsq_idx,vert]], 
+                                                              axis=0)
             
 
     
 
         
-        
+    # Create flatmaps  
     print('Creating flatmaps...')
-
     maps_names = []        
     
     
-    
+    #  Creat the all flatmap
     alpha_all = (rsq_all - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_all[alpha_all>1]=1
     
-    
-    
     final_data_all = final_mat[all_idx,...]
-    param_all = {'data': final_data_all, 'cmap': cmap, 'alpha': alpha_all, 
-                  'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                  'cortex_type': 'VertexRGB','description': 'final map',
-                  'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                  'cbar_label': '', 'with_labels': True}
+    param_all = {'data': final_data_all, 
+                 'cmap': cmap, 'alpha': alpha_all, 
+                  'vmin': 0, 'vmax': 7, 
+                  'cbar': 'stats', 
+                  'cmap_steps': cmap_steps,
+                  'cortex_type': 'VertexRGB', 
+                  'description': 'final map',
+                  'curv_brightness': 0.1, 
+                  'curv_contrast': 0.25, 
+                  'add_roi': save_svg,
+                  'cbar_label': '',
+                  'with_labels': True}
     maps_names.append('all')
     
     #  Creat the pursuit flatmap
-    
-
-
+    rsq_pur = pur_mat[rsq_idx, :]
     alpha_pur = (rsq_pur - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_pur[alpha_pur>1]=1
 
-    
-    final_data_pur = final_mat[pursuit_idx,...]
-    param_pursuit = {'data': final_data_pur, 'cmap': cmap, 'alpha': alpha_pur, 
-                     'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                     'cortex_type': 'VertexRGB','description': 'final map',
-                     'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                     'cbar_label': '', 'with_labels': True}
+    final_data_pur = final_mat[pur_idx,...]
+    param_pursuit = {'data': final_data_pur, 
+                     'cmap': cmap, 'alpha': alpha_pur, 
+                     'vmin': 0, 'vmax': 7, 
+                     'cbar': 'stats', 
+                     'cmap_steps': cmap_steps,
+                     'cortex_type': 'VertexRGB', 
+                     'description': 'final map',
+                     'curv_brightness': 0.1, 
+                     'curv_contrast': 0.25, 
+                     'add_roi': save_svg,
+                     'cbar_label': '', 
+                     'with_labels': True}
     maps_names.append('pursuit')
     
     #  Creat the saccade flatmap
-    
-    
+    rsq_sac = sac_mat[rsq_idx, :]
     alpha_sac = (rsq_sac - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_sac[alpha_sac>1]=1
     
-    
-    final_data_sac = final_mat[saccade_idx,...]
-    param_saccade = {'data': final_data_sac, 'cmap': cmap, 'alpha': alpha_sac, 
-                     'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                     'cortex_type': 'VertexRGB','description': 'final map',
-                     'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                     'cbar_label': '', 'with_labels': True}
+    final_data_sac = final_mat[sac_idx,...]
+    param_saccade = {'data': final_data_sac, 
+                     'cmap': cmap, 'alpha': alpha_sac, 
+                     'vmin': 0, 'vmax': 7, 
+                     'cbar': 'stats', 
+                     'cmap_steps': cmap_steps,
+                     'cortex_type': 'VertexRGB', 
+                     'description': 'final map',
+                     'curv_brightness': 0.1, 
+                     'curv_contrast': 0.25, 
+                     'add_roi': save_svg,
+                     'cbar_label': '', 
+                     'with_labels': True}
     maps_names.append('saccade')
     
     #  Creat the pursuit_and_saccade flatmap
-    
-    
-    
     alpha_pur_sac = (rsq_pur_sac - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_pur_sac[alpha_pur_sac>1]=1
     
-    
-    final_data_pur_sac = final_mat[pursuit_and_saccade_idx,...]
-    param_pursuit_and_saccade = {'data': final_data_pur_sac, 'cmap': cmap, 'alpha': alpha_pur_sac, 
-                                  'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                                  'cortex_type': 'VertexRGB','description': 'final map',
-                                  'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                                  'cbar_label': '', 'with_labels': True}
+    final_data_pur_sac = final_mat[pur_sac_idx,...]
+    param_pursuit_and_saccade = {'data': final_data_pur_sac, 
+                                 'cmap': cmap, 
+                                 'alpha': alpha_pur_sac, 
+                                  'vmin': 0, 'vmax': 7, 
+                                  'cbar': 'stats', 
+                                  'cmap_steps': cmap_steps,
+                                  'cortex_type': 'VertexRGB', 
+                                  'description': 'final map',
+                                  'curv_brightness': 0.1, 
+                                  'curv_contrast': 0.25, 
+                                  'add_roi': save_svg,
+                                  'cbar_label': '', 
+                                  'with_labels': True}
     maps_names.append('pursuit_and_saccade')
     
     #  Creat the vision flatmap
-    
-    
+    rsq_prf = prf_mat[rsq_idx, :]
     alpha_prf = (rsq_prf - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_prf[alpha_prf>1]=1
 
-    
-    final_data_prf = final_mat[vision_idx,...]
-    param_vision = {'data': final_data_prf, 'cmap': cmap, 'alpha': alpha_prf, 
-                    'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                    'cortex_type': 'VertexRGB','description': 'final map',
-                    'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                    'cbar_label': '', 'with_labels': True}
+    final_data_prf = final_mat[prf_idx,...]
+    param_vision = {'data': final_data_prf, 
+                    'cmap': cmap, 
+                    'alpha': alpha_prf, 
+                    'vmin': 0, 'vmax': 7, 
+                    'cbar': 'stats', 
+                    'cmap_steps': cmap_steps,
+                    'cortex_type': 'VertexRGB', 
+                    'description': 'final map',
+                    'curv_brightness': 0.1, 
+                    'curv_contrast': 0.25, 
+                    'add_roi': save_svg,
+                    'cbar_label': '',
+                    'with_labels': True}
     maps_names.append('vision')
     
     #  Creat the vision_and_pursuite flatmap
-    
-    
     alpha_prf_pur = (rsq_prf_pur - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_prf_pur[alpha_prf_pur>1]=1
     
-
-    
-    final_data_prf_pur = final_mat[vision_and_pursuit_idx,...]
-    param_vision_and_pursuit = {'data': final_data_prf_pur, 'cmap': cmap, 'alpha': alpha_prf_pur, 
-                                  'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                                  'cortex_type': 'VertexRGB','description': 'final map',
-                                  'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                                  'cbar_label': '', 'with_labels': True}
+    final_data_prf_pur = final_mat[prf_pur_idx,...]
+    param_vision_and_pursuit = {'data': final_data_prf_pur, 
+                                'cmap': cmap, 
+                                'alpha': alpha_prf_pur, 
+                                  'vmin': 0, 'vmax': 7, 
+                                  'cbar': 'stats', 
+                                  'cmap_steps': cmap_steps,
+                                  'cortex_type': 'VertexRGB', 
+                                  'description': 'final map',
+                                  'curv_brightness': 0.1, 
+                                  'curv_contrast': 0.25, 
+                                  'add_roi': save_svg,
+                                  'cbar_label': '', 
+                                  'with_labels': True}
     maps_names.append('vision_and_pursuit')
     
     #  Creat the vision_and_saccade flatmap
-    
-    
     alpha_prf_sac = (rsq_prf_sac - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_prf_sac[alpha_prf_sac>1]=1
-
     
-    final_data_prf_sac = final_mat[vision_and_saccade_idx,...]
-    param_vision_and_saccade = {'data': final_data_prf_sac, 'cmap': cmap, 'alpha': rsq_prf_sac, 
-                                 'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                                 'cortex_type': 'VertexRGB','description': 'final map',
-                                 'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                                 'cbar_label': '', 'with_labels': True}
+    final_data_prf_sac = final_mat[prf_sac_idx,...]
+    param_vision_and_saccade = {'data': final_data_prf_sac, 
+                                'cmap': cmap, 
+                                'alpha': alpha_prf_sac, 
+                                 'vmin': 0, 'vmax': 7, 
+                                 'cbar': 'stats', 
+                                 'cmap_steps': cmap_steps,
+                                 'cortex_type': 'VertexRGB', 
+                                 'description': 'final map',
+                                 'curv_brightness': 0.1, 
+                                 'curv_contrast': 0.25, 
+                                 'add_roi': save_svg,
+                                 'cbar_label': '', 
+                                 'with_labels': True}
     maps_names.append('vision_and_saccade')
     
     #  Creat the vision_and_pursuit_and_saccade flatmap
-    
-    
     alpha_prf_pur_sac = (rsq_prf_pur_sac - alpha_range[0])/(alpha_range[1]-alpha_range[0])
     alpha_prf_pur_sac[alpha_prf_pur_sac>1]=1
 
-    
-    final_data_prf_pur_sac = final_mat[vision_and_pursuit_and_saccade_idx,...]
-    param_vision_and_pursuit_and_saccade = {'data': final_data_prf_pur_sac, 'cmap': cmap, 'alpha': alpha_prf_pur_sac, 
-                                              'vmin': 0, 'vmax': 7, 'cbar': 'stats', 'cmap_steps': cmap_steps,
-                                              'cortex_type': 'VertexRGB','description': 'final map',
-                                              'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg,
-                                              'cbar_label': '', 'with_labels': True}
+    final_data_prf_pur_sac = final_mat[prf_pur_sac_idx,...]
+    param_vision_and_pursuit_and_saccade = {'data': final_data_prf_pur_sac, 
+                                            'cmap': cmap, 
+                                            'alpha': alpha_prf_pur_sac, 
+                                            'vmin': 0, 'vmax': 7, 
+                                            'cbar': 'stats', 
+                                            'cmap_steps': cmap_steps, 
+                                            'cortex_type': 'VertexRGB', 
+                                            'description': 'final map', 
+                                            'curv_brightness': 0.1, 
+                                            'curv_contrast': 0.25, 
+                                            'add_roi': save_svg, 
+                                            'cbar_label': '',  
+                                            'with_labels': True}
     maps_names.append('vision_and_pursuit_and_saccade')
 
     
