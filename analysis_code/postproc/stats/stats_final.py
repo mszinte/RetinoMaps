@@ -71,7 +71,7 @@ glm_stats_fns = []
 prf_stats_fns = []
 for format_, extension in zip(formats, extensions):
     list_glm = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/stats/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
-    list_prf = glob.glob("{}/{}/derivatives/pp_data/{}/{}/prf/stats/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
+    list_prf = glob.glob("{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
     
     glm_stats_fns.extend(list_glm)
     prf_stats_fns.extend(list_prf)   
@@ -152,74 +152,74 @@ for stats_files in stats_files_list:
         os.makedirs(final_stats_dir, exist_ok=True)
         final_stats_fn = '{}_{}_final-stats.func.gii' .format(subject, hemi)
         
-        #Export data in TSV
-        # get a dicst with the surface vertices contained in each ROI
-        rois = analysis_info['rois']
-        roi_verts_L, roi_verts_R  = get_rois(subject, return_concat_hemis=False, rois=rois, mask=True, atlas_name=None, surf_size=None)
+        # #Export data in TSV
+        # # get a dicst with the surface vertices contained in each ROI
+        # rois = analysis_info['rois']
+        # roi_verts_L, roi_verts_R  = get_rois(subject, return_concat_hemis=False, rois=rois, mask=True, atlas_name=None, surf_size=None)
         
-        if hemi == 'hemi-L':
-            roi_verts = roi_verts_L
-        elif hemi == 'hemi-R':
-            roi_verts = roi_verts_R
+        # if hemi == 'hemi-L':
+        #     roi_verts = roi_verts_L
+        # elif hemi == 'hemi-R':
+        #     roi_verts = roi_verts_R
 
-        prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv/{}_css-prf_derivatives.tsv'.format(main_dir, project_dir, subject, subject)
-        tsv_df = pd.read_table(prf_tsv_fn)
+        # prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/fsnative/prf/tsv/{}_css-prf_derivatives.tsv'.format(main_dir, project_dir, subject, subject)
+        # tsv_df = pd.read_table(prf_tsv_fn)
         
         
-        if 'stats_final' not in tsv_df.columns:
-            tsv_df['stats_final'] = np.nan
+        # if 'stats_final' not in tsv_df.columns:
+        #     tsv_df['stats_final'] = np.nan
 
     
-        for roi in roi_verts.keys():
-            data_roi = final_map[0, roi_verts[roi]]
-            tsv_df.loc[(tsv_df['rois'] == roi) & (tsv_df['hemi'] == hemi)  , 'stats_final'] = data_roi
+        # for roi in roi_verts.keys():
+        #     data_roi = final_map[0, roi_verts[roi]]
+        #     tsv_df.loc[(tsv_df['rois'] == roi) & (tsv_df['hemi'] == hemi)  , 'stats_final'] = data_roi
             
           
-        # tsv_df.loc[tsv_df['hemi'] == hemi  , 'stats_final'].apply(lambda x: code_name[int(x)] if pd.notnull(x) else x)
-        tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if isinstance(x, float) and pd.notnull(x) else x)
+        # # tsv_df.loc[tsv_df['hemi'] == hemi  , 'stats_final'].apply(lambda x: code_name[int(x)] if pd.notnull(x) else x)
+        # tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if isinstance(x, float) and pd.notnull(x) else x)
 
 
-        tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
+        # tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
         
     else:
         final_stats_dir = '{}/{}/derivatives/pp_data/{}/170k/final_stats/results/'.format(main_dir, project_dir, subject)
         os.makedirs(final_stats_dir, exist_ok=True)
         final_stats_fn = '{}_final-stats.dtseries.nii' .format(subject)
         
-        #Export data in TSV
-        concat_rois_list = [analysis_info['mmp_rois'], analysis_info['rois']]
-        for n_list, rois_list in enumerate(concat_rois_list):
-            rois = rois_list
-            if 'LO' in rois_list:
-                atlas_name = 'mmp_group'
-                tsv_suffix = 'derivatives_group'
-            else:
-                atlas_name = 'mmp'
-                tsv_suffix = 'derivatives'
+        # #Export data in TSV
+        # concat_rois_list = [analysis_info['mmp_rois'], analysis_info['rois']]
+        # for n_list, rois_list in enumerate(concat_rois_list):
+        #     rois = rois_list
+        #     if 'LO' in rois_list:
+        #         atlas_name = 'mmp_group'
+        #         tsv_suffix = 'derivatives_group'
+        #     else:
+        #         atlas_name = 'mmp'
+        #         tsv_suffix = 'derivatives'
                 
-            roi_verts_dict = get_rois('sub-170k', 
-                                      return_concat_hemis=True, 
-                                      rois=rois, 
-                                      mask=True, 
-                                      atlas_name=atlas_name, 
-                                      surf_size='170k')
+        #     roi_verts_dict = get_rois('sub-170k', 
+        #                               return_concat_hemis=True, 
+        #                               rois=rois, 
+        #                               mask=True, 
+        #                               atlas_name=atlas_name, 
+        #                               surf_size='170k')
         
-            prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/170k/prf/tsv/{}_css-prf_{}.tsv'.format(main_dir, project_dir, subject, subject, tsv_suffix)
-            tsv_df = pd.read_table(prf_tsv_fn)
+        #     prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/170k/prf/tsv/{}_css-prf_{}.tsv'.format(main_dir, project_dir, subject, subject, tsv_suffix)
+        #     tsv_df = pd.read_table(prf_tsv_fn)
             
-            if 'stats_final' not in tsv_df.columns:
-                tsv_df['stats_final'] = np.nan
+        #     if 'stats_final' not in tsv_df.columns:
+        #         tsv_df['stats_final'] = np.nan
 
     
-            for roi in roi_verts_dict.keys():
-                data_roi = final_map[0, roi_verts_dict[roi]]
-                tsv_df.loc[tsv_df['rois'] == roi, 'stats_final'] = data_roi
+        #     for roi in roi_verts_dict.keys():
+        #         data_roi = final_map[0, roi_verts_dict[roi]]
+        #         tsv_df.loc[tsv_df['rois'] == roi, 'stats_final'] = data_roi
                 
             
             
-            # tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if pd.notnull(x) else x)
-            tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if isinstance(x, float) and pd.notnull(x) else x)
-            tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
+        #     # tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if pd.notnull(x) else x)
+        #     tsv_df['stats_final'] = tsv_df['stats_final'].apply(lambda x: code_name[int(x)] if isinstance(x, float) and pd.notnull(x) else x)
+        #     tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
        
     maps_names = ['all','pursuit','saccade', 'pursuit_and_saccade', 'vision', 'vision_and_pursuite', 'vision_and_saccade', 'vision_and_pursuite_and_saccade']
     final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names)
