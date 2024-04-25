@@ -81,7 +81,7 @@ slurm_cmd = """\
            subject=subject, memory_val=memory_val, log_dir=log_dir)
     
 preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
-corr_cmd = "python compute_corr.py {} {} {} {}".format(main_dir, project_dir, subject, group)
+corr_cmd = "python compute_run_corr.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
 # Define permission cmd
 chmod_cmd = "chmod -Rf 771 {}/{}".format(main_dir, project_dir)
