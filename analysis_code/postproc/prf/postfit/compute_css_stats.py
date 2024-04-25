@@ -21,6 +21,7 @@ To run:
 >> python compute_css_stats.py [main directory] [project name] [subject num] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python compute_css_stats.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -104,9 +105,9 @@ for format_, extension in zip(formats, extensions):
         
         # Compute linear regression 
         results = linear_regression_surf(bold_signal=bold_data, 
-                                         model_prediction=pred_data, 
-                                         correction='fdr_tsbh', 
-                                         alpha=fdr_alpha)
+                                          model_prediction=pred_data, 
+                                          correction='fdr_tsbh', 
+                                          alpha=fdr_alpha)
         
         # Save results
         prf_deriv_dir = "{}/{}/{}/prf/prf_derivatives".format(
@@ -160,7 +161,7 @@ for loo_stats_fns in loo_stats_fns_list:
             
     # Compute two sided corrected p-values
     t_statistic = loo_stats_data_avg[slope_idx, :] / loo_stats_data_avg[stderr_idx, :]
-    degrees_of_freedom = loo_stats_data_avg[strs_idx, 0] - 2
+    degrees_of_freedom = np.nanmax(loo_stats_data_avg[trs_idx, :]) - 2
     p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
     corrected_p_values = multipletests_surface(pvals=p_values, 
                                                correction='fdr_tsbh', 

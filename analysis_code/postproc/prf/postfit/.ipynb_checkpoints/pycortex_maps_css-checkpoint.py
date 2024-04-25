@@ -194,7 +194,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     polar_ang = np.angle(pol_comp_num)
     ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
     ang_norm = np.fmod(ang_norm + col_offset,1)
-    param_polar = {'data': ang_norm.astype('float32'), 'cmap': cmap_polar, 'alpha': alpha.astype('float32'), 
+    param_polar = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
                     'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
                     'cbar': 'polar', 'col_offset': col_offset, 
                     'description': 'pRF polar:{:3.0f} steps'.format(cmap_steps), 
