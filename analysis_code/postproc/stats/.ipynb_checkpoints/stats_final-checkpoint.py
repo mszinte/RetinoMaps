@@ -70,7 +70,7 @@ fdr_alpha = analysis_info['fdr_alpha'][1]
 glm_stats_fns = []
 prf_stats_fns = []
 for format_, extension in zip(formats, extensions):
-    list_glm = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/glm_derivatives/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
+    list_glm = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/stats/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
     list_prf = glob.glob("{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives/*loo-avg*stats.{}".format(main_dir, project_dir, subject, format_, extension))
     
     glm_stats_fns.extend(list_glm)
