@@ -103,9 +103,15 @@ if subject == 'sub-170k':
     formats = ['170k'] 
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Define directories and fn
-    stats_dir = "{}/{}/derivatives/pp_data/{}/{}/final_stats".format(main_dir, project_dir, subject,format_)
-    prf_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives".format(main_dir, project_dir, subject,format_)
-    glm_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/glm/stats".format(main_dir, project_dir, subject,format_)
+    stats_dir = "{}/{}/derivatives/pp_data/{}/{}/final_stats".format(main_dir, 
+                                                                     project_dir, 
+                                                                     subject,format_)
+    prf_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives".format(main_dir, 
+                                                                                 project_dir, 
+                                                                                 subject,format_)
+    glm_stats_dir = "{}/{}/derivatives/pp_data/{}/{}/glm/stats".format(main_dir, 
+                                                                       project_dir, 
+                                                                       subject,format_)
     stats_results_dir = "{}/results".format(stats_dir)
     
     flatmaps_dir = '{}/pycortex/flatmaps_stats'.format(stats_dir)
@@ -115,17 +121,27 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     os.makedirs(datasets_dir, exist_ok=True)
     
     if format_ == 'fsnative': 
-        deriv_stats_fn_L = '{}/{}_hemi-L_final-stats.func.gii'.format(stats_results_dir, subject)
-        deriv_stats_fn_R = '{}/{}_hemi-R_final-stats.func.gii'.format(stats_results_dir, subject)
+        deriv_stats_fn_L = '{}/{}_hemi-L_final-stats.func.gii'.format(stats_results_dir, 
+                                                                      subject)
+        deriv_stats_fn_R = '{}/{}_hemi-R_final-stats.func.gii'.format(stats_results_dir, 
+                                                                      subject)
         
-        prf_stats_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject, prf_task_name)
-        prf_stats_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, subject, prf_task_name)
+        prf_stats_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, 
+                                                                                               subject, 
+                                                                                               prf_task_name)
+        prf_stats_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(prf_stats_dir, 
+                                                                                               subject, 
+                                                                                               prf_task_name)
         
-        sac_stats_fn_L = '{}/{}_task-SacLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
-        sac_stats_fn_R = '{}/{}_task-SacLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
+        sac_stats_fn_L = '{}/{}_task-SacLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, 
+                                                                                                   subject)
+        sac_stats_fn_R = '{}/{}_task-SacLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, 
+                                                                                                   subject)
         
-        pur_stats_fn_L = '{}/{}_task-PurLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
-        pur_stats_fn_R = '{}/{}_task-PurLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, subject)
+        pur_stats_fn_L = '{}/{}_task-PurLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, 
+                                                                                                   subject)
+        pur_stats_fn_R = '{}/{}_task-PurLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(glm_stats_dir, 
+                                                                                                   subject)
         
         #  Load data
         results_stats = load_surface_pycortex(L_fn=deriv_stats_fn_L, R_fn=deriv_stats_fn_R)
@@ -141,10 +157,15 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         pur_mat = results_pur['data_concat']
         
     elif format_ == '170k':
-        stats_avg_fn = '{}/{}_final-stats.dtseries.nii'.format(stats_results_dir, subject)
-        prf_stats_avg_fn = '{}/{}_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(prf_stats_dir, subject, prf_task_name)
-        sac_stats_avg_fn = '{}/{}_task-SacLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, subject)
-        pur_stats_avg_fn = '{}/{}_task-PurLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, subject)
+        stats_avg_fn = '{}/{}_final-stats.dtseries.nii'.format(stats_results_dir, 
+                                                               subject)
+        prf_stats_avg_fn = '{}/{}_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(prf_stats_dir, 
+                                                                                              subject, 
+                                                                                              prf_task_name)
+        sac_stats_avg_fn = '{}/{}_task-SacLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, 
+                                                                                                  subject)
+        pur_stats_avg_fn = '{}/{}_task-PurLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(glm_stats_dir, 
+                                                                                                  subject)
         
         #  Load data
         results_stats = load_surface_pycortex(brain_fn=stats_avg_fn)
@@ -265,8 +286,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                  'vmin': 0, 
                  'vmax': 7, 
                  'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
+                 'cmap_steps': len(colormap_dict),
+                 'cmap_dict': colormap_dict,
                  'cortex_type': 'VertexRGB', 
                  'description': 'final map', 
                  'curv_brightness': 0.1, 
@@ -284,10 +305,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     final_data_pur = final_mat[pur_idx,...]
     param_pursuit = {'data': final_data_pur, 
                      'cmap': colormap_name, 'alpha': alpha_pur, 
-                     'vmin': 0, 'vmax': 7, 
+                     'vmin': 0, 
+                     'vmax': 7, 
                      'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
+                     'cmap_steps': len(colormap_dict),
+                     'cmap_dict': colormap_dict,
                      'cortex_type': 'VertexRGB', 
                      'description': 'final map',
                      'curv_brightness': 0.1, 
@@ -305,10 +327,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     final_data_sac = final_mat[sac_idx,...]
     param_saccade = {'data': final_data_sac, 
                      'cmap': colormap_name, 'alpha': alpha_sac, 
-                     'vmin': 0, 'vmax': 7, 
+                     'vmin': 0, 
+                     'vmax': 7, 
                      'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
+                     'cmap_steps': len(colormap_dict),
+                     'cmap_dict': colormap_dict,
                      'cortex_type': 'VertexRGB', 
                      'description': 'final map',
                      'curv_brightness': 0.1, 
@@ -326,17 +349,18 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_pursuit_and_saccade = {'data': final_data_pur_sac, 
                                  'cmap': colormap_name, 
                                  'alpha': alpha_pur_sac, 
-                                  'vmin': 0, 'vmax': 7, 
-                                  'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
-                                  'cortex_type': 'VertexRGB', 
-                                  'description': 'final map',
-                                  'curv_brightness': 0.1, 
-                                  'curv_contrast': 0.25, 
-                                  'add_roi': save_svg,
-                                  'cbar_label': '', 
-                                  'with_labels': True}
+                                 'vmin': 0, 
+                                 'vmax': 7, 
+                                 'cbar': 'discrete_personalized', 
+                                 'cmap_steps': len(colormap_dict),
+                                 'cmap_dict': colormap_dict,
+                                 'cortex_type': 'VertexRGB', 
+                                 'description': 'final map',
+                                 'curv_brightness': 0.1, 
+                                 'curv_contrast': 0.25, 
+                                 'add_roi': save_svg,
+                                 'cbar_label': '', 
+                                 'with_labels': True}
     maps_names.append('pursuit_and_saccade')
     
     #  Creat the vision flatmap
@@ -348,10 +372,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_vision = {'data': final_data_prf, 
                     'cmap': colormap_name, 
                     'alpha': alpha_prf, 
-                    'vmin': 0, 'vmax': 7, 
+                    'vmin': 0, 
+                    'vmax': 7, 
                     'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
+                    'cmap_steps': len(colormap_dict),
+                    'cmap_dict': colormap_dict,
                     'cortex_type': 'VertexRGB', 
                     'description': 'final map',
                     'curv_brightness': 0.1, 
@@ -369,17 +394,18 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_vision_and_pursuit = {'data': final_data_prf_pur, 
                                 'cmap': colormap_name, 
                                 'alpha': alpha_prf_pur, 
-                                  'vmin': 0, 'vmax': 7, 
-                                  'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
-                                  'cortex_type': 'VertexRGB', 
-                                  'description': 'final map',
-                                  'curv_brightness': 0.1, 
-                                  'curv_contrast': 0.25, 
-                                  'add_roi': save_svg,
-                                  'cbar_label': '', 
-                                  'with_labels': True}
+                                'vmin': 0, 
+                                'vmax': 7, 
+                                'cbar': 'discrete_personalized', 
+                                'cmap_steps': len(colormap_dict), 
+                                'cmap_dict': colormap_dict,
+                                'cortex_type': 'VertexRGB', 
+                                'description': 'final map',
+                                'curv_brightness': 0.1, 
+                                'curv_contrast': 0.25, 
+                                'add_roi': save_svg,
+                                'cbar_label': '', 
+                                'with_labels': True}
     maps_names.append('vision_and_pursuit')
     
     #  Creat the vision_and_saccade flatmap
@@ -390,17 +416,18 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     param_vision_and_saccade = {'data': final_data_prf_sac, 
                                 'cmap': colormap_name, 
                                 'alpha': alpha_prf_sac, 
-                                 'vmin': 0, 'vmax': 7, 
-                                 'cbar': 'discrete_personalized', 
-                  'cmap_steps': len(colormap_dict),
-                  'cmap_dict': colormap_dict,
-                                 'cortex_type': 'VertexRGB', 
-                                 'description': 'final map',
-                                 'curv_brightness': 0.1, 
-                                 'curv_contrast': 0.25, 
-                                 'add_roi': save_svg,
-                                 'cbar_label': '', 
-                                 'with_labels': True}
+                                'vmin': 0, 
+                                'vmax': 7, 
+                                'cbar': 'discrete_personalized', 
+                                'cmap_steps': len(colormap_dict), 
+                                'cmap_dict': colormap_dict,
+                                'cortex_type': 'VertexRGB', 
+                                'description': 'final map',
+                                'curv_brightness': 0.1, 
+                                'curv_contrast': 0.25, 
+                                'add_roi': save_svg,
+                                'cbar_label': '', 
+                                'with_labels': True}
     maps_names.append('vision_and_saccade')
     
     #  Creat the vision_and_pursuit_and_saccade flatmap

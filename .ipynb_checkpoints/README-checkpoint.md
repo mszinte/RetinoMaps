@@ -88,9 +88,10 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 ### **GLM analysis**
 - [x] Run Glm for the differents tasks [glm_sbatch.py](analysis_code/postproc/glm/glm_sbatch.py)
+- [x] Compute GLM statistics [compute_glm_stats.py](analysis_code/postproc/glm/postfit/compute_glm_stats.py)
 
 ### **Statistical analysis**
-- [x] Run Glm and pRF satistical analysis and combine results [final_stats_sbatch.py](analysis_code/postproc/stats/final_stats_sbatch.py)
+- [x] Make final statistique image [stats_final.py](analysis_code/postproc/stats/stats_final.py)
 - [x] Average statisticales derivatives from all subjects in 170k template [170k_stats_averaging.py](analysis_code/postproc/stats/170k_stats_averaging.py) 
 - [x] Make final satistiques maps maps with pycortex [pycortex_maps_stats_final.py](analysis_code/postproc/stats/pycortex_maps_stats_final.py)
 
