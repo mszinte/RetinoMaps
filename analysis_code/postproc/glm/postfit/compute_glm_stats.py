@@ -110,9 +110,9 @@ for format_, extension in zip(formats, extensions):
             # Compute linear regression 
             print('compute {} {} linear regression'.format(glm_pred_loo_fn, glm_bold_fn))
             results = linear_regression_surf(bold_signal=bold_data, 
-                                             model_prediction=pred_data, 
-                                             correction='fdr_tsbh', 
-                                             alpha=fdr_alpha)
+                                              model_prediction=pred_data, 
+                                              correction='fdr_tsbh', 
+                                              alpha=fdr_alpha)
 
             # Save results 
             glm_deriv_dir = '{}/{}/derivatives/pp_data/{}/{}/glm/glm_derivatives'.format(
@@ -129,7 +129,7 @@ for format_, extension in zip(formats, extensions):
 # Get files
 glm_stats_loo_fns_list = []
 for format_, extension in zip(formats, extensions):
-    list_ = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/stats/*loo-*_glm-stats.{}".format(
+    list_ = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/glm_derivatives/*loo-*_glm-stats.{}".format(
         main_dir, project_dir, subject, format_, extension))
     list_ = [item for item in list_ if "loo-avg" not in item]
     glm_stats_loo_fns_list.extend(list_)
@@ -186,11 +186,11 @@ for loo_stats_fns in loo_stats_fns_list:
         loo_stats_data_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
             
         if hemi:
-            avg_fn = '{}/{}/derivatives/pp_data/{}/fsnative/glm/stats/{}'.format(
+            avg_fn = '{}/{}/derivatives/pp_data/{}/fsnative/glm/glm_derivatives/{}'.format(
                 main_dir, project_dir, subject, loo_stats_avg_fn)
             hemi_data_avg[hemi] = loo_stats_data_avg
         else:
-            avg_fn = '{}/{}/derivatives/pp_data/{}/170k/glm/stats/{}'.format(
+            avg_fn = '{}/{}/derivatives/pp_data/{}/170k/glm/glm_derivatives/{}'.format(
                 main_dir, project_dir, subject, loo_stats_avg_fn)
             hemi_data_avg['170k'] = loo_stats_data_avg
         
@@ -200,7 +200,7 @@ for loo_stats_fns in loo_stats_fns_list:
                                            maps_names=maps_names)
         nb.save(loo_stats_img, avg_fn)
 
-# # Define permission cmd
-# print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# Define permission cmd
+print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))

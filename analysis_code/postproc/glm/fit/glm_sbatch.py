@@ -50,7 +50,7 @@ group = sys.argv[4]
 server_project = sys.argv[5]
 
 # define analysis parameters
-with open('../../settings.json') as f:
+with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 # Define cluster/server specific parameters

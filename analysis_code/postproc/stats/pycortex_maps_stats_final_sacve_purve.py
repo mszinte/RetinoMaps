@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-pycortex_maps_stats_final.py
+pycortex_maps_stats_final_sacve_purve.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Create flatmap plots and dataset
@@ -22,7 +22,7 @@ To run:
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/stats
-python pycortex_maps_stats_final.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_stats_final_sacve_purve.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -55,8 +55,9 @@ with open('../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 prf_task_name = analysis_info['prf_task_name']
-tasks = analysis_info['task_final_stats']
 alpha_range = analysis_info["alpha_range"]
+
+tasks = ["PurVELoc", "SacVELoc", "pRF"]
 
 # Inputs
 main_dir = sys.argv[1]
@@ -111,29 +112,29 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         main_dir, project_dir,  subject,format_)
     stats_results_dir = "{}/results".format(stats_dir)
     
-    flatmaps_dir = '{}/pycortex/flatmaps_stats'.format(stats_dir)
-    datasets_dir = '{}/pycortex/datasets_stats'.format(stats_dir)
+    flatmaps_dir = '{}/pycortex/flatmaps_stats_SacVE_PurVE'.format(stats_dir)
+    datasets_dir = '{}/pycortex/datasets_stats_SacVE_PurVE'.format(stats_dir)
     
     os.makedirs(flatmaps_dir, exist_ok=True)
     os.makedirs(datasets_dir, exist_ok=True)
     
     if format_ == 'fsnative': 
-        deriv_stats_fn_L = '{}/{}_hemi-L_final-stats.func.gii'.format(
+        deriv_stats_fn_L = '{}/{}_hemi-L_final-stats_SacVE_PurVE.func.gii'.format(
             stats_results_dir, subject)
-        deriv_stats_fn_R = '{}/{}_hemi-R_final-stats.func.gii'.format(
+        deriv_stats_fn_R = '{}/{}_hemi-R_final-stats_SacVE_PurVE.func.gii'.format(
             stats_results_dir, subject)
         
         prf_stats_fn_L = '{}/{}_task-{}_hemi-L_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(
             prf_stats_dir, subject, prf_task_name)
         prf_stats_fn_R = '{}/{}_task-{}_hemi-R_fmriprep_dct_loo-avg_prf-stats.func.gii'.format(
             prf_stats_dir, subject, prf_task_name)
-        sac_stats_fn_L = '{}/{}_task-SacLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
+        sac_stats_fn_L = '{}/{}_task-SacVELoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
             glm_stats_dir, subject)
-        sac_stats_fn_R = '{}/{}_task-SacLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
+        sac_stats_fn_R = '{}/{}_task-SacVELoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
             glm_stats_dir, subject)
-        pur_stats_fn_L = '{}/{}_task-PurLoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
+        pur_stats_fn_L = '{}/{}_task-PurVELoc_hemi-L_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
             glm_stats_dir, subject)
-        pur_stats_fn_R = '{}/{}_task-PurLoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
+        pur_stats_fn_R = '{}/{}_task-PurVELoc_hemi-R_fmriprep_dct_loo-avg_glm-stats.func.gii'.format(
             glm_stats_dir, subject)
         
         #  Load data
@@ -150,13 +151,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         pur_mat = results_pur['data_concat']
         
     elif format_ == '170k':
-        stats_avg_fn = '{}/{}_final-stats.dtseries.nii'.format(
+        stats_avg_fn = '{}/{}_final-stats_SacVE_PurVE.dtseries.nii'.format(
             stats_results_dir, subject)
         prf_stats_avg_fn = '{}/{}_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii'.format(
             prf_stats_dir, subject, prf_task_name)
-        sac_stats_avg_fn = '{}/{}_task-SacLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(
+        sac_stats_avg_fn = '{}/{}_task-SacVELoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(
             glm_stats_dir, subject)
-        pur_stats_avg_fn = '{}/{}_task-PurLoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(
+        pur_stats_avg_fn = '{}/{}_task-PurVELoc_fmriprep_dct_loo-avg_glm-stats.dtseries.nii'.format(
             glm_stats_dir, subject)
         
         #  Load data
@@ -432,7 +433,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                                             'alpha': alpha_prf_pur_sac, 
                                             'vmin': 0, 'vmax': 7, 
                                             'cbar': 'discrete_personalized', 
-                                            'cmap_steps': len(colormap_dict), 
+                                            'cmap_steps': len(colormap_dict),
                                             'cmap_dict': colormap_dict,
                                             'cortex_type': 'VertexRGB', 
                                             'description': 'final map', 
@@ -465,5 +466,4 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     dataset_file = "{}/{}_final.hdf".format(datasets_dir, subject)
     dataset = cortex.Dataset(data=volumes)
     dataset.save(dataset_file)
-    
     
