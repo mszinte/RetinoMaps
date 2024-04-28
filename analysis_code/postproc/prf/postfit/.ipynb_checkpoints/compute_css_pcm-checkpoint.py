@@ -24,7 +24,8 @@ To run:
 >> python compute_pcm.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python compute_css_pcm.py /scratch/mszinte/data amblyo_prf sub-01 327
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit
+python compute_css_pcm.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -65,7 +66,6 @@ task = analysis_info["prf_task_name"]
 vert_dist_th = analysis_info['vertex_pcm_rad']
 formats = analysis_info['formats']
 rois = analysis_info["rois"]
-# rois_group = analysis_info['rois_group']
 maps_names = analysis_info['maps_names_pcm']
 
 # Set pycortex db and colormaps
@@ -222,18 +222,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         nb.save(new_img_L, '{}/{}'.format(prf_deriv_dir, deriv_avg_fn_L))
         print('Saving {}'.format(deriv_avg_fn_R))
         nb.save(new_img_R, '{}/{}'.format(prf_deriv_dir, deriv_avg_fn_R))
-        
-        # # Save as tsv
-        # prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_css-prf_derivatives.tsv'.format(
-        #     main_dir, project_dir, subject, format_, subject)
-        # tsv_df = pd.read_table(prf_tsv_fn)
-        # tsv_df['pcm'] = np.nan
-    
-        # for roi in roi_verts_dict.keys():
-        #     data_roi = deriv_mat_new[-1, roi_verts_dict[roi]]
-        #     tsv_df.loc[tsv_df['rois'] == roi, 'pcm'] = data_roi
-        
-        # tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
                 
     elif format_ == '170k':
         # Save as image
@@ -249,36 +237,6 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         deriv_avg_fn = deriv_avg_fn[0].split('/')[-1].replace('deriv', 'pcm')
         print('Saving {}'.format(deriv_avg_fn))
         nb.save(new_img, '{}/{}'.format(prf_deriv_dir, deriv_avg_fn))
-        
-        
-        # # concat_rois_list = [analysis_info['mmp_rois'], analysis_info['rois']]
-        # # for n_list, rois_list in enumerate(concat_rois_list):
-        #     # rois = rois_list
-        #     # if 'LO' in rois_list:
-        #     #     atlas_name = 'mmp_group'
-        #     #     tsv_suffix = 'derivatives_group'
-        #     # else:
-        #     #     atlas_name = 'mmp'
-        #     #     tsv_suffix = 'derivatives'
-                
-        #     roi_verts_dict = get_rois(pycortex_subject, 
-        #                               return_concat_hemis=True, 
-        #                               rois=rois, 
-        #                               mask=False, 
-        #                               atlas_name=atlas_name, 
-        #                               surf_size=surf_size)
-        
-        #     prf_tsv_fn = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv/{}_css-prf_{}.tsv'.format(
-        #         main_dir, project_dir, subject, format_, subject, tsv_suffix)
-            
-        #     tsv_df = pd.read_table(prf_tsv_fn)
-        #     tsv_df['pcm'] = np.nan
-    
-        #     for roi in roi_verts_dict.keys():
-        #         data_roi = deriv_mat_new[-1, roi_verts_dict[roi]]
-        #         tsv_df.loc[tsv_df['rois'] == roi, 'pcm'] = data_roi
-            
-        #     tsv_df.to_csv(prf_tsv_fn, sep="\t", na_rep='NaN', index=False)
 
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))

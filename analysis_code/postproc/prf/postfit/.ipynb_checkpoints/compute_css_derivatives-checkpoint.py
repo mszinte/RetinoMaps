@@ -66,7 +66,6 @@ with open('../../../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 rois = analysis_info['rois']
-# rois_group = analysis_info['rois_group']
 maps_names = analysis_info['maps_names_css']
 
 # Set pycortex db and colormaps
@@ -159,69 +158,6 @@ for loo_deriv_fns in loo_deriv_fns_list:
                                        maps_names=maps_names)
     nb.save(loo_deriv_img, avg_fn)
     print('Saving avg: {}'.format(avg_fn))
-
-# # Make TSV
-# for format_, extension in zip(formats, extensions):
-#     prf_tsv_dir = "{}/{}/{}/prf/tsv".format(pp_dir, subject, format_)
-#     os.makedirs(prf_tsv_dir, exist_ok=True)
-#     tsv_fn = '{}/{}_css-prf_derivatives.tsv'.format(prf_tsv_dir, subject)
-#     df_rois_brain = pd.DataFrame()
-    
-#     if format_ == 'fsnative':
-#         atlas_name, surf_size = None, None 
-
-#         for hemi in ['hemi-L', 'hemi-R']:
-#             brain_data_avg = hemi_data_avg[hemi]
-#             roi_verts = get_rois(subject=subject, 
-#                                  return_concat_hemis=False, 
-#                                  return_hemi=hemi, 
-#                                  rois=rois, 
-#                                  mask=True, 
-#                                  atlas_name=atlas_name, 
-#                                  surf_size=surf_size)
-
-#             for roi in roi_verts.keys():
-#                 data_dict = {col: brain_data_avg[col_idx, roi_verts[roi]] for col_idx, col in enumerate(maps_names)}
-#                 data_dict['roi'] = [roi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                 data_dict['subject'] = [subject] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                 data_dict['hemi'] = [hemi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                 df_rois_hemi = pd.DataFrame(data_dict)
-#                 df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
-
-#         df_rois_brain.to_csv(tsv_fn, sep="\t", na_rep='NaN', index=False)
-#         print('Saving tsv: {}'.format(tsv_fn))
-
-#     elif format_ == '170k':
-#         atlas_name, surf_size = 'mmp', '170k'
-        
-#         for rois_group, roi in zip(rois_group, rois):
-#             brain_data_avg = hemi_data_avg['170k']
-#             roi_verts_L, roi_verts_R = get_rois(subject=subject,
-#                                                 return_concat_hemis=False,
-#                                                 return_hemi=None,
-#                                                 rois=rois_group,
-#                                                 mask=True,
-#                                                 atlas_name=atlas_name,
-#                                                 surf_size=surf_size)
-            
-#             # combine dict with multiple areas (thanks ChatGPT)
-#             roi_verts_L = {roi: np.array([all(value) for value in zip(*roi_verts_L.values())])}
-#             roi_verts_R = {roi: np.array([all(value) for value in zip(*roi_verts_R.values())])}
-            
-#             for hemi in ['hemi-L', 'hemi-R']:
-#                 if hemi == 'hemi-L': roi_verts = roi_verts_L
-#                 elif hemi == 'hemi-R': roi_verts = roi_verts_R
-
-#                 for roi in roi_verts.keys():
-#                     data_dict = {col: brain_data_avg[col_idx, roi_verts[roi]] for col_idx, col in enumerate(maps_names)}
-#                     data_dict['roi'] = [roi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                     data_dict['subject'] = [subject] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                     data_dict['hemi'] = [hemi] * brain_data_avg[:, roi_verts[roi]].shape[1]
-#                     df_rois_hemi = pd.DataFrame(data_dict)
-#                     df_rois_brain = pd.concat([df_rois_brain, df_rois_hemi], ignore_index=True)
-                    
-#         df_rois_brain.to_csv(tsv_fn, sep="\t", na_rep='NaN', index=False)
-#         print('Saving tsv: {}'.format(tsv_fn))
 
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
