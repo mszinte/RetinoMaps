@@ -50,7 +50,7 @@ with open('../settings.json') as f:
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 rois = analysis_info['rois']
-rois_group = analysis_info['rois_group']
+rois_groups = analysis_info['rois_groups']
 
 # Get input
 main_dir = sys.argv[1]
@@ -113,7 +113,7 @@ for key, value in rois_dict_59k_R.items():
     rois_dict_170k_R[key] = np.concatenate((np.full(len(value[mask_59k_L]), False),value[mask_59k_R], np.full(vertex_to_add, False)))
 
 # Define groups and their corresponding ROIs in a dictionary
-groups = dict(zip(rois, rois_group))
+groups = dict(zip(rois, rois_groups))
 
 # Brain 59k group
 rois_dict_59k_group = {}
