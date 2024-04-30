@@ -104,7 +104,6 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Make group tsv [make_group_tsv.py](analysis_code/postproc/group_analysis/make_group_tsv.py)
 
 ### **Final ploting**
-- [x] Add vertex surface on tsvs [add_vertex_surface_to_tsv.py](analysis_code/postproc/result_analysis/add_vertex_surface_to_tsv.py)
 - [x] Make figures for all subjects [finals_figures.py](analysis_code/postproc/result_analysis/finals_figures.py)
 
 
