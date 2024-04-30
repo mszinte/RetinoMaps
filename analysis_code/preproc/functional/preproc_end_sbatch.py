@@ -84,16 +84,12 @@ slurm_cmd = """\
 preproc_end_surf_cmd = "python preproc_end.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 corr_cmd = "python compute_run_corr.py {} {} {} {}".format(main_dir, project_dir, subject, group)
 
-# Define permission cmd
-chmod_cmd = "chmod -Rf 771 {}/{}".format(main_dir, project_dir)
-chgrp_cmd = "chgrp -Rf {} {}/{}".format(group, main_dir, project_dir)
 
 # Create sh fn
 sh_fn = "{}/{}_preproc_end.sh".format(job_dir, subject)
 
 of = open(sh_fn, 'w')
-of.write("{} \n{} \n{} \n{} \n{}".format(
-    slurm_cmd, preproc_end_surf_cmd, corr_cmd, chmod_cmd, chgrp_cmd))
+of.write("{} \n{} \n{}".format(slurm_cmd, preproc_end_surf_cmd, corr_cmd))
 of.close()
 
 # Submit jobs
