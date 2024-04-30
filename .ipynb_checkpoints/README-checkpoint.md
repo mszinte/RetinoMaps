@@ -76,11 +76,13 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 
 #### Css fit
 - [x] CSS fit within the ROIs [prf_submit_css_jobs.py](analysis_code/postproc/prf/fit/prf_submit_css_jobs.py)
-- [x] Compute CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
-- [x] Compute CSS population cortical magnification [compute_css_pcm.py](analysis_code/postproc/prf/postfit/compute_css_pcm.py)
 - [x] Compute CSS statistics [compute_css_stats.py](analysis_code/postproc/prf/postfit/compute_css_stats.py)
+- [x] Compute CSS fit derivatives [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
+- [x] Compute CSS population cortical magnification [css_pcm_sbatch.py](analysis_code/postproc/prf/postfit/css_pcm_sbatch.py)
+- [x] Make CSS fit derivatives and pcm maps with pycortex [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
 - [ ] Make CSS fit derivatives and pcm maps webgl with pycortex
 - [ ] Make TSV with CSS fit derivatives, pcm and statistics [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
+- [ ] Make pRF derivatives and pcm main figures [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py)
 
 #### For later
 - [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
