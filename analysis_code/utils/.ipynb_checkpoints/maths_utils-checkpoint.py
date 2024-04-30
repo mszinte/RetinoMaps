@@ -25,9 +25,12 @@ def weighted_regression(x_reg, y_reg, weight_reg, model):
     import numpy as np
     from scipy.optimize import curve_fit
     from sklearn import linear_model
+    import ipdb
+    deb = ipdb.set_trace
     
     x_reg = np.array(x_reg)
     y_reg = np.array(y_reg)
+    
     weight_reg = np.array(weight_reg)
 
     # Filter out NaN values
@@ -39,27 +42,28 @@ def weighted_regression(x_reg, y_reg, weight_reg, model):
         # Define the model function
         def model_function(x, c, d):
             return 1 / (c * x) + d
-       
-        # Perform curve fitting
-        params, _ = curve_fit(model_function, x_reg_nan, y_reg_nan, sigma=weight_reg_nan)
-        
-        # Extract parameters
-        c, d = params
-        
-        return c, d
-    
-    elif model == 'linear':
-        regr = linear_model.LinearRegression()
-        
-        # Filter out NaN values
-        x_reg_nan = x_reg_nan.reshape(-1, 1)
-        y_reg_nan = y_reg_nan.reshape(-1, 1)
-        
-        regr.fit(x_reg_nan, y_reg_nan, sample_weight=weight_reg_nan)
-        coef_reg, intercept_reg = regr.coef_, regr.intercept_
 
+        if weight_reg_nan.size >= 2:
+            # Perform curve fitting
+            params, _ = curve_fit(model_function, x_reg_nan, y_reg_nan, sigma=weight_reg_nan)
+            c, d = params
+        else:
+            c, d = np.nan, np.nan
+        return c, d
+
+    elif model == 'linear':
+        if weight_reg_nan.size >= 2:
+            regr = linear_model.LinearRegression()
+            
+            # Filter out NaN values
+            x_reg_nan = x_reg_nan.reshape(-1, 1)
+            y_reg_nan = y_reg_nan.reshape(-1, 1)
+            
+            regr.fit(x_reg_nan, y_reg_nan, sample_weight=weight_reg_nan)
+            coef_reg, intercept_reg = regr.coef_[0][0], regr.intercept_[0]
+        else: 
+            coef_reg, intercept_reg = np.nan, np.nan
         return coef_reg, intercept_reg
-    
     else:
         raise ValueError("Invalid model type. Supported models are 'pcm' and 'linear'.")
 

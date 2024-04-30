@@ -150,6 +150,7 @@ for format_, extension in zip(formats, extensions):
     # Contralaterality plots
     fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
     fig = prf_contralaterality_plot(data, fig_width=fig_width, fig_height=300, rois=rois, roi_colors=roi_colors)
+    print('Saving {}'.format(fig_fn))
     fig.write_image(fig_fn)
 
     # Spatial distibution plot
