@@ -231,7 +231,7 @@ for format_, extension in zip(formats, extensions):
     print("Computing vertex area {}".format(format_))
     
     # Define output folders
-    dest_dir = "{}/{c}/derivatives/pp_data/{}/{}/vertex_area".format(
+    dest_dir = "{}/{}/derivatives/pp_data/{}/{}/vertex_area".format(
         main_dir, project_dir, subject, format_)
     os.makedirs(dest_dir, exist_ok=True)
 
