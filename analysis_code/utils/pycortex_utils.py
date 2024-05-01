@@ -432,7 +432,6 @@ def calculate_vertex_areas(pts, polys):
         # Divide the total area by 3 to account for each triangle being shared by 3 vertices
         vertex_areas[i] = total_area / 3
         
-        
     return vertex_areas
 
 def set_pycortex_config_file(cortex_folder):
