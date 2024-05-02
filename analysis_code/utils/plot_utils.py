@@ -655,6 +655,115 @@ def prf_contralaterality_plot(data, fig_height, fig_width, rois, roi_colors):
                       margin_b=50)
     
     return fig 
+
+def prf_roi_area(data, fig_width, fig_height, roi_colors):
+    """
+    Make bar plots of each roi area and the corresponding significative area of pRF  
+    
+    Parameters
+    ----------
+    data : A data dataframe
+    fig_width : figure width in pixels
+    fig_height : figure height in pixels
+    roi_colors : list of rgb colors for plotly
+    
+    Returns
+    -------
+    fig : bar plot
+    """
+    data = data.copy()
+    # General figure settings
+    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
+                          axes_width=2,
+                          axes_font_size=15,
+                          bg_col="rgba(255, 255, 255, 1)",
+                          font='Arial',
+                          title_font_size=15,
+                          plot_width=1.5)
+    
+    # General figure settings
+    fig_template = plotly_template(template_specs)
+    
+    # General settings
+    fig = make_subplots(rows=1, 
+                        cols=2, 
+                        subplot_titles=['FDR threshold = 0.05', 'FDR threshold = 0.01'])
+    fig.layout.annotations[0].update(x=0.1)
+    fig.layout.annotations[1].update(x=0.65)
+    
+    # Converte mm2 in cm2 
+    data['vert_area'] = data['vert_area'] / 100
+    
+    # Compute the area of each area 
+    group_df_rois = data.groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
+
+    # Compute the area of significative vertex in each roi for FDR 0.05
+    group_df_rois_5pt = data[data['corr_pvalue_5pt'] < 0.05].groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
+    group_df_rois_5pt['percentage'] = ((group_df_rois_5pt.vert_area / group_df_rois.vert_area ) * 100).round()
+    group_df_rois_5pt['percentage'] = group_df_rois_5pt['percentage'].astype(int).astype(str) + '%'
+    
+    # Compute the area of significative vertex in each roi for FDR 0.01
+    group_df_rois_1pt = data[data['corr_pvalue_1pt'] < 0.01].groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
+    group_df_rois_1pt['percentage'] = ((group_df_rois_1pt.vert_area / group_df_rois.vert_area ) * 100).round()
+    group_df_rois_1pt['percentage'] = group_df_rois_1pt['percentage'].astype(int).astype(str) + '%'
+    
+    # plot for FDR 0.05
+    # total bar 
+    fig.add_trace(go.Bar(x=group_df_rois.roi, 
+                         y=group_df_rois.vert_area, 
+                         text=group_df_rois_5pt.percentage, 
+                         textposition='outside',
+                         textangle=-60,
+                         showlegend=False, 
+                         marker=dict(color=roi_colors, opacity=0.2)),
+                 row=1, col=1)
+    
+    # significatif vertex bar
+    fig.add_trace(go.Bar(x=group_df_rois_5pt.roi, 
+                         y=group_df_rois_5pt.vert_area, 
+    
+                         showlegend=False, 
+                         marker=dict(color=roi_colors)),
+                 row=1, col=1)
+    
+    
+    # plot for FDR 0.01 
+    # total bar 
+    fig.add_trace(go.Bar(x=group_df_rois.roi, 
+                         y=group_df_rois.vert_area, 
+                         text=group_df_rois_1pt.percentage, 
+                         textposition='outside',
+                         textangle=-60,
+                         showlegend=False, 
+                         marker=dict(color=roi_colors, opacity=0.1)),
+                 row=1, col=2)
+    
+    # significatif vertex bar
+    fig.add_trace(go.Bar(x=group_df_rois_1pt.roi, 
+                         y=group_df_rois_1pt.vert_area, 
+                         showlegend=False, 
+                         marker=dict(color=roi_colors)),
+                 row=1, col=2)
+
+    # Define parameters
+    fig.update_xaxes(showline=True, 
+                     ticklen=0, 
+                     linecolor=('rgba(255,255,255,0)'))      
+    
+    fig.update_yaxes(range=[0,100], 
+                     showline=True, 
+                     nticks=5, 
+                     title_text='Surface area (cm<sup>2</sup>)',secondary_y=False)
+    
+    fig.update_layout(barmode='overlay',
+                      height=fig_height, 
+                      width=fig_width, 
+                      template=fig_template,
+                      margin_l=100, 
+                      margin_r=50, 
+                      margin_t=100, 
+                      margin_b=100)
+    return fig 
     
 def categories_proportions_roi_plot(data, subject, fig_height, fig_width):
     data = data.copy()
