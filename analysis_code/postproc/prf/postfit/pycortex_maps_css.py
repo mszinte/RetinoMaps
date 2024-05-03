@@ -157,14 +157,14 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # Threshold mat
     all_deriv_mat_th = all_deriv_mat
     amp_down = all_deriv_mat_th[amp_idx,...] > 0
-    rsq_down = all_deriv_mat_th[loo_rsq_idx,...] >= 0
+    rsq_down = all_deriv_mat_th[loo_rsq_idx,...] >= analysis_info['rsqr_th']
     size_th_down = all_deriv_mat_th[size_idx,...] >= analysis_info['size_th'][0]
     size_th_up = all_deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
     ecc_th_down = all_deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
     ecc_th_up = all_deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
     if analysis_info['stats_th'] == 0.05: stats_th_down = all_deriv_mat_th[pvalue_corrected_5pt_idx,...] <= 0.05
     elif analysis_info['stats_th'] == 0.01: stats_th_down = all_deriv_mat_th[pvalue_corrected_1pt_idx,...] <= 0.01
-    all_th = np.array((amp_down, 
+    all_th = np.array((amp_down,
                        rsq_down,
                        size_th_down,size_th_up, 
                        ecc_th_down, ecc_th_up,
@@ -181,61 +181,115 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     alpha = (alpha - alpha_range[0]) / (alpha_range[1] - alpha_range[0])
     alpha[alpha>1]=1
 
-    param_loo_rsq = {'data': loo_rsq_data, 'cmap': cmap_uni, 'alpha': alpha, 
-                     'vmin': rsq_scale[0], 'vmax': rsq_scale[1], 'cbar': 'discrete', 
-                     'cortex_type': 'VertexRGB','description': 'pRF loo rsquare',
-                     'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg,
-                     'cbar_label': 'pRF loo R2', 'with_labels': True}
+    param_loo_rsq = {'data': loo_rsq_data, 
+                     'cmap': cmap_uni, 
+                     'alpha': alpha, 
+                     'vmin': rsq_scale[0], 
+                     'vmax': rsq_scale[1], 
+                     'cbar': 'discrete', 
+                     'cortex_type': 'VertexRGB',
+                     'description': 'CSS pRF loo R2',
+                     'curv_brightness':1,
+                     'curv_contrast': 0.1,
+                     'add_roi': save_svg,
+                     'cbar_label': 'pRF loo R2', 
+                     'with_labels': True}
     maps_names.append('loo_rsq')
-    
     
     # Polar angle
     pol_comp_num = all_deriv_mat[polar_real_idx,...] + 1j * all_deriv_mat[polar_imag_idx,...]
     polar_ang = np.angle(pol_comp_num)
     ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
     ang_norm = np.fmod(ang_norm + col_offset,1)
-    param_polar = {'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 
-                    'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': 'VertexRGB',
-                    'cbar': 'polar', 'col_offset': col_offset, 
-                    'description': 'pRF polar:{:3.0f} steps'.format(cmap_steps), 
-                    'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg, 
-                    'with_labels': True}
+    param_polar = {'data': ang_norm, 
+                   'cmap': cmap_polar, 
+                   'alpha': alpha, 
+                   'vmin': 0, 
+                   'vmax': 1, 
+                   'cmap_steps': cmap_steps, 
+                   'cortex_type': 'VertexRGB',
+                   'cbar': 'polar', 
+                   'col_offset': col_offset, 
+                   'description': 'CSS pRF polar angle', 
+                   'curv_brightness': 0.1, 
+                   'curv_contrast': 0.25, 
+                   'add_roi': save_svg, 
+                   'with_labels': True}
     exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
     exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
     
     # Eccentricity
     ecc_data = all_deriv_mat[ecc_idx,...]
-    param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha,
-                  'vmin': ecc_scale[0], 'vmax': ecc_scale[1], 'cbar': 'ecc', 'cortex_type': 'VertexRGB',
-                  'description': 'pRF eccentricity', 'curv_brightness': 1,
-                  'curv_contrast': 0.1, 'add_roi': save_svg, 'with_labels': True}
+    param_ecc = {'data': ecc_data, 
+                 'cmap': cmap_ecc_size, 
+                 'alpha': alpha,
+                 'vmin': ecc_scale[0], 
+                 'vmax': ecc_scale[1], 
+                 'cbar': 'ecc', 
+                 'cortex_type': 'VertexRGB',
+                 'description': 'CSS pRF eccentricity', 
+                 'curv_brightness': 1,
+                 'curv_contrast': 0.1, 
+                 'add_roi': save_svg, 
+                 'with_labels': True}
     maps_names.append('ecc')
     
     # Size
     size_data = all_deriv_mat[size_idx,...]
-    param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-                  'vmin': size_scale[0], 'vmax': size_scale[1], 'cbar': 'discrete', 
-                  'cortex_type': 'VertexRGB', 'description': 'pRF size', 
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pRF size (dva)',
+    param_size = {'data': size_data, 
+                  'cmap': cmap_ecc_size, 
+                  'alpha': alpha, 
+                  'vmin': size_scale[0], 
+                  'vmax': size_scale[1], 
+                  'cbar': 'discrete', 
+                  'cortex_type': 'VertexRGB', 
+                  'description': 'CSS pRF size', 
+                  'curv_brightness': 1, 
+                  'curv_contrast': 0.1, 
+                  'add_roi': False, 
+                  'cbar_label': 'pRF size (dva)',
                   'with_labels': True}
     maps_names.append('size')
     
     # n
     n_data = all_deriv_mat[n_idx,...]
-    param_n = {'data': n_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-               'vmin': n_scale[0], 'vmax': n_scale[1], 'cbar': 'discrete', 
-               'cortex_type': 'VertexRGB', 'description': 'n',
-               'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'n',
+    param_n = {'data': n_data, 
+               'cmap': cmap_ecc_size, 
+               'alpha': alpha, 
+               'vmin': n_scale[0], 
+               'vmax': n_scale[1], 
+               'cbar': 'discrete', 
+               'cortex_type': 'VertexRGB', 
+               'description': 'CSS pRF n',
+               'curv_brightness': 1, 
+               'curv_contrast': 0.1, 
+               'add_roi': False, 
+               'cbar_label': 'n',
                'with_labels': True}
     maps_names.append('n')
     
     # pcm
+    
+    # threshold for PCM
+    pcm_th_down = all_deriv_mat_th[pcm_idx,...] >= analysis_info['pcm_th'][0]
+    pcm_th_up = all_deriv_mat_th[pcm_idx,...] <= analysis_info['pcm_th'][1]
+    all_th_pcm = np.array((pcm_th_down, pcm_th_up)) 
+    all_deriv_mat[loo_rsq_idx, np.logical_and.reduce(all_th_pcm)==False]=0 # put this to zero to not plot it
+    
     pcm_data = all_deriv_mat[pcm_idx,...]
-    param_pcm = {'data': pcm_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 
-                  'vmin': pcm_scale[0], 'vmax': pcm_scale[1], 'cbar': 'discrete', 
-                  'cortex_type': 'VertexRGB', 'description': 'pcm', 
-                  'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False, 'cbar_label': 'pCM (mm/dva)',
-                  'with_labels': True}
+    param_pcm = {'data': pcm_data, 
+                 'cmap': cmap_ecc_size, 
+                 'alpha': alpha, 
+                 'vmin': pcm_scale[0], 
+                 'vmax': pcm_scale[1], 
+                 'cbar': 'discrete', 
+                 'cortex_type': 'VertexRGB', 
+                 'description': 'CSS pCM',
+                 'curv_brightness': 1, 
+                 'curv_contrast': 0.1, 
+                 'add_roi': False, 
+                 'cbar_label': 'pCM (mm/dva)',
+                 'with_labels': True}
     maps_names.append('pcm')
         
     # draw flatmaps
@@ -257,6 +311,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         volumes.update({vol_description:volume})
     
     # save dataset
-    dataset_file = "{}/{}_task-{}_css.hdf".format(datasets_dir, subject, prf_task_name)
+    dataset_file = "{}/{}_task-{}_loo-avg_css.hdf".format(datasets_dir, subject, prf_task_name)
+    if os.path.exists(dataset_file): os.system("rm -fv {}".format(dataset_file))
     dataset = cortex.Dataset(data=volumes)
     dataset.save(dataset_file)
