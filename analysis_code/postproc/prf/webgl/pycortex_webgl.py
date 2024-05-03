@@ -81,23 +81,27 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
 
     # Define filenames
     cor_datasets_fn = []
-    for task in tasks: cor_datasets_fn.append("{}/{}_task-{}_inter-run-corr.hdf".format(cor_datasets_dir, subject, task)) 
+    for task in tasks: 
+        cor_datasets_fn.append("{}/{}_task-{}_inter-run-corr.hdf".format(cor_datasets_dir, subject, task)) 
     rois_datasets_fn = "{}/{}_task-{}_rois.hdf".format(rois_datasets_dir, subject, prf_task_name)
     gridfit_datasets_fn = "{}/{}_task-{}_avg_gauss_gridfit.hdf".format(gridfit_datasets_dir, subject, prf_task_name)
     css_datasets_fn = "{}/{}_task-{}_loo-avg_css.hdf".format(css_dataset_dir, subject, prf_task_name)
 
     # Concatenate filenames
-    dateset_fns = []
-    dateset_fns.append(cor_datasets_fn)
-    dateset_fns.append([rois_datasets_fn])
-    dateset_fns.append([gridfit_datasets_fn])
-    dateset_fns.append([css_datasets_fn])
-
+    dateset_list_fns = []
+    dateset_list_fns.append(cor_datasets_fn)
+    dateset_list_fns.append([rois_datasets_fn])
+    dateset_list_fns.append([gridfit_datasets_fn])
+    dateset_list_fns.append([css_datasets_fn])
+    
     # Load datasets and combine them
     list_dataset = ''
-    for dataset_num, dataset_fn in enumerate(dateset_fns):
-        exec("dataset_{} = cortex.load(dataset_fn[0])".format(dataset_num))
-        list_dataset += "dataset_{}=dataset_{}, ".format(dataset_num, dataset_num)
+    dataset_num = 0
+    for dataset_fn_list in dateset_list_fns:
+        for dataset_fn in dataset_fn_list:
+            dataset_num += 1
+            exec("dataset_{} = cortex.load(dataset_fn)".format(dataset_num))
+            list_dataset += "dataset_{}=dataset_{}, ".format(dataset_num, dataset_num)
     exec("new_dataset = cortex.Dataset({})".format(list_dataset))
     
     # Make webgl

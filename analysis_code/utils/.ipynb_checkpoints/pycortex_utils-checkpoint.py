@@ -589,6 +589,8 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
                                       blue = mat[...,2].astype(np.uint8),
                                       subject = subject,
                                       alpha = alpha.astype(np.uint8))
+        braindata = braindata.blend_curvature(alpha)
+        
     elif cortex_type=='Vertex':
         
         # define Vertex 
@@ -598,13 +600,14 @@ def draw_cortex(subject, data, vmin, vmax, description, cortex_type='VolumeRGB',
                                  cmap = cmap,
                                  vmin = vmin,
                                  vmax = vmax)
-        
+
     braindata_fig = cortex.quickshow(braindata = braindata,
                                      depth = depth,
                                      thick = thick,
                                      height = height,
                                      sampler = sampler,
                                      with_curvature = with_curvature,
+                                     nanmean = True,
                                      with_labels = with_labels,
                                      with_colorbar = with_colorbar,
                                      with_borders = with_borders,
