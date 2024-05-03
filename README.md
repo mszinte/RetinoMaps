@@ -83,7 +83,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 - [x] Make TSV with CSS fit derivatives, pcm and statistics [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
 - [x] Make pRF derivatives and pcm main figures [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py)
 - [x] Make subject WEBGL with pycortex [pycortex_webgl_css.py](analysis_code/postproc/prf/webgl/pycortex_webgl.py)
-- [x] Edit index.html and push data on server [send_data.sh](analysis_code/postproc/prf/webgl/send_data.sh)
+- [x] Edit [index.html](disks/meso_H/projects/amblyo_prf/analysis_code/postproc/prf/webgl/index.html) and publish WEBGL on webapp [publish_webgl.py](analysis_code/postproc/prf/webgl/publish_webgl.py)
 
 #### For later
 - [x] Average pRF derivatives from all subjects in 170k template [170k_averaging.py](analysis_code/postproc/prf/postfit/170k_averaging.py) 
