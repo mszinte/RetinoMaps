@@ -23,7 +23,7 @@ To run:
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
-python pycortex_maps_rois.py ~/disks/meso_shared RetinoMaps sub-01 n
+python pycortex_maps_rois.py ~/disks/meso_S/data RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
@@ -127,7 +127,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     alpha_mat[roi_mat==0]=0
     print('Creating flatmaps...')
 
-    # rois
+    # Rois
     roi_name = '{}_rois'.format(prf_task_name)
     param_rois = {'subject': pycortex_subject,
                   'data': roi_mat, 
@@ -135,7 +135,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'alpha': alpha_mat,
                   'cbar': 'discrete_personalized', 
                   'vmin': 0,
-                  'vmax': 9,
+                  'vmax': 12,
                   'cmap_steps': len(colormap_dict),
                   'cmap_dict': colormap_dict,
                   'cortex_type': 'VertexRGB',
@@ -146,17 +146,17 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                   'with_labels': True,
                   'roi_name': roi_name}
                   
-    # draw flatmaps
+    # Draw flatmaps
     volume_roi = draw_cortex(**param_rois)
     plt.savefig('{}/{}_task-{}_rois.pdf'.format(flatmaps_dir, subject, prf_task_name))
     plt.close()
 
-    # save flatmap as dataset
+    # Save flatmap as dataset
     volumes = {}
     vol_description = param_rois["description"]
     volumes.update({vol_description:volume_roi})
 
-    # save dataset
+    # Save dataset
     dataset_file = "{}/{}_task-{}_rois.hdf".format(datasets_dir, subject, prf_task_name)
     if os.path.exists(dataset_file): os.system("rm -fv {}".format(dataset_file))
     dataset = cortex.Dataset(data=volumes)
