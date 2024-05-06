@@ -22,6 +22,7 @@ To run:
 >> python pycortex_webgl.py [main dir] [project] [subject] [group] [recache]
 -----------------------------------------------------------------------------------------
 Exemple:
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/webgl/
 python pycortex_webgl.py /scratch/mszinte/data RetinoMaps sub-01 327 1
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)

@@ -21,7 +21,8 @@ To run:
 python make_rois_fig.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python make_rois_fig.py /scratch/mszinte/data amblyo_prf sub-01 327
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
+python make_rois_fig.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
@@ -104,6 +105,9 @@ for format_, extension in zip(formats, extensions):
     tsv_fn = '{}/{}_css-all_derivatives.tsv'.format(tsv_dir, subject)
     data = pd.read_table(tsv_fn, sep="\t")
     
+    # keep a raw data df 
+    data_raw = data.copy()
+
     # Threshold data (replace by nan)
     data.loc[(data.amplitude < amplitude_th) |                                    # amplitude 
              (data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) |            # eccentricity 
@@ -114,8 +118,10 @@ for format_, extension in zip(formats, extensions):
     data = data.dropna()
 
     # Stats plot
-    # col 1 / row 1 => surface area per ROI, surface area significant at 0.05
-    # col 2 / row 1 => surface area per ROI, surface area significant at 0.01
+    fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
+    print('Saving {}'.format(fig_fn))
+    fig = prf_roi_area(data=data_raw, fig_width=fig_width, fig_height=600, roi_colors=roi_colors)
+    fig.write_image(fig_fn)
     
     # Violins plots
     fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
