@@ -752,7 +752,7 @@ def prf_roi_area(data, fig_width, fig_height, roi_colors):
     
     fig.update_yaxes(range=[0,100], 
                      showline=True, 
-                     nticks=5, 
+                     nticks=10, 
                      title_text='Surface area (cm<sup>2</sup>)',secondary_y=False)
     
     fig.update_layout(barmode='overlay',
@@ -761,8 +761,8 @@ def prf_roi_area(data, fig_width, fig_height, roi_colors):
                       template=fig_template,
                       margin_l=100, 
                       margin_r=50, 
-                      margin_t=100, 
-                      margin_b=100)
+                      margin_t=50, 
+                      margin_b=50)
     return fig 
     
 def categories_proportions_roi_plot(data, subject, fig_height, fig_width):

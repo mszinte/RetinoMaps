@@ -89,7 +89,7 @@ num_ecc_size_bins = 8
 num_ecc_pcm_bins = 8
 num_polar_bins = 12
 max_ecc = 15
-fig_width = 1200
+fig_width = 1440
 
 # Format loop
 for format_, extension in zip(formats, extensions):
@@ -120,7 +120,7 @@ for format_, extension in zip(formats, extensions):
     # Stats plot
     fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
     print('Saving {}'.format(fig_fn))
-    fig = prf_roi_area(data=data_raw, fig_width=fig_width, fig_height=600, roi_colors=roi_colors)
+    fig = prf_roi_area(data=data_raw, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
     fig.write_image(fig_fn)
     
     # Violins plots
