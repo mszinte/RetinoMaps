@@ -86,7 +86,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
 ### Group analysis
 
 #### Functional preprocessing
-- [ ] Inter-run correlation for sub-170k
+- [ ] Inter-run correlation for sub-170k [compute_run_corr.py](analysis_code/preproc/functional/compute_run_corr.py)
 - [ ] Make timeseries inter-run correlations flatmaps with pycortex for sub-170k [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py)
 
 ##### Gaussian fit
