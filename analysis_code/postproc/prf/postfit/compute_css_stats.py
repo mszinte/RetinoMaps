@@ -219,7 +219,7 @@ elif subject == 'sub-170k':
     
     sub_170k_stat_fn = "{}/sub-170k_task-{}_fmriprep_dct_loo-avg_prf-stats.dtseries.nii".format(sub_170k_stats_dir, prf_task_name)
     
-    print("corr save: {}".format(sub_170k_stat_fn))
+    print("save: {}".format(sub_170k_stat_fn))
     sub_170k_stat_img = make_surface_image(
         data=data_stat_avg, source_img=img, maps_names=maps_names)
     nb.save(sub_170k_stat_img, sub_170k_stat_fn)
