@@ -74,8 +74,6 @@ fdr_alpha = analysis_info['fdr_alpha']
 maps_names = analysis_info['maps_names_corr']
 subjects = analysis_info['subjects']
 
-
-
 # sub-170k exeption
 if subject != 'sub-170k':
     print('{}, computing inter-run correlation...'.format(subject))
