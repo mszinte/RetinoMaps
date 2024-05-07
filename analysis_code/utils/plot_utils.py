@@ -308,6 +308,7 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
             r2_mean = np.array(df_grouped['prf_loo_r2'].mean())
             
             ci = df_grouped['prf_size'].apply(lambda x: bootstrap_ci_mean(x))
+            deb()
             upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
             lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
             
@@ -636,7 +637,8 @@ def prf_contralaterality_plot(data, fig_height, fig_width, rois, roi_colors):
             
         percentage_rest = 1 - percentage_total
         values = [percentage_total, percentage_rest]
-        
+
+        deb()
         fig.add_trace(go.Pie(values=values,
                              marker=dict(colors=[roi_colors[j], 'white'],
                                          line=dict(color=['black', 'white'],
