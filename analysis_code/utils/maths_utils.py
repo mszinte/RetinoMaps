@@ -231,3 +231,30 @@ def multipletests_surface(pvals, correction='fdr_tsbh', alpha=0.01):
         corrected_pvals[n_alpha, valid_vertices] = p_values_corrected
 
     return corrected_pvals
+
+def avg_subject_template(fns): 
+    """
+    Averages data from different subjects in the same template space.
+
+    Parameters:
+        fns (list): List of filenames to be averaged.
+
+    Returns:
+        img : Cifti image of the last subject to be used as source_img.
+        data_avg : The averaged data.
+    """
+    import numpy as np
+    from surface_utils import load_surface
+    
+    for n_file, fn in enumerate(fns) : 
+        print('adding {} to avg'.format(fn))
+        # Load data
+        img, data = load_surface(fn=fn)
+    
+        # Average without nan
+        if n_file == 0:
+            data_avg = np.copy(data)
+        else:
+            data_avg = np.nanmean(np.array([data_avg, data]), axis=0)
+            
+    return img, data_avg
