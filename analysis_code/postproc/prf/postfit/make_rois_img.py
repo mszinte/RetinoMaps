@@ -21,7 +21,8 @@ To run:
 >> python make_rois_img.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-python make_rois_img.py /scratch/mszinte/data amblyo_prf sub-01 327
+cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit
+python make_rois_img.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (martin.szinte@gmail.com)
@@ -37,7 +38,6 @@ deb = ipdb.set_trace
 
 # General imports
 import os
-import cortex
 import sys
 import json
 import numpy as np
@@ -48,19 +48,21 @@ sys.path.append("{}/../../../utils".format(os.getcwd()))
 from surface_utils import make_surface_image, load_surface
 from pycortex_utils import get_rois, set_pycortex_config_file
 
-with open('../../../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-rois = analysis_info["rois"]
-formats = analysis_info['formats']
-extensions = analysis_info['extensions']
-prf_task_name = analysis_info['prf_task_name']
-
 # Inputs
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]
 group = sys.argv[4]
+
+with open('../../../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+rois = analysis_info["rois"]
+if subject == 'sub-170k': formats = ['170k']
+else: formats = analysis_info['formats']
+if subject == 'sub-170k': extensions = ['dtseries.nii']
+else: extensions = analysis_info['extensions']
+prf_task_name = analysis_info['prf_task_name']
 
 # Set pycortex db and colormaps
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
@@ -90,12 +92,10 @@ for format_, extension in zip(formats, extensions):
                 array_rois[mask] = i
                 
             # Load data to have source img
-            data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, 
-                                                                        project_dir, 
-                                                                        subject, 
-                                                                        format_)
+            data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives'.format(
+                main_dir, project_dir, subject, format_)
 
-            data_fn = '{}_task-{}_{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, hemi, extension)
+            data_fn = '{}_task-{}_{}_fmriprep_dct_avg_prf-deriv_gauss_gridfit.{}'.format(subject, prf_task_name, hemi, extension)
             img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
             
             # Define filename
@@ -121,12 +121,10 @@ for format_, extension in zip(formats, extensions):
             
 
         # Load data to have source img
-        data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/fit'.format(main_dir, 
-                                                                    project_dir, 
-                                                                    subject, 
-                                                                    format_)
+        data_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/prf_derivatives'.format(
+            main_dir, project_dir, subject, format_)
         
-        data_fn = '{}_task-{}_fmriprep_dct_avg_prf-fit_gauss_gridfit.{}'.format(subject, prf_task_name, extension)
+        data_fn = '{}_task-{}_fmriprep_dct_avg_prf-deriv_gauss_gridfit.{}'.format(subject, prf_task_name, extension)
         img, data = load_surface(fn='{}/{}'.format(data_dir, data_fn))
         
         # Define filename

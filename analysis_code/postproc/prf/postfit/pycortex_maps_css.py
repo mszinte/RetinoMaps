@@ -22,7 +22,8 @@ To run:
 >> python pycortex_maps_css.py [main directory] [project] [subject] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_css.py ~/disks/meso_S/data RetinoMaps sub-01 n
+cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
+python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -69,7 +70,8 @@ else: save_svg = False
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
+if subject == 'sub-170k': formats = ['170k']
+else: formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 prf_task_name = analysis_info['prf_task_name']
 
