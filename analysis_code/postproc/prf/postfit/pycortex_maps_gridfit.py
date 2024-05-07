@@ -35,16 +35,18 @@ Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 import warnings
 warnings.filterwarnings("ignore")
 
-# General imports
-import cortex
-import importlib
+# Debug
 import ipdb
-import json
-import matplotlib.pyplot as plt
-import numpy as np
+deb = ipdb.set_trace
+
+# General imports
 import os
 import sys
-deb = ipdb.set_trace
+import json
+import cortex
+import importlib
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
