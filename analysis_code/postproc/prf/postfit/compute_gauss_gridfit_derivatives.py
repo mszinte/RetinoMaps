@@ -36,7 +36,6 @@ warnings.filterwarnings("ignore")
 import ipdb
 deb = ipdb.set_trace 
 
-
 # General imports
 import os
 import sys
@@ -49,7 +48,6 @@ sys.path.append("{}/../../../utils".format(os.getcwd()))
 from prf_utils import fit2deriv
 from surface_utils import make_surface_image , load_surface
 from maths_utils import  avg_subject_template
-
 
 # load settings
 with open('../../../settings.json') as f:
@@ -123,8 +121,8 @@ elif subject == 'sub-170k':
         data=data_task_deriv_avg, source_img=img, maps_names=maps_names_gauss)
     nb.save(sub_170k_deriv_img, sub_170k_deriv_fn)
     
-# # Define permission cmd
-# print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-# os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
-# os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
+# Define permission cmd
+print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
+os.system("chmod -Rf 771 {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir))
+os.system("chgrp -Rf {group} {main_dir}/{project_dir}".format(main_dir=main_dir, project_dir=project_dir, group=group))
 
