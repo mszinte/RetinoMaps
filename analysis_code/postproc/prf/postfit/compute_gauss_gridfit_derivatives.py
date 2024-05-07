@@ -46,8 +46,8 @@ import nibabel as nb
 # personal imports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from prf_utils import fit2deriv
-from surface_utils import make_surface_image , load_surface
 from maths_utils import  avg_subject_template
+from surface_utils import make_surface_image , load_surface
 
 # load settings
 with open('../../../settings.json') as f:
@@ -111,13 +111,13 @@ elif subject == 'sub-170k':
     img, data_deriv_avg = avg_subject_template(fns=subjects_derivatives)
         
     # Export results
-    sub_170k_deriv_dir = "{}/{}/derivatives/pp_data/sub-170k/170k/prf/prf_derivatives/".format(
+    sub_170k_deriv_dir = "{}/{}/derivatives/pp_data/sub-170k/170k/prf/prf_derivatives".format(
             main_dir, project_dir)
     os.makedirs(sub_170k_deriv_dir, exist_ok=True)
     
     sub_170k_deriv_fn = "{}/sub-170k_task-{}_fmriprep_dct_avg_prf-deriv_gauss_gridfit.dtseries.nii".format(sub_170k_deriv_dir, prf_task_name)
     
-    print("corr save: {}".format(sub_170k_deriv_fn))
+    print("save: {}".format(sub_170k_deriv_fn))
     sub_170k_deriv_img = make_surface_image(
         data=data_deriv_avg, source_img=img, maps_names=maps_names_gauss)
     nb.save(sub_170k_deriv_img, sub_170k_deriv_fn)
