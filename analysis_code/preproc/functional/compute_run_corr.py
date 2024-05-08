@@ -172,7 +172,7 @@ if subject != 'sub-170k':
             corr_stats_data_avg[pvalue_idx, :] = p_values
             corr_stats_data_avg[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
             corr_stats_data_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
-    
+
             # Average across combinations
             if hemi:
                 cor_fn = "{}/{}/derivatives/pp_data/{}/fsnative/corr/fmriprep_dct_corr/{}_task-{}_{}_fmriprep_dct_corr_bold.func.gii".format(

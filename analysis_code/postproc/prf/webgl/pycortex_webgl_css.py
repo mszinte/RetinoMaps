@@ -62,7 +62,8 @@ else: recache = False
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
+if subject == 'sub-170k': formats = ['170k']
+else: formats = analysis_info['formats']
 prf_task_name = analysis_info['prf_task_name']
 webapp_dir = analysis_info['webapp_dir']
 

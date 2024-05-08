@@ -1,31 +1,31 @@
 """
-# -----------------------------------------------------------------------------------------
-# publish_webgl.py
-# -----------------------------------------------------------------------------------------
-# Goal of the script:
-# Publish webgl on webapp
-# -----------------------------------------------------------------------------------------
-# Input(s):
-# sys.argv[1]: main project directory
-# sys.argv[2]: project name (correspond to directory)
-# -----------------------------------------------------------------------------------------
-# Output(s):
-# sent data
-# -----------------------------------------------------------------------------------------
-# To run:
-# On invibe.nohost.me
-# 1. cd to function
-# >> cd cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/postproc/prf/webgl/
-# 2. run python command
-# >> python publish_webgl.py [main directory] [project name]
-# -----------------------------------------------------------------------------------------
-# Exemple:
-# cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/webgl/
-# python publish_webgl.py ~/disks/meso_shared RetinoMaps
-# -----------------------------------------------------------------------------------------
-# Written by Martin Szinte (mail@martinszinte.net)
-# Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
-# -----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+publish_webgl.py
+-----------------------------------------------------------------------------------------
+Goal of the script:
+Publish webgl on webapp
+-----------------------------------------------------------------------------------------
+Input(s):
+sys.argv[1]: main project directory
+sys.argv[2]: project name (correspond to directory)
+-----------------------------------------------------------------------------------------
+Output(s):
+sent data
+-----------------------------------------------------------------------------------------
+To run:
+On invibe.nohost.me
+1. cd to function
+>> cd cd ~/disks/meso_H/projects/[PROJECT]/analysis_code/postproc/prf/webgl/
+2. run python command
+>> python publish_webgl.py [main directory] [project name]
+-----------------------------------------------------------------------------------------
+Exemple:
+cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/webgl/
+python publish_webgl.py ~/disks/meso_shared RetinoMaps
+-----------------------------------------------------------------------------------------
+Written by Martin Szinte (mail@martinszinte.net)
+Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
+-----------------------------------------------------------------------------------------
 """
 
 # Stop warnings
