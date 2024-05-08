@@ -22,7 +22,8 @@ To run:
 >> python pycortex_maps_css.py [main directory] [project] [subject] [save_svg_in]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pycortex_maps_css.py ~/disks/meso_S/data RetinoMaps sub-01 n
+cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
+python pycortex_maps_css.py ~/disks/meso_shared RetinoMaps sub-01 n
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -69,7 +70,8 @@ else: save_svg = False
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
+if subject == 'sub-170k': formats = ['170k']
+else: formats = analysis_info['formats']
 extensions = analysis_info['extensions']
 prf_task_name = analysis_info['prf_task_name']
 
@@ -78,11 +80,11 @@ cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 
 # Maps settings 
-rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx, \
-    size_idx, amp_idx, baseline_idx, x_idx, y_idx, \
-    n_idx, loo_rsq_idx, pcm_idx, slope_idx, intercept_idx, \
-    rvalue_idx, pvalue_idx, stderr_idx, pvalue_corrected_5pt_idx,  \
-    pvalue_corrected_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx, size_idx = 0, 1, 2, 3, 4
+amp_idx, baseline_idx, x_idx, y_idx, hrf_1_idx = 5, 6, 7, 8, 9
+hrf_2_idx, n_idx, loo_rsq_idx, pcm_idx, slope_idx = 10, 11, 12, 13, 14
+intercept_idx, rvalue_idx, pvalue_idx, stderr_idx, trs_idx = 15, 16, 17, 18, 19
+corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 20, 21
 
 cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
 col_offset = 1.0/14.0
@@ -162,13 +164,20 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     size_th_up = all_deriv_mat_th[size_idx,...] <= analysis_info['size_th'][1]
     ecc_th_down = all_deriv_mat_th[ecc_idx,...] >= analysis_info['ecc_th'][0]
     ecc_th_up = all_deriv_mat_th[ecc_idx,...] <= analysis_info['ecc_th'][1]
-    if analysis_info['stats_th'] == 0.05: stats_th_down = all_deriv_mat_th[pvalue_corrected_5pt_idx,...] <= 0.05
-    elif analysis_info['stats_th'] == 0.01: stats_th_down = all_deriv_mat_th[pvalue_corrected_1pt_idx,...] <= 0.01
+    n_th_down = all_deriv_mat_th[n_idx,...] >= analysis_info['n_th'][0]
+    n_th_up = all_deriv_mat_th[n_idx,...] <= analysis_info['n_th'][1]
+    pcm_th_down = all_deriv_mat_th[pcm_idx,...] >= analysis_info['pcm_th'][0]
+    pcm_th_up = all_deriv_mat_th[pcm_idx,...] <= analysis_info['pcm_th'][1]
+    if analysis_info['stats_th'] == 0.05: stats_th_down = all_deriv_mat_th[corr_pvalue_5pt_idx,...] <= 0.05
+    elif analysis_info['stats_th'] == 0.01: stats_th_down = all_deriv_mat_th[corr_pvalue_1pt_idx,...] <= 0.01
     all_th = np.array((amp_down,
                        rsq_down,
                        size_th_down,size_th_up, 
                        ecc_th_down, ecc_th_up,
-                       stats_th_down)) 
+                       n_th_down, n_th_up,
+                       pcm_th_down, pcm_th_up,
+                       stats_th_down
+                      )) 
     all_deriv_mat[loo_rsq_idx, np.logical_and.reduce(all_th)==False]=0 # put this to zero to not plot it
 
     # Create flatmaps
@@ -188,11 +197,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                      'vmax': rsq_scale[1], 
                      'cbar': 'discrete', 
                      'cortex_type': 'VertexRGB',
-                     'description': 'CSS pRF loo R2',
+                     'description': 'CSS pRF LOO R2',
                      'curv_brightness':1,
                      'curv_contrast': 0.1,
                      'add_roi': save_svg,
-                     'cbar_label': 'pRF loo R2', 
+                     'cbar_label': 'pRF LOO R2', 
                      'with_labels': True}
     maps_names.append('loo_rsq')
     
@@ -264,18 +273,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                'curv_brightness': 1, 
                'curv_contrast': 0.1, 
                'add_roi': False, 
-               'cbar_label': 'n',
+               'cbar_label': 'pRF n',
                'with_labels': True}
     maps_names.append('n')
     
     # pcm
-    
-    # threshold for PCM
-    pcm_th_down = all_deriv_mat_th[pcm_idx,...] >= analysis_info['pcm_th'][0]
-    pcm_th_up = all_deriv_mat_th[pcm_idx,...] <= analysis_info['pcm_th'][1]
-    all_th_pcm = np.array((pcm_th_down, pcm_th_up)) 
-    all_deriv_mat[loo_rsq_idx, np.logical_and.reduce(all_th_pcm)==False]=0 # put this to zero to not plot it
-    
     pcm_data = all_deriv_mat[pcm_idx,...]
     param_pcm = {'data': pcm_data, 
                  'cmap': cmap_ecc_size, 
@@ -284,11 +286,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                  'vmax': pcm_scale[1], 
                  'cbar': 'discrete', 
                  'cortex_type': 'VertexRGB', 
-                 'description': 'CSS pCM',
+                 'description': 'CSS pRF CM',
                  'curv_brightness': 1, 
                  'curv_contrast': 0.1, 
                  'add_roi': False, 
-                 'cbar_label': 'pCM (mm/dva)',
+                 'cbar_label': 'pRF CM (mm/dva)',
                  'with_labels': True}
     maps_names.append('pcm')
         
