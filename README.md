@@ -35,6 +35,7 @@ Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) o
 - [x] create sagital view video before after edit [sagital_view.py](analysis_code/preproc/anatomical/sagital_view.py)
 - [x] make cut in the brains for flattening [cortex_cuts.sh](analysis_code/preproc/anatomical/cortex_cuts.sh)
 - [x] flatten the cut brains [flatten_sbatch.py](analysis_code/preproc/anatomical/flatten_sbatch.py)
+- [x] Compute vertex areas [compute_vertex_area.py](analysis_code/preproc/anatomical/compute_vertex_area.py)
 
 #### Functional preprocessing
 - [x] fMRIprep [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
@@ -78,6 +79,9 @@ Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) o
 We run either analysis on the template of the HCP cifti format (**sub-170k**) in which individual results are averaged on a template </br>
 or we ran a ROI based group analysis determined individually on subject surfaces fsnative (**group**).</br> 
 
+#### Structural preprocessing
+- [x] Compute vertex areas for **sub-170k** [compute_vertex_area.py](analysis_code/preproc/anatomical/compute_vertex_area.py)
+
 #### Functional postprocessing
 
 ##### Inter-run correlations
@@ -97,11 +101,11 @@ or we ran a ROI based group analysis determined individually on subject surfaces
 - [ ] Compute CSS fit derivatives for **sub-170k** [compute_css_derivatives.py](analysis_code/postproc/prf/postfit/compute_css_derivatives.py)
 - [ ] Compute CSS population cortical magnification for **sub-170k** [css_pcm_sbatch.py](analysis_code/postproc/prf/postfit/css_pcm_sbatch.py)
 - [ ] Make CSS fit derivatives and pcm maps with pycortex for **sub-170k** [pycortex_maps_css.py](analysis_code/postproc/prf/postfit/pycortex_maps_css.py)
-- [ ] Merge all css pycortex and pRF derivatives and pcm main figures for **sub-170k** and **group** [merge_fig_css.py](analysis_code/postproc/prf/postfit/merge_fig_css.py)
 - [ ] Make subject WEBGL with pycortex for **sub-170k** [pycortex_webgl_css.py](analysis_code/postproc/prf/webgl/pycortex_webgl_css.py)
 - [ ] Edit [index.html](analysis_code/postproc/prf/webgl/index.html) and publish WEBGL on webapp [publish_webgl.py](analysis_code/postproc/prf/webgl/publish_webgl.py)
-- [ ] Make TSV with CSS fit derivatives, pcm and statistics for **sub-170k** and **group** [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
+- [ ] Make TSV with CSS fit derivatives, pcm and statistics for **sub-170k** [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
 - [ ] Make pRF derivatives and pcm main figures and figure TSV for **sub-170k** and **group** [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py)
+- [ ] Merge all css pycortex and pRF derivatives and pcm main figures for **sub-170k** and **group** [merge_fig_css.py](analysis_code/postproc/prf/postfit/merge_fig_css.py)
 
 ## On working
 ### **GLM analysis**

@@ -23,6 +23,7 @@ python make_rois_fig.py [main directory] [project name] [subject] [group]
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python make_rois_fig.py /scratch/mszinte/data RetinoMaps sub-01 327
+python make_rois_fig.py /scratch/mszinte/data RetinoMaps sub-170k 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
@@ -55,8 +56,12 @@ group = sys.argv[4]
 with open('../../../settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
-formats = analysis_info['formats']
-extensions = analysis_info['extensions']
+if subject == 'sub-170k': 
+    formats = ['170k']
+    extensions = ['dtseries.nii']
+else: 
+    formats = analysis_info['formats']
+    extensions = analysis_info['extensions']
 rois = analysis_info['rois']
 
 # Threshold settings
@@ -169,5 +174,5 @@ for format_, extension in zip(formats, extensions):
     
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
