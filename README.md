@@ -1,27 +1,14 @@
 # RetinoMaps
 ## About
 ---
-We study cerebral areas implicated in both vision and eye movements.</br>
-All the analysis are down in surface with both fsnative ad 170k space.
-This repository contain all code allowing us to analyse our dataset [OpenNeuro:DSXXXXX](https://openneuro.org/datasets/dsXXXX).</br>
+*We here study cortical areas involved in both vision and eye movements in 20 healthy controls.</br>*
+*All the analyses are done in surface with both **fsnative** ad **HCP 170k** format.</br>*
+*This repository contains all codes allowing us to analyse our dataset [OpenNeuro:DSXXXXX](https://openneuro.org/datasets/dsXXXX).</br>*
 
 ---
 ## Authors (alphabetic order): 
 ---
-Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
-
-### Main dependencies
----
-[dcm2niix](https://github.com/rordenlab/dcm2niix); 
-[PyDeface](https://github.com/poldracklab/pydeface); 
-[fMRIprep](https://fmriprep.org/en/stable/); 
-[pRFpy](https://github.com/VU-Cog-Sci/prfpy); 
-[FreeSurfer](https://surfer.nmr.mgh.harvard.edu/);
-[FFmpeg](https://ffmpeg.org/);
-[FSL](https://fsl.fmrib.ox.ac.uk);
-[Inkscape](https://inkscape.org/);
-[workbench](https://humanconnectome.org/software/connectome-workbench)
-</br>
+Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ## To Do 
 ---
@@ -59,8 +46,8 @@ Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) o
 Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) or their projection on the HCP cifti format (**170k**).</br>
 
 ##### Inter-run correlations
-<!-- - [x] Average inter-run correlations of each subject in 170k template [170k_corr_averaging.py](analysis_code/preproc/functional/170k_corr_averaging.py) -->
-- [x] Make inter-run correlations flatmaps with pycortex [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py) or [pycortex_maps_run_corr.sh](analysis_code/preproc/functional/pycortex_maps_run_corr.sh)
+- [x] Compute inter-run correlation [compute_run_corr.py](analysis_code/preproc/functional/compute_run_corr.py)
+- [x] Make inter-run correlations maps with pycortex [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py) or [pycortex_maps_run_corr.sh](analysis_code/preproc/functional/pycortex_maps_run_corr.sh)
 
 ##### PRF Gaussian fit
 - [x] Create the visual matrix design [vdm_builder.py](analysis_code/postproc/prf/vdm_builder.py)
@@ -95,7 +82,7 @@ or we ran a ROI based group analysis determined individually on subject surfaces
 
 ##### Inter-run correlations
 - [ ] Inter-run correlation for **sub-170k** [compute_run_corr.py](analysis_code/preproc/functional/compute_run_corr.py)
-- [ ] Make inter-run correlations flatmaps with pycortex for **sub-170k** [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py)
+- [ ] Make inter-run correlations maps with pycortex for **sub-170k** [pycortex_maps_run_corr.py](analysis_code/preproc/functional/pycortex_maps_run_corr.py)
 
 ##### PRF Gaussian fit
 - [ ] Compute pRF gaussian grid fit derivatives for **sub-170k** [compute_gauss_gridfit_derivatives.py](analysis_code/postproc/prf/postfit/compute_gauss_gridfit_derivatives.py)
