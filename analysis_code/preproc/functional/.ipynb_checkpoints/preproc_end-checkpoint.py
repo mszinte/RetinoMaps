@@ -1,4 +1,3 @@
-
 """
 -----------------------------------------------------------------------------------------
 preproc_end.py
@@ -227,66 +226,6 @@ for preproc_files in preproc_files_list:
                     print("loo save: {}".format(loo_fn))
                     shutil.copyfile(loo, loo_fn)
                     
-# compute vertex area 
-for format_, extension in zip(formats, extensions): 
-    print("Computing vertex area {}".format(format_))
-    
-    # Define output folders
-    dest_dir = "{}/{c}/derivatives/pp_data/{}/{}/vertex_area".format(
-        main_dir, project_dir, subject, format_)
-    os.makedirs(dest_dir, exist_ok=True)
-
-    if format_ == 'fsnative':
-        # Get pycortex surface
-        surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(subject, "flat")]
-        surf_lh, surf_rh = surfs[0], surfs[1]
-        
-        for hemi, surf in zip(['hemi-L', 'hemi-R'],[surf_lh,surf_rh]):
-            if hemi == 'hemi-L': preproc_fn = preproc_fsnative_hemi_L[0]
-            elif hemi == 'hemi-R': preproc_fn = preproc_fsnative_hemi_R[0]
-            
-            # Load data to get source img 
-            img, data = load_surface(fn=preproc_fn)
-            
-            # Compute vertex area 
-            vertex_area = calculate_vertex_areas(pts=surf.pts, polys=surf.polys)
-            vertex_area = vertex_area.reshape(1,-1)
-            
-            # Save image
-            vertex_area_fn = '{}/{}_{}_vertex_area.{}'.format(dest_dir, subject, hemi, extension)
-            vert_surf_img = make_surface_image(data=vertex_area, 
-                                               source_img=img, 
-                                               maps_names=maps_names_vert_area)
-            nb.save(vert_surf_img, vertex_area_fn)
-                
-    elif format_ == '170k': 
-        # Load data to get source img and 59k mask 
-        preproc_fn = preproc_170k[0]
-        
-        # Acces to a 59k mask 
-        results = load_surface_pycortex(brain_fn=preproc_fn, 
-                                        return_img=True, 
-                                        return_59k_mask=True)
-        img, mask_59k = results['img'], results['mask_59k']
-
-        # Get pycortex surface polys and pts
-        pts, polys = cortex.db.get_surf('sub-170k', "flat",  merge=True)
-        
-        # Compute vertex area 
-        vertex_area_59k = calculate_vertex_areas(pts=pts, polys=polys)
-        vertex_area_59k = vertex_area_59k.reshape(1,-1)
-        
-        # Converte vertex area from 59k to 170k
-        vertex_area_170k = from_59k_to_170k(data_59k=vertex_area_59k, 
-                                            brain_mask_59k=mask_59k)
-        
-        # Save image
-        vertex_area_fn = '{}/{}_vertex_area.{}'.format(dest_dir, subject, extension)
-        vertex_area_170k_img = make_surface_image(data=vertex_area_170k, 
-                                                  source_img=img, 
-                                                  maps_names=maps_names_vert_area)
-        nb.save(vertex_area_170k_img, vertex_area_fn)
-
 # Anatomy
 for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
     # define folders
@@ -343,4 +282,4 @@ print("\nStart time:\t{start_time}\nEnd time:\t{end_time}\nDuration:\t{dur}".for
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
 os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(main_dir, project_dir, group))
+os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
