@@ -38,6 +38,7 @@ Uriel LASCOMBES, Sina KLING, Guillaume MASSON & Martin SZINTE
     </br>Note: for the webpage, use FireFox and wait for at least 30 min, even if nothing seems to happen.
 
 ### Individual analysis
+Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) or their projection on the HCP cifti format (**170k**).</br>
 
 #### Structural preprocessing
 - [x] fMRIprep with anat-only option [fmriprep_sbatch.py](analysis_code/preproc/functional/fmriprep_sbatch.py)
