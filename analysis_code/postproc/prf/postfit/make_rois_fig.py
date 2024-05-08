@@ -66,8 +66,8 @@ rsqr_th = analysis_info['rsqr_th']
 pcm_th = analysis_info['pcm_th']
 amplitude_th = analysis_info['amplitude_th']
 stats_th = analysis_info['stats_th']
-if stats_th == 0.05: stats_col = 'corr_pvalue_5pt'
-elif stats_th == 0.01: stats_col = 'corr_pvalue_1pt'
+n_th = analysis_info['n_th']
+subjects = analysis_info['subjects']
 
 # Figure settings
 colormap_dict = {'V1': (243, 231, 155),
@@ -85,9 +85,9 @@ colormap_dict = {'V1': (243, 231, 155),
                 }
 roi_colors = ['rgb({},{},{})'.format(*rgb) for rgb in colormap_dict.values()]
 plot_groups = [['V1', 'V2', 'V3'], ['V3AB', 'LO', 'VO'], ['hMT+', 'iIPS', 'sIPS'], ['iPCS', 'sPCS', 'mPCS']]
-num_ecc_size_bins = 8
-num_ecc_pcm_bins = 8
-num_polar_bins = 12
+num_ecc_size_bins = 6
+num_ecc_pcm_bins = 6
+num_polar_angle_bins = 9
 max_ecc = 15
 fig_width = 1440
 
@@ -95,73 +95,79 @@ fig_width = 1440
 for format_, extension in zip(formats, extensions):
     
     # Create folders and fns
-    tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
-        main_dir, project_dir, subject, format_)
     fig_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/figures'.format(
         main_dir, project_dir, subject, format_)
     os.makedirs(fig_dir, exist_ok=True)
 
     # Load data
-    tsv_fn = '{}/{}_css-all_derivatives.tsv'.format(tsv_dir, subject)
-    data = pd.read_table(tsv_fn, sep="\t")
+    df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality = \
+        compute_plot_data(subject=subject,
+                          main_dir=main_dir,
+                          project_dir=project_dir,
+                          format_=format_,
+                          rois=rois,
+                          amplitude_threshold=amplitude_th, 
+                          ecc_threshold=ecc_th, 
+                          size_threshold=size_th, 
+                          rsqr_threshold=rsqr_th,
+                          n_threshold=n_th,
+                          stats_threshold=stats_th,
+                          pcm_threshold=pcm_th,
+                          num_ecc_size_bins=num_ecc_size_bins, 
+                          num_ecc_pcm_bins=num_ecc_pcm_bins,
+                          num_polar_angle_bins=num_polar_angle_bins,
+                          max_ecc=max_ecc,
+                          subjects_to_group=subjects)
     
-    # keep a raw data df 
-    data_raw = data.copy()
-
-    # Threshold data (replace by nan)
-    data.loc[(data.amplitude < amplitude_th) |                                    # amplitude 
-             (data.prf_ecc < ecc_th[0]) | (data.prf_ecc > ecc_th[1]) |            # eccentricity 
-             (data.prf_size < size_th[0]) | (data.prf_size > size_th[1]) |        # size
-             (data.prf_loo_r2 < rsqr_th) |                                        # loo rsqr
-             (data[stats_col] > stats_th)                                         # stats
-              ] = np.nan
-    data = data.dropna()
-
-    # Stats plot
+    # Roi area and stats plot
+    fig = prf_roi_area(df_roi_area=df_roi_area, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
     fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
-    print('Saving {}'.format(fig_fn))
-    fig = prf_roi_area(data=data_raw, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
+    print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
     
     # Violins plots
+    fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
+                           rois=rois, roi_colors=roi_colors)
     fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
-    print('Saving {}'.format(fig_fn))
-    fig = prf_violins_plot(data=data, fig_width=fig_width, fig_height=600, rois=rois, roi_colors=roi_colors)
+    print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
-
+        
     # Ecc.size plots
+    fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
+                            fig_height=400, rois=rois, roi_colors=roi_colors,
+                            plot_groups=plot_groups, max_ecc=max_ecc)
     fig_fn = "{}/{}_prf_ecc_size.pdf".format(fig_dir, subject)
-    print('Saving {}'.format(fig_fn))
-    fig = prf_ecc_size_plot(data=data, fig_width=fig_width, fig_height=400, rois=rois, roi_colors=roi_colors,
-                            plot_groups=plot_groups, num_bins=num_ecc_size_bins, max_ecc=max_ecc)
+    print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
 
     # Ecc.pCM plot
-    data_pcm = data.copy()
-    data_pcm.loc[(data_pcm.pcm < pcm_th[0]) | (data_pcm.pcm > pcm_th[1])] = np.nan
-    data_pcm = data_pcm.dropna()
     fig_fn = "{}/{}_prf_ecc_pcm.pdf".format(fig_dir, subject)
-    fig = prf_ecc_pcm_plot(data_pcm, fig_width=fig_width, fig_height=400, rois=rois, roi_colors=roi_colors,
-                           plot_groups=plot_groups, num_bins=num_ecc_pcm_bins, max_ecc=max_ecc)
-    print('Saving {}'.format(fig_fn))
+    fig = prf_ecc_pcm_plot(df_ecc_pcm=df_ecc_pcm, fig_width=fig_width, fig_height=400, 
+                           rois=rois, roi_colors=roi_colors,
+                           plot_groups=plot_groups, max_ecc=max_ecc)
+    print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
     
     # Polar angle distributions
-    figs, hemis = prf_polar_plot(data, fig_width=fig_width, fig_height=300, rois=rois, roi_colors=roi_colors, num_bins=num_polar_bins)
+    figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
+                                       fig_height=300, rois=rois, roi_colors=roi_colors,
+                                       num_polar_angle_bins=num_polar_angle_bins)
     for (fig, hemi) in zip(figs, hemis):
         fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
-        print('Saving {}'.format(fig_fn))
+        print('Saving pdf: {}'.format(fig_fn))
         fig.write_image(fig_fn)
 
     # Contralaterality plots
     fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
-    fig = prf_contralaterality_plot(data, fig_width=fig_width, fig_height=300, rois=rois, roi_colors=roi_colors)
-    print('Saving {}'.format(fig_fn))
+    fig = prf_contralaterality_plot(df_contralaterality=df_contralaterality, 
+                                    fig_width=fig_width, fig_height=300, 
+                                    rois=rois, roi_colors=roi_colors)
+    print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
 
     # Spatial distibution plot
     
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
+# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))

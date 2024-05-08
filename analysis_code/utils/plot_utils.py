@@ -5,8 +5,294 @@ from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
 import ipdb
+import os
 deb = ipdb.set_trace
 
+def compute_plot_data(subject, main_dir, project_dir, format_, rois,
+                      amplitude_threshold, ecc_threshold, size_threshold, 
+                      rsqr_threshold, stats_threshold, pcm_threshold, n_threshold,
+                      max_ecc, num_ecc_size_bins, num_ecc_pcm_bins, num_polar_angle_bins,
+                      subjects_to_group=None):
+    """
+    Load and compute the data as function of the plot
+    
+    Parameters
+    ----------
+    subject: subject string
+    main_dir: data main directory
+    project_dir: project name
+    format_ : format of data
+    rois: ROIs
+    amplitude_threshold : prf amplitude threshold tupple
+    ecc_threshold: prf eccentricity threshold tupple
+    size_threshold: prf size threshold tupple
+    rsqr_threshold: prf loo r2 threshold tupple
+    stats_threshold: prf stats threshold tupple
+    n_threshold: prf stats threshold tupple
+    pcm_threshold: prf pCM threshold tupple
+    max_ecc: maximum eccentricity
+    num_ecc_size_bins: number of bins for eccentricty plot for size relationship
+    num_ecc_pcm_bins: number of bins for eccentricty plot for pcm relationship
+    num_polar_angle_bins: number of bins for eccentricty plot for polar angle
+    subjects: list of subject to group
+    
+    Returns
+    -------
+    df_roi_area: dataframe to use in surface area plot
+    df_violins: dataframe filtered to use in violins plot
+    df_ecc_size: dataframe to use in eccentricity size plot
+    df_ecc_pcm: dataframe to use in eccentricity size plot
+    """
+    from maths_utils import weighted_regression, bootstrap_ci_mean
+    
+    if subject == 'group':
+        
+        for i, subject_to_group in enumerate(subjects_to_group):
+            tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
+                main_dir, project_dir, subject_to_group, format_)
+
+            # ROI surface areas 
+            # -----------------
+            tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject_to_group)
+            df_roi_area_indiv = pd.read_table(tsv_roi_area_fn, sep="\t")
+            if i == 0: df_roi_area = df_roi_area_indiv.copy()
+            else: df_roi_area = pd.concat([df_roi_area, df_roi_area_indiv])
+
+            # Violins
+            # -------
+            tsv_violins_fn = "{}/{}_prf_violins.tsv".format(tsv_dir, subject_to_group)
+            df_violins_indiv = pd.read_table(tsv_violins_fn, sep="\t")
+            if i == 0: df_violins = df_violins_indiv.copy()
+            else: df_violins = pd.concat([df_violins, df_violins_indiv])
+
+            # Ecc.size
+            # --------
+            tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject_to_group)
+            df_ecc_size_indiv = pd.read_table(tsv_ecc_size_fn, sep="\t")
+            if i == 0: df_ecc_size = df_ecc_size_indiv.copy()
+            else: df_ecc_size = pd.concat([df_ecc_size, df_ecc_size_indiv])
+
+            # Ecc.pCM
+            # -------
+            tsv_ecc_pcm_fn = "{}/{}_prf_ecc_pcm.tsv".format(tsv_dir, subject_to_group)
+            df_ecc_pcm_indiv = pd.read_table(tsv_ecc_pcm_fn, sep="\t")
+            if i == 0: df_ecc_pcm = df_ecc_pcm_indiv.copy()
+            else: df_ecc_pcm = pd.concat([df_ecc_pcm, df_ecc_pcm_indiv])
+
+            # Polar angle
+            # -----------
+            tsv_polar_angle_fn = "{}/{}_prf_polar_angle.tsv".format(tsv_dir, subject_to_group)
+            df_polar_angle_indiv = pd.read_table(tsv_polar_angle_fn, sep="\t")
+            if i == 0: df_polar_angle = df_polar_angle_indiv.copy()
+            else: df_polar_angle = pd.concat([df_polar_angle, df_polar_angle_indiv])
+
+            # Contralaterality
+            # ----------------
+            tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject_to_group)
+            df_contralaterality_indiv = pd.read_table(tsv_contralaterality_fn, sep="\t")
+            if i == 0: df_contralaterality = df_contralaterality_indiv.copy()
+            else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_indiv])
+        
+        # Averaging and saving tsv
+        tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
+            main_dir, project_dir, subject, format_)
+        os.makedirs(tsv_dir, exist_ok=True)
+        
+        # ROI surface areas 
+        # -----------------
+        df_roi_area = df_roi_area.groupby(['roi'], sort=False).mean().reset_index()
+        tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_roi_area_fn))
+        df_roi_area.to_csv(tsv_roi_area_fn, sep="\t", na_rep='NaN', index=False)
+        
+        # Violins
+        # -------
+        df_violins = df_violins # no averaging
+        tsv_violins_fn = "{}/{}_prf_violins.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_violins_fn))
+        df_violins.to_csv(tsv_violins_fn, sep="\t", na_rep='NaN', index=False)
+
+        # Ecc.size
+        # --------
+        df_ecc_size = df_ecc_size.groupby(['roi', 'num_bins'], sort=False).mean().reset_index()
+        tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_ecc_size_fn))
+        df_ecc_size.to_csv(tsv_ecc_size_fn, sep="\t", na_rep='NaN', index=False)
+
+        # Ecc.pCM
+        # -------
+        df_ecc_pcm = df_ecc_pcm.groupby(['roi', 'num_bins'], sort=False).mean().reset_index()
+        tsv_ecc_pcm_fn = "{}/{}_prf_ecc_pcm.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_ecc_pcm_fn))
+        df_ecc_pcm.to_csv(tsv_ecc_pcm_fn, sep="\t", na_rep='NaN', index=False)
+
+        # Polar angle
+        # -----------
+        df_polar_angle = df_polar_angle.groupby(['roi', 'hemi', 'num_bins'], sort=False).mean().reset_index()
+        tsv_polar_angle_fn = "{}/{}_prf_polar_angle.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_polar_angle_fn))
+        df_polar_angle.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
+
+        # Contralaterality
+        # ----------------
+        df_contralaterality = df_contralaterality.groupby(['roi'], sort=False).mean().reset_index()
+        tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_contralaterality_fn))
+        df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
+    else:
+        tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
+            main_dir, project_dir, subject, format_)
+        os.makedirs(tsv_dir, exist_ok=True)
+        
+        tsv_fn = '{}/{}_css-all_derivatives.tsv'.format(tsv_dir, subject)
+        data = pd.read_table(tsv_fn, sep="\t")
+        
+        # keep a raw data df 
+        data_raw = data.copy()
+    
+        # Threshold data (replace by nan)
+        if stats_threshold == 0.05: stats_col = 'corr_pvalue_5pt'
+        elif stats_threshold == 0.01: stats_col = 'corr_pvalue_1pt'
+        data.loc[(data.amplitude < amplitude_threshold) |
+                 (data.prf_ecc < ecc_threshold[0]) | (data.prf_ecc > ecc_threshold[1]) |
+                 (data.prf_size < size_threshold[0]) | (data.prf_size > size_threshold[1]) | 
+                 (data.prf_n < n_threshold[0]) | (data.prf_n > n_threshold[1]) | 
+                 (data.pcm < pcm_threshold[0]) | (data.pcm > pcm_threshold[1]) |
+                 (data.prf_loo_r2 < rsqr_threshold) |
+                 (data[stats_col] > stats_threshold)] = np.nan
+        data = data.dropna()
+
+        # ROI surface areas 
+        # -----------------
+        data_raw['vert_area'] = data_raw['vert_area'] / 100 # in cm2
+        df_roi_area = data_raw.groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
+    
+        # Compute the area of FRD 0.05/0.01 vertex in each roi
+        df_roi_area['vert_area_corr_pvalue_5pt'] = np.array(data_raw[data_raw['corr_pvalue_5pt'] < 0.05].groupby(
+            ['roi'], sort=False)['vert_area'].sum())
+        df_roi_area['ratio_corr_pvalue_5pt'] = df_roi_area['vert_area_corr_pvalue_5pt'] / df_roi_area['vert_area'] 
+        df_roi_area['vert_area_corr_pvalue_1pt'] = np.array(data_raw[data_raw['corr_pvalue_1pt'] < 0.01].groupby(
+            ['roi'], sort=False)['vert_area'].sum())
+        df_roi_area['ratio_corr_pvalue_1pt'] = df_roi_area['vert_area_corr_pvalue_1pt'] / df_roi_area['vert_area']         
+
+        # Violins
+        # -------
+        df_violins = data
+
+        # Ecc.size
+        # --------
+        ecc_bins = np.linspace(0.1, 1, num_ecc_size_bins+1)**2 * max_ecc
+        for num_roi, roi in enumerate(rois):
+            df_roi = data.loc[(data.roi == roi)]
+            df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
+            df_ecc_size_bin = pd.DataFrame()
+            df_ecc_size_bin['roi'] = [roi]*num_ecc_size_bins
+            df_ecc_size_bin['num_bins'] = np.arange(num_ecc_size_bins)
+            df_ecc_size_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].mean())
+            df_ecc_size_bin['prf_size_bins_mean'] = np.array(df_bins['prf_size'].mean())
+            df_ecc_size_bin['prf_loo_r2_bins_mean'] = np.array(df_bins['prf_loo_r2'].mean())
+            ci = df_bins['prf_size'].apply(lambda x: bootstrap_ci_mean(x))
+            df_ecc_size_bin['prf_size_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+            df_ecc_size_bin['prf_size_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+
+            if num_roi == 0: df_ecc_size_bins = df_ecc_size_bin
+            else: df_ecc_size_bins = pd.concat([df_ecc_size_bins, df_ecc_size_bin])
+
+        df_ecc_size = df_ecc_size_bins
+
+        # Ecc.pCM
+        # --------
+        data_pcm = data
+        
+        ecc_bins = np.linspace(0.1, 1, num_ecc_pcm_bins+1)**2 * max_ecc
+        for num_roi, roi in enumerate(rois):
+            df_roi = data_pcm.loc[(data.roi == roi)]
+            df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
+            df_ecc_pcm_bin = pd.DataFrame()
+            df_ecc_pcm_bin['roi'] = [roi]*num_ecc_pcm_bins
+            df_ecc_pcm_bin['num_bins'] = np.arange(num_ecc_pcm_bins)
+            df_ecc_pcm_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].mean())
+            df_ecc_pcm_bin['prf_pcm_bins_mean'] = np.array(df_bins['pcm'].mean())
+            df_ecc_pcm_bin['prf_loo_r2_bins_mean'] = np.array(df_bins['prf_loo_r2'].mean())
+            ci = df_bins['pcm'].apply(lambda x: bootstrap_ci_mean(x))
+            df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
+            df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+
+            if num_roi == 0: df_ecc_pcm_bins = df_ecc_pcm_bin
+            else: df_ecc_pcm_bins = pd.concat([df_ecc_pcm_bins, df_ecc_pcm_bin])
+
+        df_ecc_pcm = df_ecc_pcm_bins
+
+        # Polar angle
+        # -----------
+        theta_slices = np.linspace(0, 360, num_polar_angle_bins, endpoint=False)
+        data['prf_polar_angle'] = np.mod(np.degrees(np.angle(data.polar_real + 1j * data.polar_imag)), 360) 
+        hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
+        for i, hemi in enumerate(hemis):
+            hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
+            for j, roi in enumerate(rois): #
+                df = data.loc[(data.roi==roi) & (data.hemi.isin(hemi_values))]
+                if len(df): 
+                    df_bins = df.groupby(pd.cut(df['prf_polar_angle'], bins=num_polar_angle_bins))
+                    loo_r2_sum = df_bins['prf_loo_r2'].sum()
+                else: loo_r2_sum = [np.nan]*num_polar_angle_bins
+
+                df_polar_angle_bin = pd.DataFrame()
+                df_polar_angle_bin['roi'] = [roi]*(num_polar_angle_bins)
+                df_polar_angle_bin['hemi'] = [hemi]*(num_polar_angle_bins)
+                df_polar_angle_bin['num_bins'] = np.arange((num_polar_angle_bins))
+                df_polar_angle_bin['theta_slices'] = np.array(theta_slices)
+                df_polar_angle_bin['loo_r2_sum'] = np.array(loo_r2_sum)
+                
+                if j == 0 and i == 0: df_polar_angle_bins = df_polar_angle_bin
+                else: df_polar_angle_bins = pd.concat([df_polar_angle_bins, df_polar_angle_bin])
+                    
+        df_polar_angle = df_polar_angle_bins
+        
+        # Contralaterality
+        # ----------------
+        for j, roi in enumerate(rois):
+            df_rh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-R')]
+            df_lh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-L')]
+            try: contralaterality_prct = (sum(df_rh.loc[df_rh.prf_x < 0].prf_loo_r2) + \
+                                         sum(df_lh.loc[df_lh.prf_x > 0].prf_loo_r2)) / \
+                                        (sum(df_rh.prf_loo_r2) + sum(df_lh.prf_loo_r2))
+            except: contralaterality_prct = np.nan
+            
+            df_contralaterality_roi = pd.DataFrame()
+            df_contralaterality_roi['roi'] = [roi]
+            df_contralaterality_roi['contralaterality_prct'] = np.array(contralaterality_prct)
+    
+            if j == 0: df_contralaterality = df_contralaterality_roi
+            else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_roi])
+        
+        # Saving tsv
+        tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_roi_area_fn))
+        df_roi_area.to_csv(tsv_roi_area_fn, sep="\t", na_rep='NaN', index=False)
+
+        tsv_violins_fn = "{}/{}_prf_violins.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_violins_fn))
+        df_violins.to_csv(tsv_violins_fn, sep="\t", na_rep='NaN', index=False)
+
+        tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_ecc_size_fn))
+        df_ecc_size.to_csv(tsv_ecc_size_fn, sep="\t", na_rep='NaN', index=False)
+
+        tsv_ecc_pcm_fn = "{}/{}_prf_ecc_pcm.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_ecc_pcm_fn))
+        df_ecc_pcm.to_csv(tsv_ecc_pcm_fn, sep="\t", na_rep='NaN', index=False)
+
+        tsv_polar_angle_fn = "{}/{}_prf_polar_angle.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_polar_angle_fn))
+        df_polar_angle.to_csv(tsv_polar_angle_fn, sep="\t", na_rep='NaN', index=False)
+
+        tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_contralaterality_fn))
+        df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
+
+    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality
+        
 def plotly_template(template_specs):
     """
     Define the template for plotly
@@ -114,13 +400,108 @@ def plotly_template(template_specs):
 
     return fig_template
 
-def prf_violins_plot(data, fig_width, fig_height, rois, roi_colors):
+
+def prf_roi_area(df_roi_area, fig_width, fig_height, roi_colors):
+    """
+    Make bar plots of each roi area and the corresponding significative area of pRF  
+    
+    Parameters
+    ----------
+    df_roi_area : dataframe for corresponding plot
+    fig_width : figure width in pixels
+    fig_height : figure height in pixels
+    roi_colors : list of rgb colors for plotly
+    
+    Returns
+    -------
+    fig : bar plot
+    """
+    
+    # General figure settings
+    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
+                          axes_width=2,
+                          axes_font_size=15,
+                          bg_col="rgba(255, 255, 255, 1)",
+                          font='Arial',
+                          title_font_size=15,
+                          plot_width=1.5)
+    
+    # General figure settings
+    fig_template = plotly_template(template_specs)
+    
+    # General settings
+    fig = make_subplots(rows=1, 
+                        cols=2, 
+                        subplot_titles=['FDR threshold = 0.05', 'FDR threshold = 0.01'],
+                       )
+    
+    # FDR 0.01 
+    # All vertices
+    fig.add_trace(go.Bar(x=df_roi_area.roi, 
+                         y=df_roi_area.vert_area, 
+                         text=(df_roi_area['ratio_corr_pvalue_5pt']*100).astype(int).astype(str) + '%',
+                         textposition='outside',
+                         textangle=-60,
+                         showlegend=False, 
+                         marker=dict(color=roi_colors, opacity=0.2)),
+                 row=1, col=1)
+ 
+    # Significant vertices
+    fig.add_trace(go.Bar(x=df_roi_area.roi, 
+                         y=df_roi_area.vert_area_corr_pvalue_5pt, 
+                         showlegend=False, 
+                         marker=dict(color=roi_colors)),
+                 row=1, col=1)
+    
+    
+    # FDR 0.01 
+    # All vertices
+    fig.add_trace(go.Bar(x=df_roi_area.roi, 
+                         y=df_roi_area.vert_area, 
+                         text=(df_roi_area['ratio_corr_pvalue_1pt']*100).astype(int).astype(str) + '%',
+                         textposition='outside',
+                         textangle=-60,
+                         showlegend=False, 
+                         marker=dict(color=roi_colors, opacity=0.1)),
+                 row=1, col=2)
+    
+    # Significant vertices
+    fig.add_trace(go.Bar(x=df_roi_area.roi, 
+                         y=df_roi_area.vert_area_corr_pvalue_1pt,
+                         showlegend=False, 
+                         marker=dict(color=roi_colors)),
+                 row=1, col=2)
+
+    # Define parameters
+    fig.update_xaxes(showline=True, 
+                     ticklen=0, 
+                     linecolor=('rgba(255,255,255,0)'))      
+    
+    fig.update_yaxes(range=[0,100], 
+                     showline=True, 
+                     nticks=10, 
+                     title_text='Surface area (cm<sup>2</sup>)',secondary_y=False)
+    
+    fig.update_layout(barmode='overlay',
+                      height=fig_height, 
+                      width=fig_width, 
+                      template=fig_template,
+                      margin_l=100, 
+                      margin_r=50, 
+                      margin_t=50, 
+                      margin_b=50,
+                     )
+
+    # Return outputs
+    return fig
+
+def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
     """
     Make violins plots for pRF r2/loo_r2, ecc and size
 
     Parameters
     ----------
-    data : A data dataframe
+    df_violins : dataframe
     fig_width : figure width in pixels
     fig_height : figure height in pixels
     rois : list of rois
@@ -149,10 +530,11 @@ def prf_violins_plot(data, fig_width, fig_height, rois, roi_colors):
                         print_grid=False, 
                         vertical_spacing=0.08, 
                         horizontal_spacing=0.05)
-    
+
+
     for j, roi in enumerate(rois):
         
-        df = data.loc[(data.roi == roi)]
+        df = df_violins.loc[(df_violins.roi == roi)]
         
         # pRF loo r2
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
@@ -204,27 +586,27 @@ def prf_violins_plot(data, fig_width, fig_height, rois, roi_colors):
         
         # Set axis titles only for the left-most column and bottom-most row
         fig.update_yaxes(showline=True, 
-                         range=[0,1],
+                         range=[0, 1],
                          nticks=10, 
                          title_text='pRF LOO R<sup>2</sup>',
                          row=1, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0,20], 
+                         range=[0, 20], 
                          nticks=5, 
                          title_text='pRF size (dva)', 
                          row=1, col=2)
         
         fig.update_yaxes(showline=True, 
-                         range=[0,2], 
+                         range=[0, 2], 
                          nticks=5, 
                          title_text='pRF n', 
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0,20], 
-                         nticks=5, 
-                         title_text='pCM', 
+                         range=[0, 10], 
+                         nticks=10, 
+                         title_text='pRF pCM (mm/dva)', 
                          row=2, col=2)
         
         fig.update_xaxes(showline=True, 
@@ -246,22 +628,21 @@ def prf_violins_plot(data, fig_width, fig_height, rois, roi_colors):
                       margin_r=50, 
                       margin_t=100, 
                       margin_b=100)
-    
-    return fig 
 
-def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups, num_bins, max_ecc):
+    return fig
+
+def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot_groups, max_ecc):
     """
     Make scatter plot for linear relationship between eccentricity and size
 
     Parameters
     ----------
-    data : A data dataframe
+    df_ecc_size : A data dataframe
     fig_width : figure width in pixels
     fig_height : figure height in pixels
     rois : list of rois
     roi_colors : list of rgb colors for plotly
     plot_groups : groups of roi to plot together
-    num_bins : number of eccentricity bins
     max_ecc : maximum eccentricity 
     
     Returns
@@ -269,8 +650,7 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
     fig : eccentricy as a function of size plot
     """
     
-    from maths_utils import weighted_regression, bootstrap_ci_mean
-    data = data.copy()
+    from maths_utils import weighted_regression
 
     # General figure settings
     template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
@@ -285,54 +665,45 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
     fig_template = plotly_template(template_specs)
 
     # General settings
-    ecc_bins = np.linspace(0.1, 1, num_bins+1)**2 * max_ecc
     rows, cols = 1, len(plot_groups)
     fig = make_subplots(rows=rows, cols=cols, print_grid=False)
     
     for l, line_label in enumerate(plot_groups):
         for j, roi in enumerate(line_label):
             
-            # Sorting best datas
-            df = data.loc[(data.roi == roi)]
-            
             # Parametring colors
             roi_color = roi_colors[j + l * 3]
             roi_color_opac = f"rgba{roi_color[3:-1]}, 0.15)"
             
-            # Grouping by eccentricities
-            df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=ecc_bins))
-            df_sorted = df.sort_values('prf_ecc')
-            
-            ecc_mean = np.array(df_grouped['prf_ecc'].mean())
-            sd_mean = np.array(df_grouped['prf_size'].mean())
-            r2_mean = np.array(df_grouped['prf_loo_r2'].mean())
-            
-            ci = df_grouped['prf_size'].apply(lambda x: bootstrap_ci_mean(x))
-            deb()
-            upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
-            lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            # Get data
+            df = df_ecc_size.loc[(df_ecc_size.roi == roi)]
+            ecc_mean = np.array(df.prf_ecc_bins)
+            size_mean = np.array(df.prf_size_bins_mean)
+            r2_mean = np.array(df.prf_loo_r2_bins_mean)
+            size_upper_bound = np.array(df.prf_size_bins_ci_upper_bound)
+            size_lower_bound = np.array(df.prf_size_bins_ci_lower_bound)
             
             # Linear regression
-            slope, intercept = weighted_regression(ecc_mean, sd_mean, r2_mean, model='linear')
-            slope_upper, intercept_upper = weighted_regression(ecc_mean[np.where(~np.isnan(upper_bound))], 
-                                                                upper_bound[~np.isnan(upper_bound)], 
-                                                                r2_mean[np.where(~np.isnan(upper_bound))], 
-                                                                model='linear')
-            slope_lower, intercept_lower = weighted_regression(ecc_mean[np.where(~np.isnan(lower_bound))], 
-                                                                lower_bound[~np.isnan(lower_bound)], 
-                                                                r2_mean[np.where(~np.isnan(lower_bound))], 
-                                                                model='linear')
+            slope, intercept = weighted_regression(ecc_mean, size_mean, r2_mean, model='linear')
+            slope_upper, intercept_upper = weighted_regression(ecc_mean[np.where(~np.isnan(size_upper_bound))], 
+                                                               size_upper_bound[~np.isnan(size_upper_bound)], 
+                                                               r2_mean[np.where(~np.isnan(size_upper_bound))], 
+                                                               model='linear')
+            slope_lower, intercept_lower = weighted_regression(ecc_mean[np.where(~np.isnan(size_lower_bound))], 
+                                                               size_lower_bound[~np.isnan(size_lower_bound)], 
+                                                               r2_mean[np.where(~np.isnan(size_lower_bound))], 
+                                                               model='linear')
             
-            line = slope * np.array(df_sorted.prf_ecc) + intercept
-            line_upper = slope_upper * np.array(df_sorted.prf_ecc) + intercept_upper
-            line_lower = slope_lower * np.array(df_sorted.prf_ecc) + intercept_lower
+            line = slope * ecc_mean + intercept
+            line_upper = slope_upper * ecc_mean + intercept_upper
+            line_lower = slope_lower * ecc_mean + intercept_lower
 
-            fig.add_trace(go.Scatter(x=np.array(df_sorted.prf_ecc), y=line, mode='lines', name=roi, legendgroup=roi, 
+            fig.add_trace(go.Scatter(x=ecc_mean, y=line, mode='lines', name=roi, legendgroup=roi, 
                                       line=dict(color=roi_color, width=3), showlegend=False), 
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([df_sorted.prf_ecc, df_sorted.prf_ecc[::-1]]), 
+            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]), 
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -340,9 +711,10 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
 
             # Markers
             fig.add_trace(go.Scatter(x=ecc_mean, 
-                                     y=sd_mean, mode='markers', 
+                                     y=size_mean, mode='markers', 
                                      error_y=dict(type='data', 
-                                                  array=ci.apply(lambda x: (x[1] - x[0]) / 2).tolist(), 
+                                                  array=size_upper_bound - size_mean, 
+                                                  arrayminus=size_mean - size_lower_bound,
                                                   visible=True, 
                                                   thickness=3, 
                                                   width=0, 
@@ -355,7 +727,7 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
                           row=1, col=l + 1)
             
             # Add legend
-            annotation = go.layout.Annotation(x=1, y=15-j*1.5, text=roi, xanchor='left',
+            annotation = go.layout.Annotation(x=1, y=max_ecc-j*1.5, text=roi, xanchor='left',
                                               showarrow=False, font_color=roi_color, 
                                               font_family=template_specs['font'],
                                               font_size=template_specs['axes_font_size'],
@@ -364,34 +736,33 @@ def prf_ecc_size_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups
 
         # Set axis titles only for the left-most column and bottom-most row
         fig.update_yaxes(title_text='pRF size (dva)', row=1, col=1)
-        fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0,15], showline=True, row=1, col=l+1)
-        fig.update_yaxes(range=[0,15], showline=True)
+        fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0, max_ecc], showline=True, row=1, col=l+1)
+        fig.update_yaxes(range=[0, max_ecc], showline=True)
         fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template=fig_template,
                          margin_l=100, margin_r=50, margin_t=50, margin_b=100)
         
     return fig
 
-def prf_ecc_pcm_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups, num_bins, max_ecc):
+def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_groups, max_ecc):
     """
     Make scatter plot for relationship between eccentricity and pCM
 
     Parameters
     ----------
-    data : A data dataframe
+    df_ecc_pcm : dataframe for the plot
     fig_width : figure width in pixels
     fig_height : figure height in pixels
     rois : list of rois
     roi_colors : list of rgb colors for plotly
     plot_groups : groups of roi to plot together
-    num_bins : number of eccentricity bins
-    max_ecc : maximum eccentricity 
+    max_ecc : maximum eccentricity
     
     Returns
     -------
-    fig : eccentricy as a function of size plot
+    fig : eccentricy as a function of pcm plot
     """
 
-    from maths_utils import weighted_regression, bootstrap_ci_mean
+    from maths_utils import weighted_regression
     
     # General figure settings
     template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
@@ -403,7 +774,6 @@ def prf_ecc_pcm_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups,
                           plot_width=1.5)
     
     # General figure settings
-    ecc_bins = np.linspace(0.1, 1, num_bins+1)**2 * max_ecc
     fig_template = plotly_template(template_specs)
 
     # General settings
@@ -412,55 +782,47 @@ def prf_ecc_pcm_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups,
     
     for l, line_label in enumerate(plot_groups):
         for j, roi in enumerate(line_label):
-            
-            # Sorting best datas
-            df = data.loc[(data.roi == roi)]
-            
+
             # Parametring colors
             roi_color = roi_colors[j + l * 3]
             roi_color_opac = f"rgba{roi_color[3:-1]}, 0.15)"
             
-            # Grouping by eccentricities
-            df_grouped = df.groupby(pd.cut(df['prf_ecc'], bins=ecc_bins))
-            df_sorted = df.sort_values('prf_ecc')
-            
-            ecc_mean = np.array(df_grouped['prf_ecc'].mean())
-            sd_mean = np.array(df_grouped['pcm'].mean())
-            r2_mean = np.array(df_grouped['prf_loo_r2'].mean())
-            
-            # CI95 for each group of ecc
-            ci = df_grouped['pcm'].apply(lambda x: bootstrap_ci_mean(x))
-            upper_bound = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
-            lower_bound = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            # Get data
+            df = df_ecc_pcm.loc[(df_ecc_pcm.roi == roi)]
+            ecc_mean = np.array(df.prf_ecc_bins)
+            pcm_mean = np.array(df.prf_pcm_bins_mean)
+            r2_mean = np.array(df.prf_loo_r2_bins_mean)
+            pcm_upper_bound = np.array(df.prf_pcm_bins_ci_upper_bound)
+            pcm_lower_bound = np.array(df.prf_pcm_bins_ci_lower_bound)
             
             # Linear regression
-            slope, intercept = weighted_regression(ecc_mean, sd_mean, r2_mean, model='pcm')
+            slope, intercept = weighted_regression(ecc_mean, pcm_mean, r2_mean, model='pcm')
             
-            slope_upper, intercept_upper = weighted_regression(ecc_mean[~np.isnan(upper_bound)], 
-                                                                upper_bound[~np.isnan(upper_bound)], 
-                                                                r2_mean[~np.isnan(upper_bound)], 
-                                                                model='pcm')
+            slope_upper, intercept_upper = weighted_regression(ecc_mean[~np.isnan(pcm_upper_bound)], 
+                                                               pcm_upper_bound[~np.isnan(pcm_upper_bound)], 
+                                                               r2_mean[~np.isnan(pcm_upper_bound)], 
+                                                               model='pcm')
             
-            slope_lower, intercept_lower = weighted_regression(ecc_mean[~np.isnan(lower_bound)], 
-                                                                lower_bound[~np.isnan(lower_bound)], 
-                                                                r2_mean[~np.isnan(lower_bound)], 
-                                                                model='pcm')
+            slope_lower, intercept_lower = weighted_regression(ecc_mean[~np.isnan(pcm_lower_bound)], 
+                                                               pcm_lower_bound[~np.isnan(pcm_lower_bound)], 
+                                                               r2_mean[~np.isnan(pcm_lower_bound)], 
+                                                               model='pcm')
             
-            line = 1 / (slope * np.array(df_sorted.prf_ecc)) + intercept
-            line_upper = 1 / (slope_upper * np.array(df_sorted.prf_ecc)) + intercept_upper
-            line_lower = 1 / (slope_lower * np.array(df_sorted.prf_ecc)) + intercept_lower
+            line = 1 / (slope * ecc_mean) + intercept
+            line_upper = 1 / (slope_upper * ecc_mean) + intercept_upper
+            line_lower = 1 / (slope_lower * ecc_mean) + intercept_lower
 
-            fig.add_trace(go.Scatter(x=np.array(df_sorted.prf_ecc), 
-                                      y=line, 
-                                      mode='lines', 
-                                      name=roi, 
-                                      legendgroup=roi, 
-                                      line=dict(color=roi_color, width=3), 
-                                      showlegend=False), 
+            fig.add_trace(go.Scatter(x=ecc_mean, 
+                                     y=line, 
+                                     mode='lines', 
+                                     name=roi, 
+                                     legendgroup=roi, 
+                                     line=dict(color=roi_color, width=3), 
+                                     showlegend=False), 
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([df_sorted.prf_ecc, df_sorted.prf_ecc[::-1]]), 
+            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]),
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -468,20 +830,21 @@ def prf_ecc_pcm_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups,
 
             # Markers
             fig.add_trace(go.Scatter(x=ecc_mean, 
-                                      y=sd_mean, 
-                                      mode='markers', 
-                                      error_y=dict(type='data', 
-                                                   array=ci.apply(lambda x: (x[1] - x[0]) / 2).tolist(), 
-                                                   visible=True, 
-                                                   thickness=3, 
-                                                   width=0, 
-                                                   color=roi_color),
-                                      marker=dict(color='white', size=8, line=dict(color=roi_color,width=3)), 
-                                      showlegend=False), 
+                                     y=pcm_mean, 
+                                     mode='markers', 
+                                     error_y=dict(type='data', 
+                                                  array=pcm_upper_bound - pcm_mean, 
+                                                  arrayminus=pcm_mean - pcm_lower_bound,
+                                                  visible=True, 
+                                                  thickness=3, 
+                                                  width=0, 
+                                                  color=roi_color),
+                                     marker=dict(color='white', size=8, line=dict(color=roi_color,width=3)), 
+                                     showlegend=False), 
                           row=1, col=l + 1)
             
             # Add legend
-            annotation = go.layout.Annotation(x=1, y=15-j*1.5, text=roi, xanchor='left',
+            annotation = go.layout.Annotation(x=1, y=max_ecc-j*1.5, text=roi, xanchor='left',
                                               showarrow=False, font_color=roi_color, 
                                               font_family=template_specs['font'],
                                               font_size=template_specs['axes_font_size'],
@@ -489,21 +852,21 @@ def prf_ecc_pcm_plot(data, fig_width, fig_height, rois, roi_colors, plot_groups,
             fig.add_annotation(annotation, row=1, col=l+1)
 
         # Set axis titles only for the left-most column and bottom-most row
-        fig.update_yaxes(title_text='pCM (mm/dva)', row=1, col=1)
-        fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0, 15], showline=True, row=1, col=l+1)
-        fig.update_yaxes(range=[0, 15], showline=True)
+        fig.update_yaxes(title_text='pRF cortical magn. (mm/dva)', row=1, col=1)
+        fig.update_xaxes(title_text='pRF eccentricity (dva)', range=[0, max_ecc], showline=True, row=1, col=l+1)
+        fig.update_yaxes(range=[0, max_ecc], showline=True)
         fig.update_layout(height=fig_height, width=fig_width, showlegend=False, template=fig_template,
                          margin_l=100, margin_r=50, margin_t=50, margin_b=100)
         
     return fig
 
-def prf_polar_plot(data, fig_width, fig_height, rois, roi_colors, num_bins) :    
+def prf_polar_angle_plot(df_polar_angle, fig_width, fig_height, rois, roi_colors, num_polar_angle_bins) :    
     """
-    Make polar plots
+    Make polar angle distribution plots
     
     Parameters
     ----------
-    data : A data dataframe
+    df_polar_angle : polar angle dataframe
     fig_width : figure width in pixels
     fig_height : figure height in pixels
     rois : list of rois
@@ -529,39 +892,29 @@ def prf_polar_plot(data, fig_width, fig_height, rois, roi_colors, num_bins) :
 
     # General settings
     rows, cols = 1, len(rois)
-    hemis = np.append(pd.unique(data.hemi), 'hemi-LR')
-    data['prf_angle'] = np.angle(data.polar_real + 1j * data.polar_imag)
     specs = [[{'type': 'polar'}] * cols]
     
     figs = []
     hemispheres = []
+    hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
     for i, hemi in enumerate(hemis):
         fig = make_subplots(rows=rows, cols=cols, print_grid=False, specs=specs)
-        
-        hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
-    
+            
         for j, roi in enumerate(rois):
             if j == 0: showlegend = True
             else: showlegend = False
     
-            df = data.loc[(data.roi==roi) & (data.hemi.isin(hemi_values))]
-    
-            # Conversion
-            df.prf_angle = np.degrees(df.prf_angle)
-            df.prf_angle = np.mod(df.prf_angle, 360)
-    
             # Parts of polar angles and number of voxels in each part
-            theta_slices = np.linspace(0, 360, num_bins+1, endpoint=True)
-            vertex_counts, _ = np.histogram(df.prf_angle, bins=theta_slices)
-    
+            df = df_polar_angle.loc[(df_polar_angle.roi==roi) & (df_polar_angle.hemi==hemi)]
+            
             # barpolar
-            fig.add_trace(go.Barpolar(r=vertex_counts, 
-                                      theta=theta_slices, 
-                                      width=30, 
+            fig.add_trace(go.Barpolar(r=df.loo_r2_sum, 
+                                      theta=df.theta_slices, 
                                       marker_color=roi_colors[j], 
+                                      width=360/(num_polar_angle_bins),
                                       marker_line_color='black', 
                                       marker_line_width=1, 
-                                      opacity=0.8,
+                                      opacity=1,
                                       showlegend=True,
                                       name=roi, 
                                      ), 
@@ -592,13 +945,13 @@ def prf_polar_plot(data, fig_width, fig_height, rois, roi_colors, num_bins) :
         
     return figs, hemispheres
 
-def prf_contralaterality_plot(data, fig_height, fig_width, rois, roi_colors):
+def prf_contralaterality_plot(df_contralaterality, fig_height, fig_width, rois, roi_colors):
     """
     Make contralaterality pie plot
     
     Parameters
     ----------
-    data : A data dataframe
+    df_contralaterality : dataframe
     fig_width : figure width in pixels
     fig_height : figure height in pixels
     rois : list of rois
@@ -627,23 +980,20 @@ def prf_contralaterality_plot(data, fig_height, fig_width, rois, roi_colors):
     fig = make_subplots(rows=rows, cols=cols, print_grid=False, specs=specs)
     
     for j, roi in enumerate(rois):
-        df_rh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-R')]
-        df_lh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-L')]
-        try: 
-            percentage_total = (sum(df_rh.loc[df_rh.prf_x < 0].prf_loo_r2) + sum(df_lh.loc[df_lh.prf_x > 0].prf_loo_r2)) \
-                                / (sum(df_rh.prf_loo_r2) + sum(df_lh.prf_loo_r2))
-        except: 
-            percentage_total = np.nan
-            
-        percentage_rest = 1 - percentage_total
-        values = [percentage_total, percentage_rest]
 
-        deb()
+        df = df_contralaterality.loc[df_contralaterality.roi==roi]
+        percentage_total = np.array(df.contralaterality_prct)
+        percentage_rest = 1 - percentage_total
+        percentage_total = percentage_total.tolist()
+        percentage_rest = percentage_rest.tolist()
+        values = [percentage_total[0], percentage_rest[0]]
+
+
         fig.add_trace(go.Pie(values=values,
                              marker=dict(colors=[roi_colors[j], 'white'],
                                          line=dict(color=['black', 'white'],
                                                    width=[1,0])),
-                             rotation=percentage_total * 360 if percentage_total < percentage_rest else 0,),
+                            ),
                       row=1, col=j+1)
 
     # Define parameters
@@ -658,115 +1008,7 @@ def prf_contralaterality_plot(data, fig_height, fig_width, rois, roi_colors):
     
     return fig 
 
-def prf_roi_area(data, fig_width, fig_height, roi_colors):
-    """
-    Make bar plots of each roi area and the corresponding significative area of pRF  
-    
-    Parameters
-    ----------
-    data : A data dataframe
-    fig_width : figure width in pixels
-    fig_height : figure height in pixels
-    roi_colors : list of rgb colors for plotly
-    
-    Returns
-    -------
-    fig : bar plot
-    """
-    data = data.copy()
-    # General figure settings
-    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
-                          axes_width=2,
-                          axes_font_size=15,
-                          bg_col="rgba(255, 255, 255, 1)",
-                          font='Arial',
-                          title_font_size=15,
-                          plot_width=1.5)
-    
-    # General figure settings
-    fig_template = plotly_template(template_specs)
-    
-    # General settings
-    fig = make_subplots(rows=1, 
-                        cols=2, 
-                        subplot_titles=['FDR threshold = 0.05', 'FDR threshold = 0.01'])
-    fig.layout.annotations[0].update(x=0.1)
-    fig.layout.annotations[1].update(x=0.65)
-    
-    # Converte mm2 in cm2 
-    data['vert_area'] = data['vert_area'] / 100
-    
-    # Compute the area of each area 
-    group_df_rois = data.groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
 
-    # Compute the area of significative vertex in each roi for FDR 0.05
-    group_df_rois_5pt = data[data['corr_pvalue_5pt'] < 0.05].groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
-    group_df_rois_5pt['percentage'] = ((group_df_rois_5pt.vert_area / group_df_rois.vert_area ) * 100).round()
-    group_df_rois_5pt['percentage'] = group_df_rois_5pt['percentage'].astype(int).astype(str) + '%'
-    
-    # Compute the area of significative vertex in each roi for FDR 0.01
-    group_df_rois_1pt = data[data['corr_pvalue_1pt'] < 0.01].groupby(['roi'], sort=False)['vert_area'].sum().reset_index()
-    group_df_rois_1pt['percentage'] = ((group_df_rois_1pt.vert_area / group_df_rois.vert_area ) * 100).round()
-    group_df_rois_1pt['percentage'] = group_df_rois_1pt['percentage'].astype(int).astype(str) + '%'
-    
-    # plot for FDR 0.05
-    # total bar 
-    fig.add_trace(go.Bar(x=group_df_rois.roi, 
-                         y=group_df_rois.vert_area, 
-                         text=group_df_rois_5pt.percentage, 
-                         textposition='outside',
-                         textangle=-60,
-                         showlegend=False, 
-                         marker=dict(color=roi_colors, opacity=0.2)),
-                 row=1, col=1)
-    
-    # significatif vertex bar
-    fig.add_trace(go.Bar(x=group_df_rois_5pt.roi, 
-                         y=group_df_rois_5pt.vert_area, 
-    
-                         showlegend=False, 
-                         marker=dict(color=roi_colors)),
-                 row=1, col=1)
-    
-    
-    # plot for FDR 0.01 
-    # total bar 
-    fig.add_trace(go.Bar(x=group_df_rois.roi, 
-                         y=group_df_rois.vert_area, 
-                         text=group_df_rois_1pt.percentage, 
-                         textposition='outside',
-                         textangle=-60,
-                         showlegend=False, 
-                         marker=dict(color=roi_colors, opacity=0.1)),
-                 row=1, col=2)
-    
-    # significatif vertex bar
-    fig.add_trace(go.Bar(x=group_df_rois_1pt.roi, 
-                         y=group_df_rois_1pt.vert_area, 
-                         showlegend=False, 
-                         marker=dict(color=roi_colors)),
-                 row=1, col=2)
-
-    # Define parameters
-    fig.update_xaxes(showline=True, 
-                     ticklen=0, 
-                     linecolor=('rgba(255,255,255,0)'))      
-    
-    fig.update_yaxes(range=[0,100], 
-                     showline=True, 
-                     nticks=10, 
-                     title_text='Surface area (cm<sup>2</sup>)',secondary_y=False)
-    
-    fig.update_layout(barmode='overlay',
-                      height=fig_height, 
-                      width=fig_width, 
-                      template=fig_template,
-                      margin_l=100, 
-                      margin_r=50, 
-                      margin_t=50, 
-                      margin_b=50)
-    return fig 
-    
 def categories_proportions_roi_plot(data, subject, fig_height, fig_width):
     data = data.copy()
     filtered_data = data[data['stats_final'] != 'non_responding']
