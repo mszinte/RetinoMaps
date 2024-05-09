@@ -181,7 +181,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
 
         # Ecc.size
         # --------
-        ecc_bins = np.linspace(0.1, 1, num_ecc_size_bins+1)**2 * max_ecc
+        ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_size_bins)**2 * max_ecc))
         for num_roi, roi in enumerate(rois):
             df_roi = data.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -203,8 +203,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         # Ecc.pCM
         # --------
         data_pcm = data
-        
-        ecc_bins = np.linspace(0.1, 1, num_ecc_pcm_bins+1)**2 * max_ecc
+        ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_pcm_bins)**2 * max_ecc))
         for num_roi, roi in enumerate(rois):
             df_roi = data_pcm.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -217,7 +216,6 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             ci = df_bins['pcm'].apply(lambda x: bootstrap_ci_mean(x))
             df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
             df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
-
             if num_roi == 0: df_ecc_pcm_bins = df_ecc_pcm_bin
             else: df_ecc_pcm_bins = pd.concat([df_ecc_pcm_bins, df_ecc_pcm_bin])
 
@@ -604,7 +602,7 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0, 10], 
+                         range=[0, 20], 
                          nticks=10, 
                          title_text='pRF pCM (mm/dva)', 
                          row=2, col=2)
@@ -693,17 +691,18 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
                                                                size_lower_bound[~np.isnan(size_lower_bound)], 
                                                                r2_mean[np.where(~np.isnan(size_lower_bound))], 
                                                                model='linear')
-            
-            line = slope * ecc_mean + intercept
-            line_upper = slope_upper * ecc_mean + intercept_upper
-            line_lower = slope_lower * ecc_mean + intercept_lower
 
-            fig.add_trace(go.Scatter(x=ecc_mean, y=line, mode='lines', name=roi, legendgroup=roi, 
+            line_x = np.linspace(0, max_ecc, 50)
+            line = slope * line_x + intercept
+            line_upper = slope_upper * line_x + intercept_upper
+            line_lower = slope_lower * line_x + intercept_lower
+
+            fig.add_trace(go.Scatter(x=line_x, y=line, mode='lines', name=roi, legendgroup=roi, 
                                       line=dict(color=roi_color, width=3), showlegend=False), 
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]), 
+            fig.add_trace(go.Scatter(x=np.concatenate([line_x, line_x[::-1]]), 
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -807,12 +806,13 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                                                                pcm_lower_bound[~np.isnan(pcm_lower_bound)], 
                                                                r2_mean[~np.isnan(pcm_lower_bound)], 
                                                                model='pcm')
-            
-            line = 1 / (slope * ecc_mean) + intercept
-            line_upper = 1 / (slope_upper * ecc_mean) + intercept_upper
-            line_lower = 1 / (slope_lower * ecc_mean) + intercept_lower
 
-            fig.add_trace(go.Scatter(x=ecc_mean, 
+            line_x = np.linspace(0, max_ecc, 50)
+            line = 1 / (slope * line_x) + intercept
+            line_upper = 1 / (slope_upper * line_x) + intercept_upper
+            line_lower = 1 / (slope_lower * line_x) + intercept_lower
+
+            fig.add_trace(go.Scatter(x=line_x, 
                                      y=line, 
                                      mode='lines', 
                                      name=roi, 
@@ -822,7 +822,7 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]),
+            fig.add_trace(go.Scatter(x=np.concatenate([line_x, line_x[::-1]]),
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -1222,16 +1222,3 @@ def surface_rois_all_categories_plot(data, subject, fig_height, fig_width):
                       template='simple_white')  
     
     return fig 
-    
-    
-    
-
-    
-        
-    
-    
-    
-    
-        
-           
-            

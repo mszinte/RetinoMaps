@@ -12,9 +12,10 @@ Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ## To Do 
 ---
-- [ ] make webgl and publish it
-- [ ] merge_fig_css.py
-- [ ] do full group analysis
+- [ ] re-run css maps plot
+- [ ] include change in amblyo_prf
+- [ ] code average figure data similar to violin
+- [ ] re-run merge figures
 
 ## Data analysis
 ---
