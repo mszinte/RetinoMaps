@@ -12,9 +12,7 @@ Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ## To Do 
 ---
-- [ ] re-run css maps plot
-- [ ] code average figure data similar to violin
-- [ ] re-run make_rois_fig to run new figure
+- [x] re-run css maps plot
 - [ ] re-run merging and webgl
 
 ## Data analysis
