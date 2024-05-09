@@ -21,7 +21,7 @@ On invibe.nohost.me
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/webgl/
-python publish_webgl.py ~/disks/meso_shared RetinoMaps
+python publish_webgl.py ~/disks/meso_S/data RetinoMaps
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

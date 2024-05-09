@@ -12,8 +12,7 @@ Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ## To Do 
 ---
-- [x] re-run css maps plot
-- [ ] re-run merging and webgl
+- [ ] take care of glm analysis
 
 ## Data analysis
 ---
