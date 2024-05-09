@@ -23,6 +23,7 @@ To run:
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python compute_css_stats.py /scratch/mszinte/data RetinoMaps sub-01 327
+python compute_css_stats.py /scratch/mszinte/data RetinoMaps sub-170k 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (martin.szinte@gmail.com)

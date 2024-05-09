@@ -23,6 +23,7 @@ To run:
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
 python compute_css_derivatives.py /scratch/mszinte/data RetinoMaps sub-01 327
+python compute_css_derivatives.py /scratch/mszinte/data RetinoMaps sub-170k 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 and Uriel Lascombes (uriel.lascombes@laposte.net)
