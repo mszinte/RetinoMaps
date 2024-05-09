@@ -23,12 +23,12 @@ python compute_run_corr.py [main directory] [project name] [subject name] [group
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/preproc/functional/
 python compute_run_corr.py /scratch/mszinte/data RetinoMaps sub-01 327
+python compute_run_corr.py /scratch/mszinte/data RetinoMaps sub-170k 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (mail@martinszinte.net)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -74,6 +74,10 @@ fdr_alpha = analysis_info['fdr_alpha']
 maps_names = analysis_info['maps_names_corr']
 subjects = analysis_info['subjects']
 
+# Index
+slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx, \
+    trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7
+        
 # sub-170k exeption
 if subject != 'sub-170k':
     print('{}, computing inter-run correlation...'.format(subject))
@@ -103,10 +107,7 @@ if subject != 'sub-170k':
                           preproc_fsnative_hemi_R,
                           preproc_170k]
     
-    # Inter-run correlations
-    slope_idx, intercept_idx, rvalue_idx, pvalue_idx, stderr_idx, \
-        trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 0, 1, 2, 3, 4, 5, 6, 7
-    
+    # Inter-run correlations    
     for preproc_files in preproc_files_list:
         for task in tasks:
             # Defind output files names 
@@ -132,9 +133,9 @@ if subject != 'sub-170k':
                 a_img, a_data = load_surface(fn=combi[0])
                 b_img, b_data = load_surface(fn=combi[1])
                 combi_task_corr = linear_regression_surf(bold_signal=a_data, 
-                                                         model_prediction=b_data,
-                                                         correction='fdr_tsbh',
-                                                         alpha=fdr_alpha)
+                                                          model_prediction=b_data,
+                                                          correction='fdr_tsbh',
+                                                          alpha=fdr_alpha)
                 
                 # Save combi files in temp_data
                 if hemi: combi_corr_fn = "{}/{}_task-{}_{}_fmriprep_dct_corr_bold_combi-{}.func.gii".format(
@@ -167,8 +168,8 @@ if subject != 'sub-170k':
             degrees_of_freedom = corr_stats_data_avg[trs_idx, 0] - 2 
             p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
             corrected_p_values = multipletests_surface(pvals=p_values, 
-                                                       correction='fdr_tsbh', 
-                                                       alpha=fdr_alpha)
+                                                        correction='fdr_tsbh', 
+                                                        alpha=fdr_alpha)
             corr_stats_data_avg[pvalue_idx, :] = p_values
             corr_stats_data_avg[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
             corr_stats_data_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
@@ -201,6 +202,17 @@ elif subject == 'sub-170k':
  
         # Averaging across subject
         img, data_task_corr_avg = avg_subject_template(fns=subjects_task_corr)
+        
+        # Compute two sided corrected p-values
+        t_statistic = data_task_corr_avg[slope_idx, :] / data_task_corr_avg[stderr_idx, :]
+        degrees_of_freedom = data_task_corr_avg[trs_idx, 0] - 2 
+        p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
+        corrected_p_values = multipletests_surface(pvals=p_values, 
+                                                   correction='fdr_tsbh', 
+                                                   alpha=fdr_alpha)
+        data_task_corr_avg[pvalue_idx, :] = p_values
+        data_task_corr_avg[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
+        data_task_corr_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
             
         # Export results
         sub_170k_cor_dir = "{}/{}/derivatives/pp_data/sub-170k/170k/corr/fmriprep_dct_corr".format(
@@ -209,7 +221,7 @@ elif subject == 'sub-170k':
         
         sub_170k_cor_fn = "{}/sub-170k_task-{}_fmriprep_dct_corr_bold.dtseries.nii".format(sub_170k_cor_dir, task)
         
-        print("corr save: {}".format(sub_170k_cor_fn))
+        print("save: {}".format(sub_170k_cor_fn))
         sub_170k_corr_img = make_surface_image(
             data=data_task_corr_avg, source_img=img, maps_names=maps_names)
         nb.save(sub_170k_corr_img, sub_170k_cor_fn)
