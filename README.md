@@ -13,9 +13,9 @@ Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 ## To Do 
 ---
 - [ ] re-run css maps plot
-- [ ] include change in amblyo_prf
 - [ ] code average figure data similar to violin
-- [ ] re-run merge figures
+- [ ] re-run make_rois_fig to run new figure
+- [ ] re-run merging and webgl
 
 ## Data analysis
 ---
