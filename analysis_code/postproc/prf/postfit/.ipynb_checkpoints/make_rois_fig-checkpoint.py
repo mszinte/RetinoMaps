@@ -106,7 +106,7 @@ for format_, extension in zip(formats, extensions):
     os.makedirs(fig_dir, exist_ok=True)
 
     # Load data
-    df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality = \
+    df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg = \
         compute_plot_data(subject=subject,
                           main_dir=main_dir,
                           project_dir=project_dir,
@@ -131,13 +131,20 @@ for format_, extension in zip(formats, extensions):
     print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
     
-    # Violins plots
+    # Violins plot
     fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
                            rois=rois, roi_colors=roi_colors)
     fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
     print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
-        
+
+    # Parameters average plot
+    fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
+                              rois=rois, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_params_avg.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
+    
     # Ecc.size plots
     fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
                             fig_height=400, rois=rois, roi_colors=roi_colors,

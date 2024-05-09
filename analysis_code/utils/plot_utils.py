@@ -42,6 +42,9 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     df_violins: dataframe filtered to use in violins plot
     df_ecc_size: dataframe to use in eccentricity size plot
     df_ecc_pcm: dataframe to use in eccentricity size plot
+    df_polar_angle: dataframe to use in polar angle plot
+    df_contralaterality: dataframe to use in contralaterality plot
+    df_params_avg: dataframe to use in parameters average plot
     """
     from maths_utils import weighted_regression, bootstrap_ci_mean
     
@@ -64,6 +67,13 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             df_violins_indiv = pd.read_table(tsv_violins_fn, sep="\t")
             if i == 0: df_violins = df_violins_indiv.copy()
             else: df_violins = pd.concat([df_violins, df_violins_indiv])
+
+            # Parameters average
+            # ------------------
+            tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject_to_group)
+            df_params_avg_indiv = pd.read_table(tsv_params_avg_fn, sep="\t")
+            if i == 0: df_params_avg = df_params_avg_indiv.copy()
+            else: df_params_avg = pd.concat([df_params_avg, df_params_avg_indiv])
 
             # Ecc.size
             # --------
@@ -112,6 +122,14 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         print('Saving tsv: {}'.format(tsv_violins_fn))
         df_violins.to_csv(tsv_violins_fn, sep="\t", na_rep='NaN', index=False)
 
+        # Parameters average
+        # ------------------
+        df_params_avg = df_params_avg.groupby(['roi'], sort=False).mean().reset_index()
+        tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_params_avg_fn))
+        df_params_avg.to_csv(tsv_params_avg_fn, sep="\t", na_rep='NaN', index=False)
+        
+        
         # Ecc.size
         # --------
         df_ecc_size = df_ecc_size.groupby(['roi', 'num_bins'], sort=False).mean().reset_index()
@@ -179,9 +197,31 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         # -------
         df_violins = data
 
+        # Parameters average
+        # ------------------
+        for num_roi, roi in enumerate(rois):
+            df_roi = data.loc[(data.roi == roi)]
+            df_params_avg_roi = pd.DataFrame()
+            df_params_avg_roi['roi'] = [roi]
+            df_params_avg_roi['prf_loo_r2_weighted_mean'], _ = np.average(df_roi.prf_loo_r2, weights=df_roi.prf_loo_r2, axis=0, returned=True)
+            df_params_avg_roi['prf_loo_r2_ci_down'] = np.percentile(df_roi.prf_loo_r2, [2.5])
+            df_params_avg_roi['prf_loo_r2_ci_up'] = np.percentile(df_roi.prf_loo_r2, [97.5])
+            df_params_avg_roi['prf_size_weighted_mean'], _ = np.average(df_roi.prf_size, weights=df_roi.prf_loo_r2, axis=0, returned=True)
+            df_params_avg_roi['prf_size_ci_down'] = np.percentile(df_roi.prf_size, [2.5])
+            df_params_avg_roi['prf_size_ci_up'] = np.percentile(df_roi.prf_size, [97.5])
+            df_params_avg_roi['prf_n_weighted_mean'], _ = np.average(df_roi.prf_n, weights=df_roi.prf_loo_r2, axis=0, returned=True)
+            df_params_avg_roi['prf_n_ci_down'] = np.percentile(df_roi.prf_n, [2.5])
+            df_params_avg_roi['prf_n_ci_up'] = np.percentile(df_roi.prf_n, [97.5])
+            df_params_avg_roi['pcm_weighted_mean'], _ = np.average(df_roi.pcm, weights=df_roi.prf_loo_r2, axis=0, returned=True)
+            df_params_avg_roi['pcm_ci_down'] = np.percentile(df_roi.pcm, [2.5])
+            df_params_avg_roi['pcm_ci_up'] = np.percentile(df_roi.pcm, [97.5])
+    
+            if num_roi == 0: df_params_avg = df_params_avg_roi
+            else: df_params_avg = pd.concat([df_params_avg, df_params_avg_roi])
+
         # Ecc.size
         # --------
-        ecc_bins = np.linspace(0.1, 1, num_ecc_size_bins+1)**2 * max_ecc
+        ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_size_bins)**2 * max_ecc))
         for num_roi, roi in enumerate(rois):
             df_roi = data.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -203,8 +243,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         # Ecc.pCM
         # --------
         data_pcm = data
-        
-        ecc_bins = np.linspace(0.1, 1, num_ecc_pcm_bins+1)**2 * max_ecc
+        ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_pcm_bins)**2 * max_ecc))
         for num_roi, roi in enumerate(rois):
             df_roi = data_pcm.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -217,7 +256,6 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             ci = df_bins['pcm'].apply(lambda x: bootstrap_ci_mean(x))
             df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
             df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
-
             if num_roi == 0: df_ecc_pcm_bins = df_ecc_pcm_bin
             else: df_ecc_pcm_bins = pd.concat([df_ecc_pcm_bins, df_ecc_pcm_bin])
 
@@ -275,6 +313,10 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         print('Saving tsv: {}'.format(tsv_violins_fn))
         df_violins.to_csv(tsv_violins_fn, sep="\t", na_rep='NaN', index=False)
 
+        tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_params_avg_fn))
+        df_params_avg.to_csv(tsv_params_avg_fn, sep="\t", na_rep='NaN', index=False)
+
         tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_ecc_size_fn))
         df_ecc_size.to_csv(tsv_ecc_size_fn, sep="\t", na_rep='NaN', index=False)
@@ -291,7 +333,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
 
-    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality
+    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg
         
 def plotly_template(template_specs):
     """
@@ -313,16 +355,16 @@ def plotly_template(template_specs):
     fig_template.data.violin = [go.Violin(
                                     box_visible=False,
                                     points=False,
-                                    opacity=1,
+                                    # opacity=1,
                                     line_color= "rgba(0, 0, 0, 1)",
                                     line_width=template_specs['plot_width'],
                                     width=0.8,
-                                    marker_symbol='x',
-                                    marker_opacity=0.5,
+                                    #marker_symbol='x',
+                                    #marker_opacity=1,
                                     hoveron='violins',
-                                    meanline_visible=True,
-                                    meanline_color="rgba(0, 0, 0, 1)",
-                                    meanline_width=template_specs['plot_width'],
+                                    meanline_visible=False,
+                                    # meanline_color="rgba(0, 0, 0, 1)",
+                                    # meanline_width=template_specs['plot_width'],
                                     showlegend=False,
                                     )]
 
@@ -334,8 +376,8 @@ def plotly_template(template_specs):
                                     )]
     # Pie plots
     fig_template.data.pie = [go.Pie(textposition=["inside","none"],
-                                    marker_line_color=['rgba(0,0,0,1)','rgba(255,255,255,0)'],
-                                    marker_line_width=[template_specs['plot_width'],0],
+                                    # marker_line_color=['rgba(0,0,0,1)','rgba(255,255,255,0)'],
+                                    marker_line_width=0,#[template_specs['plot_width'],0],
                                     rotation=0,
                                     direction="clockwise",
                                     hole=0.4,
@@ -497,7 +539,7 @@ def prf_roi_area(df_roi_area, fig_width, fig_height, roi_colors):
 
 def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
     """
-    Make violins plots for pRF r2/loo_r2, ecc and size
+    Make violins plots for pRF loo_r2, size, n and pcm
 
     Parameters
     ----------
@@ -540,48 +582,52 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
                                 y=df.prf_loo_r2, 
                                 name=roi, 
-                                showlegend=True, 
+                                opacity=1,
+                                showlegend=False, 
                                 legendgroup='loo', 
                                 points=False, 
                                 scalemode='width', 
-                                line_color=roi_colors[j], 
-                                meanline_visible=True), 
+                                fillcolor=roi_colors[j],
+                                line_color=roi_colors[j]), 
                       row=1, col=1)
                 
         # pRF size
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
                                 y=df.prf_size, 
                                 name=roi, 
+                                opacity=1,
                                 showlegend=False, 
-                                legendgroup='avg', 
+                                legendgroup='size', 
                                 points=False, 
                                 scalemode='width', 
-                                line_color=roi_colors[j], 
-                                meanline_visible=True), 
+                                fillcolor=roi_colors[j],
+                                line_color=roi_colors[j]), 
                       row=1, col=2)
         
         # pRF n
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
                                 y=df.prf_n, 
                                 name=roi, 
+                                opacity=1,
                                 showlegend=False, 
-                                legendgroup='avg', 
+                                legendgroup='n', 
                                 points=False, 
                                 scalemode='width', 
-                                line_color=roi_colors[j], 
-                                meanline_visible=True), 
+                                fillcolor=roi_colors[j],
+                                line_color=roi_colors[j]), 
                       row=2, col=1)
         
         # pcm
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
                                 y=df.pcm, 
                                 name=roi, 
+                                opacity=1,
                                 showlegend=False, 
-                                legendgroup='avg', 
+                                legendgroup='pcm', 
                                 points=False, 
                                 scalemode='width', 
-                                line_color=roi_colors[j], 
-                                meanline_visible=True), 
+                                fillcolor=roi_colors[j],
+                                line_color=roi_colors[j]), 
                       row=2, col=2)
         
         # Set axis titles only for the left-most column and bottom-most row
@@ -604,7 +650,196 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0, 10], 
+                         range=[0, 20], 
+                         nticks=10, 
+                         title_text='pRF pCM (mm/dva)', 
+                         row=2, col=2)
+        
+        fig.update_xaxes(showline=True, 
+                         ticklen=0, 
+                         linecolor=('rgba(255,255,255,0)'))
+        
+    fig.update_layout(height=fig_height, 
+                      width=fig_width, 
+                      showlegend=False,
+                      legend=dict(orientation="h", 
+                                  font_family=template_specs['font'],
+                                  font_size=template_specs['axes_font_size'],
+                                  y=1.1, 
+                                  yanchor='top', 
+                                  xanchor='left', 
+                                  traceorder='normal', 
+                                  itemwidth=30), 
+                      template=fig_template,
+                      margin_l=100, 
+                      margin_r=50, 
+                      margin_t=100, 
+                      margin_b=100)
+
+    return fig
+
+def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
+    """
+    Make parameters average plots for pRF loo_r2, size, n and pcm
+
+    Parameters
+    ----------
+    df_params_avg : dataframe
+    fig_width : figure width in pixels
+    fig_height : figure height in pixels
+    rois : list of rois
+    roi_colors : list of rgb colors for plotly
+    
+    Returns
+    -------
+    fig : parameters average plot
+    """
+    
+    # General figure settings
+    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
+                          axes_width=2,
+                          axes_font_size=15,
+                          bg_col="rgba(255, 255, 255, 1)",
+                          font='Arial',
+                          title_font_size=15,
+                          plot_width=1.5)
+    
+    # General figure settings
+    fig_template = plotly_template(template_specs)
+
+    rows, cols = 2,2
+    fig = make_subplots(rows=rows, 
+                        cols=cols, 
+                        print_grid=False, 
+                        vertical_spacing=0.08, 
+                        horizontal_spacing=0.05)
+    
+    for j, roi in enumerate(rois):
+        
+        df = df_params_avg.loc[(df_params_avg.roi == roi)]
+
+        weighted_mean = df.prf_loo_r2_weighted_mean
+        ci_up = df.prf_loo_r2_ci_up
+        ci_down = df.prf_loo_r2_ci_down
+        
+
+        fig.add_trace(go.Scatter(x=[roi],
+                                 y=tuple(weighted_mean),
+                                 mode='markers', 
+                                 name=roi,
+                                 error_y=dict(type='data', 
+                                              array=[ci_up-weighted_mean], 
+                                              arrayminus=[weighted_mean-ci_down],
+                                              visible=True, 
+                                              thickness=3,
+                                              width=0, 
+                                              color=roi_colors[j]),
+                                 marker=dict(symbol="square",
+                                             color=roi_colors[j],
+                                             size=12, 
+                                             line=dict(color=roi_colors[j], 
+                                                       width=3)),
+                                 legendgroup='loo',
+                                 showlegend=False), 
+                          row=1, col=1)
+        
+        # pRF size
+        weighted_mean = df.prf_size_weighted_mean
+        ci_up = df.prf_size_ci_up
+        ci_down = df.prf_size_ci_down
+        
+        fig.add_trace(go.Scatter(x=[roi],
+                                 y=tuple(weighted_mean),
+                                 mode='markers', 
+                                 name=roi,
+                                 error_y=dict(type='data', 
+                                              array=[ci_up-weighted_mean], 
+                                              arrayminus=[weighted_mean-ci_down],
+                                              visible=True, 
+                                              thickness=3,
+                                              width=0, 
+                                              color=roi_colors[j]),
+                                 marker=dict(symbol="square",
+                                             color=roi_colors[j],
+                                             size=12, 
+                                             line=dict(color=roi_colors[j], 
+                                                       width=3)),
+                                 legendgroup='size',
+                                 showlegend=False), 
+                          row=1, col=2)
+                
+        # pRF n
+        weighted_mean = df.prf_n_weighted_mean
+        ci_up = df.prf_n_ci_up
+        ci_down = df.prf_n_ci_down
+        
+        fig.add_trace(go.Scatter(x=[roi],
+                                 y=tuple(weighted_mean),
+                                 mode='markers', 
+                                 name=roi,
+                                 error_y=dict(type='data', 
+                                              array=[ci_up-weighted_mean], 
+                                              arrayminus=[weighted_mean-ci_down],
+                                              visible=True, 
+                                              thickness=3,
+                                              width=0, 
+                                              color=roi_colors[j]),
+                                 marker=dict(symbol="square",
+                                             color=roi_colors[j],
+                                             size=12, 
+                                             line=dict(color=roi_colors[j], 
+                                                       width=3)),
+                                 legendgroup='n',
+                                 showlegend=False), 
+                          row=2, col=1)
+        
+        # pcm
+        weighted_mean = df.pcm_weighted_mean
+        ci_up = df.pcm_ci_up
+        ci_down = df.pcm_ci_down
+        
+        fig.add_trace(go.Scatter(x=[roi],
+                                 y=tuple(weighted_mean),
+                                 mode='markers', 
+                                 name=roi,
+                                 error_y=dict(type='data', 
+                                              array=[ci_up-weighted_mean], 
+                                              arrayminus=[weighted_mean-ci_down],
+                                              visible=True, 
+                                              thickness=3,
+                                              width=0, 
+                                              color=roi_colors[j]),
+                                 marker=dict(symbol="square",
+                                             color=roi_colors[j],
+                                             size=12, 
+                                             line=dict(color=roi_colors[j], 
+                                                       width=3)),
+                                 legendgroup='pcm',
+                                 showlegend=False), 
+                          row=2, col=2)
+
+        
+        # Set axis titles only for the left-most column and bottom-most row
+        fig.update_yaxes(showline=True, 
+                         range=[0, 1],
+                         nticks=10, 
+                         title_text='pRF LOO R<sup>2</sup>',
+                         row=1, col=1)
+        
+        fig.update_yaxes(showline=True, 
+                         range=[0, 20], 
+                         nticks=5, 
+                         title_text='pRF size (dva)', 
+                         row=1, col=2)
+        
+        fig.update_yaxes(showline=True, 
+                         range=[0, 2], 
+                         nticks=5, 
+                         title_text='pRF n', 
+                         row=2, col=1)
+        
+        fig.update_yaxes(showline=True, 
+                         range=[0, 20], 
                          nticks=10, 
                          title_text='pRF pCM (mm/dva)', 
                          row=2, col=2)
@@ -693,17 +928,18 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
                                                                size_lower_bound[~np.isnan(size_lower_bound)], 
                                                                r2_mean[np.where(~np.isnan(size_lower_bound))], 
                                                                model='linear')
-            
-            line = slope * ecc_mean + intercept
-            line_upper = slope_upper * ecc_mean + intercept_upper
-            line_lower = slope_lower * ecc_mean + intercept_lower
 
-            fig.add_trace(go.Scatter(x=ecc_mean, y=line, mode='lines', name=roi, legendgroup=roi, 
+            line_x = np.linspace(0, max_ecc, 50)
+            line = slope * line_x + intercept
+            line_upper = slope_upper * line_x + intercept_upper
+            line_lower = slope_lower * line_x + intercept_lower
+
+            fig.add_trace(go.Scatter(x=line_x, y=line, mode='lines', name=roi, legendgroup=roi, 
                                       line=dict(color=roi_color, width=3), showlegend=False), 
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]), 
+            fig.add_trace(go.Scatter(x=np.concatenate([line_x, line_x[::-1]]), 
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -719,7 +955,8 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
                                                   thickness=3, 
                                                   width=0, 
                                                   color=roi_color),
-                                      marker=dict(color='white', 
+                                      marker=dict(color=roi_color,
+                                                  symbol='square',
                                                   size=8, 
                                                   line=dict(color=roi_color, 
                                                             width=3)), 
@@ -807,12 +1044,13 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                                                                pcm_lower_bound[~np.isnan(pcm_lower_bound)], 
                                                                r2_mean[~np.isnan(pcm_lower_bound)], 
                                                                model='pcm')
-            
-            line = 1 / (slope * ecc_mean) + intercept
-            line_upper = 1 / (slope_upper * ecc_mean) + intercept_upper
-            line_lower = 1 / (slope_lower * ecc_mean) + intercept_lower
 
-            fig.add_trace(go.Scatter(x=ecc_mean, 
+            line_x = np.linspace(0, max_ecc, 50)
+            line = 1 / (slope * line_x) + intercept
+            line_upper = 1 / (slope_upper * line_x) + intercept_upper
+            line_lower = 1 / (slope_lower * line_x) + intercept_lower
+
+            fig.add_trace(go.Scatter(x=line_x, 
                                      y=line, 
                                      mode='lines', 
                                      name=roi, 
@@ -822,7 +1060,7 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                           row=1, col=l+1)
 
             # Error area
-            fig.add_trace(go.Scatter(x=np.concatenate([ecc_mean, ecc_mean[::-1]]),
+            fig.add_trace(go.Scatter(x=np.concatenate([line_x, line_x[::-1]]),
                                       y=np.concatenate([list(line_upper), list(line_lower[::-1])]), 
                                       mode='lines', fill='toself', fillcolor=roi_color_opac, 
                                       line=dict(color=roi_color_opac, width=0), showlegend=False), 
@@ -839,7 +1077,10 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                                                   thickness=3, 
                                                   width=0, 
                                                   color=roi_color),
-                                     marker=dict(color='white', size=8, line=dict(color=roi_color,width=3)), 
+                                     marker=dict(color=roi_color, 
+                                                 symbol='square',
+                                                 size=8, line=dict(color=roi_color,
+                                                                   width=3)), 
                                      showlegend=False), 
                           row=1, col=l + 1)
             
@@ -912,8 +1153,8 @@ def prf_polar_angle_plot(df_polar_angle, fig_width, fig_height, rois, roi_colors
                                       theta=df.theta_slices, 
                                       marker_color=roi_colors[j], 
                                       width=360/(num_polar_angle_bins),
-                                      marker_line_color='black', 
-                                      marker_line_width=1, 
+                                      marker_line_color='white', 
+                                      marker_line_width=3, 
                                       opacity=1,
                                       showlegend=True,
                                       name=roi, 
@@ -990,9 +1231,7 @@ def prf_contralaterality_plot(df_contralaterality, fig_height, fig_width, rois, 
 
 
         fig.add_trace(go.Pie(values=values,
-                             marker=dict(colors=[roi_colors[j], 'white'],
-                                         line=dict(color=['black', 'white'],
-                                                   width=[1,0])),
+                             marker=dict(colors=[roi_colors[j], 'white'])
                             ),
                       row=1, col=j+1)
 
@@ -1222,16 +1461,3 @@ def surface_rois_all_categories_plot(data, subject, fig_height, fig_width):
                       template='simple_white')  
     
     return fig 
-    
-    
-    
-
-    
-        
-    
-    
-    
-    
-        
-           
-            

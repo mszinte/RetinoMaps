@@ -12,9 +12,7 @@ Sina KLING, Uriel LASCOMBES, Guillaume MASSON & Martin SZINTE
 
 ## To Do 
 ---
-- [ ] make webgl and publish it
-- [ ] merge_fig_css.py
-- [ ] do full group analysis
+- [ ] take care of glm analysis
 
 ## Data analysis
 ---
