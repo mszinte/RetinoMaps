@@ -48,7 +48,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     """
     from maths_utils import weighted_regression, bootstrap_ci_mean
     
-    if subject == 'group':
+    if 'group' in subject:
         
         for i, subject_to_group in enumerate(subjects_to_group):
             tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
@@ -70,10 +70,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
 
             # Parameters average
             # ------------------
-            tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject_to_group)
-            df_params_avg_indiv = pd.read_table(tsv_params_avg_fn, sep="\t")
-            if i == 0: df_params_avg = df_params_avg_indiv.copy()
-            else: df_params_avg = pd.concat([df_params_avg, df_params_avg_indiv])
+            # use df_violins
 
             # Ecc.size
             # --------
@@ -124,11 +121,28 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
 
         # Parameters average
         # ------------------
-        df_params_avg = df_params_avg.groupby(['roi'], sort=False).mean().reset_index()
+        df_params_avg = df_violins
+
+        # compute mean and ci
+        def weighted_average(df_groupby, column_data, column_weight):
+            return (df_groupby[column_data] * df_groupby[column_weight]).sum() / df_groupby[column_weight].sum()
+
+        colnames = ['prf_loo_r2', 'prf_size', 'prf_ecc', 'prf_n', 'pcm']
+        df_params_avg_indiv = df_params_avg.groupby(['roi', 'subject'])[['prf_loo_r2']].apply(
+                weighted_average, 'prf_loo_r2', 'prf_loo_r2').reset_index(name='prf_loo_r2_weighted_mean')
+        for colname in colnames[1:]:            
+            df_params_avg_indiv['{}_weighted_mean'.format(colname)] = df_params_avg.groupby(['roi', 'subject'])[[colname, 'prf_loo_r2']].apply(
+                    weighted_average, colname, 'prf_loo_r2').reset_index()[0]
+        df_params_avg_mean = df_params_avg_indiv.groupby(['roi'])[[colname + '_weighted_mean' for colname in colnames]].mean()
+        df_params_avg_ci = pd.DataFrame()
+        for colname in colnames:
+            df_params_avg_ci['{}_ci_down'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_mean'.format(colname)]].apply(lambda x: np.percentile(x, 2.5))
+            df_params_avg_ci['{}_ci_up'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_mean'.format(colname)]].apply(lambda x: np.percentile(x, 97.5))
+        
+        df_params_avg = pd.concat([df_params_avg_mean, df_params_avg_ci], axis=1).reset_index()
         tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_params_avg_fn))
         df_params_avg.to_csv(tsv_params_avg_fn, sep="\t", na_rep='NaN', index=False)
-        
         
         # Ecc.size
         # --------
@@ -209,6 +223,9 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             df_params_avg_roi['prf_size_weighted_mean'], _ = np.average(df_roi.prf_size, weights=df_roi.prf_loo_r2, axis=0, returned=True)
             df_params_avg_roi['prf_size_ci_down'] = np.percentile(df_roi.prf_size, [2.5])
             df_params_avg_roi['prf_size_ci_up'] = np.percentile(df_roi.prf_size, [97.5])
+            df_params_avg_roi['prf_ecc_weighted_mean'], _ = np.average(df_roi.prf_ecc, weights=df_roi.prf_loo_r2, axis=0, returned=True)
+            df_params_avg_roi['prf_ecc_ci_down'] = np.percentile(df_roi.prf_ecc, [2.5])
+            df_params_avg_roi['prf_ecc_ci_up'] = np.percentile(df_roi.prf_ecc, [97.5])
             df_params_avg_roi['prf_n_weighted_mean'], _ = np.average(df_roi.prf_n, weights=df_roi.prf_loo_r2, axis=0, returned=True)
             df_params_avg_roi['prf_n_ci_down'] = np.percentile(df_roi.prf_n, [2.5])
             df_params_avg_roi['prf_n_ci_up'] = np.percentile(df_roi.prf_n, [97.5])
@@ -586,6 +603,8 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                                 showlegend=False, 
                                 legendgroup='loo', 
                                 points=False, 
+                                spanmode='manual', 
+                                span=[0, 1],
                                 scalemode='width', 
                                 fillcolor=roi_colors[j],
                                 line_color=roi_colors[j]), 
@@ -599,19 +618,36 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                                 showlegend=False, 
                                 legendgroup='size', 
                                 points=False, 
+                                spanmode='manual', 
+                                span=[0, 20],
                                 scalemode='width', 
                                 fillcolor=roi_colors[j],
                                 line_color=roi_colors[j]), 
                       row=1, col=2)
         
-        # pRF n
+        # # pRF n
+        # fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
+        #                         y=df.prf_n, 
+        #                         name=roi, 
+        #                         opacity=1,
+        #                         showlegend=False, 
+        #                         legendgroup='n', 
+        #                         points=False, 
+        #                         scalemode='width', 
+        #                         fillcolor=roi_colors[j],
+        #                         line_color=roi_colors[j]), 
+        #               row=2, col=1)
+
+        # pRF ecc
         fig.add_trace(go.Violin(x=df.roi[df.roi==roi], 
-                                y=df.prf_n, 
+                                y=df.prf_ecc, 
                                 name=roi, 
                                 opacity=1,
                                 showlegend=False, 
                                 legendgroup='n', 
                                 points=False, 
+                                spanmode='manual', 
+                                span=[0, 20],
                                 scalemode='width', 
                                 fillcolor=roi_colors[j],
                                 line_color=roi_colors[j]), 
@@ -625,6 +661,8 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                                 showlegend=False, 
                                 legendgroup='pcm', 
                                 points=False, 
+                                spanmode='manual', 
+                                span=[0, 20],
                                 scalemode='width', 
                                 fillcolor=roi_colors[j],
                                 line_color=roi_colors[j]), 
@@ -643,14 +681,20 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                          title_text='pRF size (dva)', 
                          row=1, col=2)
         
+        # fig.update_yaxes(showline=True, 
+        #                  range=[0, 2], 
+        #                  nticks=5, 
+        #                  title_text='pRF n', 
+        #                  row=2, col=1)
+
         fig.update_yaxes(showline=True, 
-                         range=[0, 2], 
+                         range=[0, 20], 
                          nticks=5, 
-                         title_text='pRF n', 
+                         title_text='pRF eccentricity (dva)', 
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0, 20], 
+                         range=[0, 20],
                          nticks=10, 
                          title_text='pRF pCM (mm/dva)', 
                          row=2, col=2)
@@ -768,10 +812,35 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                                  showlegend=False), 
                           row=1, col=2)
                 
-        # pRF n
-        weighted_mean = df.prf_n_weighted_mean
-        ci_up = df.prf_n_ci_up
-        ci_down = df.prf_n_ci_down
+        # # pRF n
+        # weighted_mean = df.prf_n_weighted_mean
+        # ci_up = df.prf_n_ci_up
+        # ci_down = df.prf_n_ci_down
+        
+        # fig.add_trace(go.Scatter(x=[roi],
+        #                          y=tuple(weighted_mean),
+        #                          mode='markers', 
+        #                          name=roi,
+        #                          error_y=dict(type='data', 
+        #                                       array=[ci_up-weighted_mean], 
+        #                                       arrayminus=[weighted_mean-ci_down],
+        #                                       visible=True, 
+        #                                       thickness=3,
+        #                                       width=0, 
+        #                                       color=roi_colors[j]),
+        #                          marker=dict(symbol="square",
+        #                                      color=roi_colors[j],
+        #                                      size=12, 
+        #                                      line=dict(color=roi_colors[j], 
+        #                                                width=3)),
+        #                          legendgroup='n',
+        #                          showlegend=False), 
+        #                   row=2, col=1)
+        
+        # pRF ecc
+        weighted_mean = df.prf_ecc_weighted_mean
+        ci_up = df.prf_ecc_ci_up
+        ci_down = df.prf_ecc_ci_down
         
         fig.add_trace(go.Scatter(x=[roi],
                                  y=tuple(weighted_mean),
@@ -789,7 +858,7 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                                              size=12, 
                                              line=dict(color=roi_colors[j], 
                                                        width=3)),
-                                 legendgroup='n',
+                                 legendgroup='ecc',
                                  showlegend=False), 
                           row=2, col=1)
         
@@ -832,10 +901,16 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                          title_text='pRF size (dva)', 
                          row=1, col=2)
         
+        # fig.update_yaxes(showline=True, 
+        #                  range=[0, 2], 
+        #                  nticks=5, 
+        #                  title_text='pRF n', 
+        #                  row=2, col=1)
+
         fig.update_yaxes(showline=True, 
-                         range=[0, 2], 
+                         range=[0, 20], 
                          nticks=5, 
-                         title_text='pRF n', 
+                         title_text='pRF eccentricity (dva)', 
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
@@ -929,7 +1004,7 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
                                                                r2_mean[np.where(~np.isnan(size_lower_bound))], 
                                                                model='linear')
 
-            line_x = np.linspace(0, max_ecc, 50)
+            line_x = np.linspace(ecc_mean[0], ecc_mean[-1], 50)
             line = slope * line_x + intercept
             line_upper = slope_upper * line_x + intercept_upper
             line_lower = slope_lower * line_x + intercept_lower
@@ -1045,7 +1120,7 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                                                                r2_mean[~np.isnan(pcm_lower_bound)], 
                                                                model='pcm')
 
-            line_x = np.linspace(0, max_ecc, 50)
+            line_x = np.linspace(ecc_mean[0], ecc_mean[-1], 50)
             line = 1 / (slope * line_x) + intercept
             line_upper = 1 / (slope_upper * line_x) + intercept_upper
             line_lower = 1 / (slope_lower * line_x) + intercept_lower
