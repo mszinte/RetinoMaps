@@ -12,7 +12,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
                       amplitude_threshold, ecc_threshold, size_threshold, 
                       rsqr_threshold, stats_threshold, pcm_threshold, n_threshold,
                       max_ecc, num_ecc_size_bins, num_ecc_pcm_bins, num_polar_angle_bins,
-                      subjects_to_group=None):
+                      subjects_to_group=None, gaussian_mesh_grain=None):
     """
     Load and compute the data as function of the plot
     
@@ -46,7 +46,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     df_contralaterality: dataframe to use in contralaterality plot
     df_params_avg: dataframe to use in parameters average plot
     """
-    from maths_utils import weighted_regression, bootstrap_ci_mean
+    from maths_utils import gaus_2d, bootstrap_ci_mean
     
     if 'group' in subject:
         
@@ -99,7 +99,23 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             df_contralaterality_indiv = pd.read_table(tsv_contralaterality_fn, sep="\t")
             if i == 0: df_contralaterality = df_contralaterality_indiv.copy()
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_indiv])
-        
+            
+            # Spatial distibution 
+            # -------------------
+            tsv_distibution_fn = "{}/{}_prf_distibution.tsv".format(tsv_dir, subject_to_group)
+            df_distribution_indiv = pd.read_table(tsv_distibution_fn, sep="\t")
+            if i == 0: df_distribution = df_distribution_indiv.copy()
+            else: 
+                integer_columns = [col for col in df_distribution_indiv.columns if isinstance(col, int)]
+                non_integer_columns = df_distribution_indiv.columns.difference(integer_columns)
+                df_distibution = df_distribution[integer_columns]
+                df_distibution_indiv = df_distribution_indiv[integer_columns]
+                
+                # Averaging
+                df_distribution = (df_distribution + df_distibution_indiv) / 2
+                
+            df_distribution = pd.concat([df_distibution_indiv[non_integer_columns],df_distibution])
+                
         # Averaging and saving tsv
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
             main_dir, project_dir, subject, format_)
@@ -171,6 +187,13 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
+        
+        # Spatial distibution 
+        # -------------------
+        tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_contralaterality_fn))
+        df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
+
     else:
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
             main_dir, project_dir, subject, format_)
@@ -305,7 +328,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         df_polar_angle = df_polar_angle_bins
         
         # Contralaterality
-        # ----------------
+        # ----------------         
         for j, roi in enumerate(rois):
             df_rh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-R')]
             df_lh = data.loc[(data.roi == roi) & (data.hemi == 'hemi-L')]
@@ -320,6 +343,40 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     
             if j == 0: df_contralaterality = df_contralaterality_roi
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_roi])
+            
+        # Spatial distibution 
+        # ----------------
+        grain = gaussian_mesh_grain
+        for j, roi in enumerate(rois) :
+            # Roi data frame
+            df_roi = data.loc[data.roi == roi].reset_index()
+            
+            gauss_z_tot = np.zeros((grain,grain)) 
+            for vert in range(len(df_roi)):
+                # compute the gaussian mesh
+                x, y, gauss_z = gaus_2d(gauss_x=df_roi.prf_x[vert],  
+                                    gauss_y=df_roi.prf_y[vert], 
+                                    gauss_sd=df_roi.prf_size[vert], 
+                                    screen_side=40, 
+                                    grain=grain)
+                
+                # addition of pRF and ponderation by loo r2
+                gauss_z_tot += gauss_z * df_roi.prf_loo_r2[vert]
+                
+            # Normalisation 
+            gauss_z_tot = (gauss_z_tot-gauss_z_tot.min())/(gauss_z_tot.max()-gauss_z_tot.min())
+            
+            # create the df
+            df_distribution_roi = pd.DataFrame()
+            df_distribution_roi['roi'] = [roi] * grain
+            df_distribution_roi['x'] = x
+            df_distribution_roi['y'] = y
+            
+            gauss_z_tot_df = pd.DataFrame(gauss_z_tot)
+            df_distribution_roi = pd.concat([df_distribution_roi, gauss_z_tot_df], axis=1)
+    
+            if j == 0: df_distribution = df_distribution_roi
+            else: df_distribution = pd.concat([df_distribution, df_distribution_roi])
         
         # Saving tsv
         tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
@@ -349,8 +406,12 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
+        
+        tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_contralaterality_fn))
+        df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
 
-    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg
+    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg, df_distribution
         
 def plotly_template(template_specs):
     """

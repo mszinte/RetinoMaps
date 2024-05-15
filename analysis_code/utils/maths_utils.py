@@ -67,6 +67,33 @@ def weighted_regression(x_reg, y_reg, weight_reg, model):
     else:
         raise ValueError("Invalid model type. Supported models are 'pcm' and 'linear'.")
 
+def gaus_2d(gauss_x, gauss_y, gauss_sd, screen_side, grain=200):
+    """
+    Generate 2D gaussian mesh
+    
+    Parameters
+    ----------
+    gauss_x : mean x gaussian parameter in dva (e.g. 1 dva)
+    gauss_y : mean y gaussian parameter in dva (e.g. 1 dva)
+    gauss_sd : sd gaussian parameter in dva (e.g. 1 dva)
+    screen_side : mesh screen side (square) im dva (e.g. 20 dva from -10 to 10 dva)
+    grain : grain resolution of the mesh in pixels (default = 100 pixels)
+    
+    Returns
+    -------
+    x : linspace x of the mesh
+    y : linspace x of the mesh
+    z : mesh_z values (to plot)
+    
+    """
+    import numpy as np
+    x = np.linspace(-screen_side/2, screen_side/2, grain)
+    y = np.linspace(-screen_side/2, screen_side/2, grain)
+    mesh_x, mesh_y = np.meshgrid(x,y) 
+    
+    gauss_z = 1./(2.*np.pi*gauss_sd*gauss_sd)*np.exp(-((mesh_x-gauss_x)**2./(2.*gauss_sd**2.)+(mesh_y-gauss_y)**2./(2.*gauss_sd**2.)))
+    return x, y, gauss_z
+
 def bootstrap_ci_median(data, n_bootstrap=1000, ci_level=0.95):
     import numpy as np
     n = len(data)
