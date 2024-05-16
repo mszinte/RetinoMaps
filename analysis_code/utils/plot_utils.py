@@ -12,7 +12,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
                       amplitude_threshold, ecc_threshold, size_threshold, 
                       rsqr_threshold, stats_threshold, pcm_threshold, n_threshold,
                       max_ecc, num_ecc_size_bins, num_ecc_pcm_bins, num_polar_angle_bins,
-                      subjects_to_group=None, gaussian_mesh_grain=None):
+                      screen_side, gaussian_mesh_grain, hot_zone_percent, subjects_to_group=None):
     """
     Load and compute the data as function of the plot
     
@@ -34,6 +34,9 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     num_ecc_size_bins: number of bins for eccentricty plot for size relationship
     num_ecc_pcm_bins: number of bins for eccentricty plot for pcm relationship
     num_polar_angle_bins: number of bins for eccentricty plot for polar angle
+    screen_side: mesh screen side (square) im dva (e.g. 20 dva from -10 to 10 dva)
+    gaussian_mesh_grain: The grain you want for the gaussian mesh
+    hot_zone_percent: the percentage to define the hot zone (how much of the denser locations you take)
     subjects: list of subject to group
     
     Returns
@@ -45,8 +48,9 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     df_polar_angle: dataframe to use in polar angle plot
     df_contralaterality: dataframe to use in contralaterality plot
     df_params_avg: dataframe to use in parameters average plot
+    df_distribution: dataframe to use in prf distribution plot
     """
-    from maths_utils import gaus_2d, bootstrap_ci_mean
+    from maths_utils import bootstrap_ci_mean, make_prf_distribution_df, make_prf_barycentre_df
     
     if 'group' in subject:
         
@@ -191,8 +195,16 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         # Spatial distibution 
         # -------------------
         tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
-        print('Saving tsv: {}'.format(tsv_contralaterality_fn))
+        print('Saving tsv: {}'.format(tsv_distribution_fn))
         df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
+        
+        # Spatial distribution hot zone barycentre 
+        # ---------------------------------------
+        tsv_barycentre_fn = "{}/{}_prf_barycentre.tsv".format(tsv_dir, subject)
+        df_barycentre = make_prf_barycentre_df(
+            df_distribution, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+        print('Saving tsv: {}'.format(tsv_barycentre_fn))
+        df_barycentre.to_csv(tsv_barycentre_fn, sep="\t", na_rep='NaN', index=False)
 
     else:
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
@@ -345,38 +357,14 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_roi])
             
         # Spatial distibution 
-        # ----------------
-        grain = gaussian_mesh_grain
-        for j, roi in enumerate(rois) :
-            # Roi data frame
-            df_roi = data.loc[data.roi == roi].reset_index()
-            
-            gauss_z_tot = np.zeros((grain,grain)) 
-            for vert in range(len(df_roi)):
-                # compute the gaussian mesh
-                x, y, gauss_z = gaus_2d(gauss_x=df_roi.prf_x[vert],  
-                                    gauss_y=df_roi.prf_y[vert], 
-                                    gauss_sd=df_roi.prf_size[vert], 
-                                    screen_side=40, 
-                                    grain=grain)
-                
-                # addition of pRF and ponderation by loo r2
-                gauss_z_tot += gauss_z * df_roi.prf_loo_r2[vert]
-                
-            # Normalisation 
-            gauss_z_tot = (gauss_z_tot-gauss_z_tot.min())/(gauss_z_tot.max()-gauss_z_tot.min())
-            
-            # create the df
-            df_distribution_roi = pd.DataFrame()
-            df_distribution_roi['roi'] = [roi] * grain
-            df_distribution_roi['x'] = x
-            df_distribution_roi['y'] = y
-            
-            gauss_z_tot_df = pd.DataFrame(gauss_z_tot)
-            df_distribution_roi = pd.concat([df_distribution_roi, gauss_z_tot_df], axis=1)
-    
-            if j == 0: df_distribution = df_distribution_roi
-            else: df_distribution = pd.concat([df_distribution, df_distribution_roi])
+        # --------------------          
+        df_distribution = make_prf_distribution_df(
+            data, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+        
+        # Spatia distribution hot zone barycentre 
+        # ---------------------------------------
+        df_barycentre = make_prf_barycentre_df(
+            df_distribution, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
         
         # Saving tsv
         tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
@@ -410,8 +398,12 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
+        
+        tsv_barycentre_fn = "{}/{}_prf_barycentre.tsv".format(tsv_dir, subject)
+        print('Saving tsv: {}'.format(tsv_barycentre_fn))
+        df_barycentre.to_csv(tsv_barycentre_fn, sep="\t", na_rep='NaN', index=False)
 
-    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg, df_distribution
+    return df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, df_contralaterality, df_params_avg, df_distribution, df_barycentre
         
 def plotly_template(template_specs):
     """
@@ -1382,6 +1374,212 @@ def prf_contralaterality_plot(df_contralaterality, fig_height, fig_width, rois, 
                       margin_b=50)
     
     return fig 
+
+
+
+
+def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colors, screen_side):
+    """
+    Make prf distribution contour plot
+    
+    Parameters
+    ----------
+    df_distribution : dataframe
+    fig_width : figure width in pixels
+    fig_height : figure height in pixels
+    rois : list of rois
+    roi_colors : list of rgb colors for plotly
+    screen_side: mesh screen side (square) im dva (e.g. 20 dva from -10 to 10 dva)
+     
+    Returns
+    -------
+    fig : distribution figure
+    """
+    
+    # Template settings
+    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
+                          axes_width=2,
+                          axes_font_size=15,
+                          bg_col="rgba(255, 255, 255, 1)",
+                          font='Arial',
+                          title_font_size=15,
+                          plot_width=1.5)
+    fig_template = plotly_template(template_specs)
+    
+    # General figure settings
+    rows, cols = 1, len(rois)
+    fig = make_subplots(rows=rows ,cols=cols)
+    line_width = 1
+    contour_width = 0.5
+    
+    
+    for i, roi in enumerate(rois) :
+        # Make df roi
+        df_roi = df_distribution.loc[df_distribution.roi == roi]
+        
+        # make the two dimensional mesh for z dimension
+        int_columns = [col for col in df_roi.columns if isinstance(col, int)]
+        gauss_z_tot = df_roi[int_columns].values
+        
+        # Contour plot
+        fig.add_trace(go.Contour(x=df_roi.x, 
+                 y=df_roi.y,
+                 z=gauss_z_tot, 
+                 colorscale='hot', 
+                 showscale=False, 
+                 contours_coloring='lines',
+                 line_width=contour_width),
+                row=1, col=i+1)
+        
+        # x line
+        fig.add_trace(go.Scatter(x=[0,0],
+                                 y=[-screen_side, screen_side],
+                                 mode='lines',
+                                 line=dict(dash='2px', 
+                                           color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
+                                           width=line_width)),
+                                row=1, col=i+1)
+        # y line
+        fig.add_trace(go.Scatter(x=[-screen_side, screen_side], 
+                                 y=[0,0], 
+                                 mode='lines', 
+                                 line=dict(dash='2px', 
+                                           color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
+                                           width=line_width)),
+                      row=1, col=i+1)
+        
+        # square
+        fig.add_shape(type="rect", 
+                      x0=-10, 
+                      y0=-10, 
+                      x1=10, 
+                      y1=10, 
+                      line=dict(dash='2px', 
+                                color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
+                                width=line_width),
+                      row=1, col=i+1)
+        
+    fig.update_xaxes(color= ('rgba(255,255,255,0)'))
+    fig.update_yaxes(color= ('rgba(255,255,255,0)'))
+    
+    # Define parameters
+    fig.update_layout(height=fig_height, 
+                      width=fig_width, 
+                      showlegend=False,
+                      template=fig_template,
+                      margin_l=10, 
+                      margin_r=10, 
+                      margin_t=100, 
+                      margin_b=100)
+    return fig
+
+def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, screen_side):
+    """
+    Make prf barycentre plot
+    
+    Parameters
+    ----------
+    df_barycentre : dataframe
+    fig_width : figure width in pixels
+    fig_height : figure height in pixels
+    rois : list of rois
+    roi_colors : list of rgb colors for plotly
+    screen_side: mesh screen side (square) im dva (e.g. 20 dva from -10 to 10 dva)
+     
+    Returns
+    -------
+    fig : barycentre figure
+    """
+    
+    # Template settings
+    template_specs = dict(axes_color="rgba(0, 0, 0, 1)",
+                          axes_width=2,
+                          axes_font_size=15,
+                          bg_col="rgba(255, 255, 255, 1)",
+                          font='Arial',
+                          title_font_size=15,
+                          plot_width=1.5)
+    fig_template = plotly_template(template_specs)
+    
+    # General figure settings
+    line_width = 1
+    fig = go.Figure()
+    for i, roi in enumerate(rois) :
+        # Make df roi
+        df_roi = df_barycentre.loc[df_barycentre.roi == roi]    
+
+        # barycentre position
+        fig.add_trace(go.Scatter(x=df_roi.barycentre_x, 
+                                 y=df_roi.barycentre_y, 
+                                 mode='markers', 
+                                 name = roi,
+                                 marker=dict(symbol="square", 
+                                             color=roi_colors[i], 
+                                             size=12),
+                                 error_x=dict(type='data', 
+                                              array=[df_roi.upper_ci_x - df_roi.barycentre_x], 
+                                              arrayminus=[df_roi.barycentre_x - df_roi.lower_ci_x],
+                                              visible=True, 
+                                              thickness=3, 
+                                              width=0, 
+                                              color=roi_colors[i]),
+                                 error_y=dict(type='data', 
+                                              array=[df_roi.upper_ci_y - df_roi.barycentre_y], 
+                                              arrayminus=[df_roi.barycentre_y - df_roi.lower_ci_y],
+                                              visible=True, 
+                                              thickness=3, 
+                                              width=0, 
+                                              color=roi_colors[i]),
+                             showlegend=True))
+        # Center lignes
+        fig.add_trace(go.Scatter(x=[0,0], 
+                                 y=[-screen_side, screen_side], 
+                                 mode='lines', 
+                                 showlegend=False, 
+                                 line=dict(dash='2px',color='grey', width=line_width)))
+        
+        fig.add_trace(go.Scatter(x=[-screen_side,screen_side], 
+                                 y=[0,0], 
+                                 mode='lines', 
+                                 showlegend=False,
+                                 line=dict(dash='2px',color='grey', width=line_width)))
+        
+        # Add squares 
+        for position in [1,2,3,4]:
+            fig.add_shape(type="rect", 
+                          x0=-position, 
+                          y0=-position, 
+                          x1=position, 
+                          y1=position, 
+                          line=dict(dash='2px',color='grey', width=line_width))
+        # Add annotations 
+        fig.add_trace(go.Scatter(x=[0, 0, 0, 0], 
+                                 y=[1.2, 2.2, 3.2, 4.2], 
+                                 showlegend=False, 
+                                 text=["1 dva", 
+                                       "2 dva", 
+                                       "3 dva",
+                                       "4 dva"], 
+                                 mode="text", 
+                                 textfont=dict(size=12)))
+    
+    fig.update_yaxes(range=[-5,5],color= ('rgba(255,255,255,0)'))
+    fig.update_xaxes(range=[-5,5],color= ('rgba(255,255,255,0)'))
+
+    # Define parameters
+    fig.update_layout(height=fig_height, 
+                      width=fig_width, 
+                      showlegend=True,
+                      template=fig_template,
+                      margin_l=570, 
+                      margin_r=570, 
+                      margin_t=50, 
+                      margin_b=50)
+        
+    return fig
+
+
+
 
 
 def categories_proportions_roi_plot(data, subject, fig_height, fig_width):

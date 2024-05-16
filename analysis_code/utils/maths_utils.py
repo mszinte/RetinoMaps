@@ -285,3 +285,125 @@ def avg_subject_template(fns):
             data_avg = np.nanmean(np.array([data_avg, data]), axis=0)
             
     return img, data_avg
+
+
+def make_prf_distribution_df(data, rois, max_ecc, grain, hot_zone_percent=0.01, ci_confidence_level=0.95):
+    """
+    Load the PRF TSV file and compute the PRF distribution 
+    
+    Parameters
+    ----------
+    data: the PRF TSV file
+    rois: list of ROIs (Regions Of Interest)
+    max_ecc: maximum eccentricity for the Gaussian mesh
+    grain: the granularity you want for the Gaussian mesh
+    hot_zone_percent: the percentage to define the hot zone (how much of the denser locations you take)
+    ci_confidence_level: the confidence level for the confidence interval
+
+    Returns
+    -------
+    df_distribution: dataframe to use in distribution plot
+    """
+    import pandas as pd
+    import numpy as np
+    for j, roi in enumerate(rois) :
+        # Make df_distribution
+        #-------------------
+        # Roi data frame
+        df_roi = data.loc[data.roi == roi].reset_index()
+        
+        gauss_z_tot = np.zeros((grain,grain)) 
+        for vert in range(len(df_roi)):
+            # compute the gaussian mesh
+            x, y, gauss_z = gaus_2d(gauss_x=df_roi.prf_x[vert],  
+                                gauss_y=df_roi.prf_y[vert], 
+                                gauss_sd=df_roi.prf_size[vert], 
+                                screen_side=max_ecc*2, 
+                                grain=grain)
+            
+            # addition of pRF and ponderation by loo r2
+            gauss_z_tot += gauss_z * df_roi.prf_loo_r2[vert]
+            
+        # Normalisation 
+        gauss_z_tot = (gauss_z_tot-gauss_z_tot.min())/(gauss_z_tot.max()-gauss_z_tot.min())
+        
+        # create the df
+        df_distribution_roi = pd.DataFrame()
+        df_distribution_roi['roi'] = [roi] * grain
+        df_distribution_roi['x'] = x
+        df_distribution_roi['y'] = y
+        
+        gauss_z_tot_df = pd.DataFrame(gauss_z_tot)
+        df_distribution_roi = pd.concat([df_distribution_roi, gauss_z_tot_df], axis=1)
+        
+        if j == 0: df_distribution = df_distribution_roi
+        else: df_distribution = pd.concat([df_distribution, df_distribution_roi])
+        
+    return df_distribution
+
+def make_prf_barycentre_df(df_distribution, rois, max_ecc, grain, hot_zone_percent=0.01, ci_confidence_level=0.95):
+    """
+    Compute the pRF hot zone barycentre
+    
+    Parameters
+    ----------
+    df_distribution: df from make_prf_distribution_df
+    rois: list of ROIs (Regions Of Interest)
+    max_ecc: maximum eccentricity for the Gaussian mesh
+    grain: the granularity you want for the Gaussian mesh
+    hot_zone_percent: the percentage to define the hot zone (how much of the denser locations you take)
+    ci_confidence_level: the confidence level for the confidence interval
+        
+    Returns
+    -------
+    df_barycentre: dataframe filtered to use in barycentre plot
+    """
+    import pandas as pd
+    import numpy as np
+    for j, roi in enumerate(rois) :
+        # Create DataFrame for the region of interest
+        df_roi = df_distribution[df_distribution.roi == roi]
+        
+        # make the two dimensional mesh for z dimension
+        int_columns = [col for col in df_roi.columns if isinstance(col, int)]
+        gauss_z_tot = df_roi[int_columns].values
+        
+        # Make df_barycentre
+        #-------------------
+        # Find the 1% higher
+        flattened_array = gauss_z_tot.flatten()
+        sorted_values = np.sort(flattened_array)[::-1]
+        hot_zone_size = int(hot_zone_percent * len(sorted_values))
+    
+        # make the 2d hot zone idx
+        hot_zone_idx = np.unravel_index(np.argsort(flattened_array, axis=None)[-hot_zone_size:], gauss_z_tot.shape)
+        
+        # Find the barycentre of the top 1% higher
+        barycentre_x = np.mean(hot_zone_idx[1])
+        barycentre_y = np.mean(hot_zone_idx[0])
+        
+        # Calculate confidence intervals using bootstrap 
+        num_samples = len(hot_zone_idx[0])
+        lower_ci_x, upper_ci_x = bootstrap_ci_mean(hot_zone_idx[1], n_bootstrap=num_samples, ci_level=ci_confidence_level)
+        lower_ci_y, upper_ci_y = bootstrap_ci_mean(hot_zone_idx[0], n_bootstrap=num_samples, ci_level=ci_confidence_level)
+        
+        # Convert positions to the correct reference frame
+        scale_factor = max_ecc / (grain / 2)
+        barycentre_x, barycentre_y = (barycentre_x * scale_factor) - max_ecc, (barycentre_y * scale_factor) - max_ecc
+        lower_ci_x, upper_ci_x = (lower_ci_x * scale_factor) - max_ecc, (upper_ci_x * scale_factor) - max_ecc
+        lower_ci_y, upper_ci_y = (lower_ci_y * scale_factor) - max_ecc, (upper_ci_y * scale_factor) - max_ecc
+        
+        # make the df 
+        df_barycentre_roi = pd.DataFrame()
+        df_barycentre_roi['roi'] = [roi]
+        df_barycentre_roi['barycentre_x'] = [barycentre_x]
+        df_barycentre_roi['barycentre_y'] = [barycentre_y]
+        df_barycentre_roi['lower_ci_x'] = [lower_ci_x]
+        df_barycentre_roi['upper_ci_x'] = [upper_ci_x]
+        df_barycentre_roi['lower_ci_y'] = [lower_ci_y]
+        df_barycentre_roi['upper_ci_y'] = [upper_ci_y]
+        
+        if j == 0: df_barycentre = df_barycentre_roi
+        else: df_barycentre = pd.concat([df_barycentre, df_barycentre_roi])
+        
+    return df_barycentre
