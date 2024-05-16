@@ -357,14 +357,30 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_roi])
             
         # Spatial distibution 
-        # --------------------          
-        df_distribution = make_prf_distribution_df(
-            data, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+        # --------------------  
+        hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
+        for i, hemi in enumerate(hemis):
+            hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
+            data_hemi = data.loc[data.hemi.isin(hemi_values)]
+            df_distribution_hemi = make_prf_distribution_df(
+                data_hemi, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+
+            df_distribution_hemi['hemi'] = [hemi] * len(df_distribution_hemi)
+            if i == 0: df_distribution = df_distribution_hemi
+            else: df_distribution = pd.concat([df_distribution, df_distribution_hemi])
         
-        # Spatia distribution hot zone barycentre 
-        # ---------------------------------------
-        df_barycentre = make_prf_barycentre_df(
-            df_distribution, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+        # Spatial distribution hot zone barycentre 
+        # ----------------------------------------
+        hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
+        for i, hemi in enumerate(hemis):
+            hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
+            df_distribution_hemi = df_distribution.loc[df_distribution.hemi.isin(hemi_values)]
+            df_barycentre_hemi = make_prf_barycentre_df(
+                df_distribution_hemi, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+            
+            df_barycentre_hemi['hemi'] = [hemi] * len(df_barycentre_hemi)
+            if i == 0: df_barycentre = df_barycentre_hemi
+            else: df_barycentre = pd.concat([df_barycentre, df_barycentre_hemi])
         
         # Saving tsv
         tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
@@ -1408,70 +1424,75 @@ def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colo
     
     # General figure settings
     rows, cols = 1, len(rois)
-    fig = make_subplots(rows=rows ,cols=cols)
     line_width = 1
     contour_width = 0.5
     
-    
-    for i, roi in enumerate(rois) :
-        # Make df roi
-        df_roi = df_distribution.loc[df_distribution.roi == roi]
+    figs = []
+    hemispheres = []
+    hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
+    for i, hemi in enumerate(hemis):  
+        fig = make_subplots(rows=rows ,cols=cols)
+        for j, roi in enumerate(rois) :
+            # Make df roi
+            df_roi = df_distribution.loc[(df_distribution.roi == roi) & (df_distribution.hemi == hemi)]
+            
+            # make the two dimensional mesh for z dimension
+            int_columns = [col for col in df_roi.columns if isinstance(col, int)]
+            gauss_z_tot = df_roi[int_columns].values
+            
+            # Contour plot
+            fig.add_trace(go.Contour(x=df_roi.x, 
+                     y=df_roi.y,
+                     z=gauss_z_tot, 
+                     colorscale='hot', 
+                     showscale=False, 
+                     contours_coloring='lines',
+                     line_width=contour_width),
+                    row=1, col=j+1)
+            
+            # x line
+            fig.add_trace(go.Scatter(x=[0,0],
+                                     y=[-screen_side, screen_side],
+                                     mode='lines',
+                                     line=dict(dash='2px', 
+                                               color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
+                                               width=line_width)),
+                                    row=1, col=j+1)
+            # y line
+            fig.add_trace(go.Scatter(x=[-screen_side, screen_side], 
+                                     y=[0,0], 
+                                     mode='lines', 
+                                     line=dict(dash='2px', 
+                                               color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
+                                               width=line_width)),
+                          row=1, col=j+1)
+            
+            # square
+            fig.add_shape(type="rect", 
+                          x0=-10, 
+                          y0=-10, 
+                          x1=10, 
+                          y1=10, 
+                          line=dict(dash='2px', 
+                                    color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
+                                    width=line_width),
+                          row=1, col=j+1)
+            
+        fig.update_xaxes(color= ('rgba(255,255,255,0)'))
+        fig.update_yaxes(color= ('rgba(255,255,255,0)'))
         
-        # make the two dimensional mesh for z dimension
-        int_columns = [col for col in df_roi.columns if isinstance(col, int)]
-        gauss_z_tot = df_roi[int_columns].values
-        
-        # Contour plot
-        fig.add_trace(go.Contour(x=df_roi.x, 
-                 y=df_roi.y,
-                 z=gauss_z_tot, 
-                 colorscale='hot', 
-                 showscale=False, 
-                 contours_coloring='lines',
-                 line_width=contour_width),
-                row=1, col=i+1)
-        
-        # x line
-        fig.add_trace(go.Scatter(x=[0,0],
-                                 y=[-screen_side, screen_side],
-                                 mode='lines',
-                                 line=dict(dash='2px', 
-                                           color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
-                                           width=line_width)),
-                                row=1, col=i+1)
-        # y line
-        fig.add_trace(go.Scatter(x=[-screen_side, screen_side], 
-                                 y=[0,0], 
-                                 mode='lines', 
-                                 line=dict(dash='2px', 
-                                           color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
-                                           width=line_width)),
-                      row=1, col=i+1)
-        
-        # square
-        fig.add_shape(type="rect", 
-                      x0=-10, 
-                      y0=-10, 
-                      x1=10, 
-                      y1=10, 
-                      line=dict(dash='2px', 
-                                color=roi_colors[i].replace('rgb','rgba').replace(')',',0.5)'), 
-                                width=line_width),
-                      row=1, col=i+1)
-        
-    fig.update_xaxes(color= ('rgba(255,255,255,0)'))
-    fig.update_yaxes(color= ('rgba(255,255,255,0)'))
-    
-    # Define parameters
-    fig.update_layout(height=fig_height, 
-                      width=fig_width, 
-                      showlegend=False,
-                      template=fig_template,
-                      margin_l=10, 
-                      margin_r=10, 
-                      margin_t=100, 
-                      margin_b=100)
-    return fig
+        # Define parameters
+        fig.update_layout(height=fig_height, 
+                          width=fig_width, 
+                          showlegend=False,
+                          template=fig_template,
+                          margin_l=10, 
+                          margin_r=10, 
+                          margin_t=100, 
+                          margin_b=100)
+        figs.append(fig)
+        hemispheres.append(hemi)
+    return figs, hemispheres
 
 def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, screen_side):
     """
@@ -1504,33 +1525,37 @@ def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, 
     # General figure settings
     line_width = 1
     fig = go.Figure()
-    for i, roi in enumerate(rois) :
-        # Make df roi
-        df_roi = df_barycentre.loc[df_barycentre.roi == roi]    
-
-        # barycentre position
-        fig.add_trace(go.Scatter(x=df_roi.barycentre_x, 
-                                 y=df_roi.barycentre_y, 
-                                 mode='markers', 
-                                 name = roi,
-                                 marker=dict(symbol="square", 
-                                             color=roi_colors[i], 
-                                             size=12),
-                                 error_x=dict(type='data', 
-                                              array=[df_roi.upper_ci_x - df_roi.barycentre_x], 
-                                              arrayminus=[df_roi.barycentre_x - df_roi.lower_ci_x],
-                                              visible=True, 
-                                              thickness=3, 
-                                              width=0, 
-                                              color=roi_colors[i]),
-                                 error_y=dict(type='data', 
-                                              array=[df_roi.upper_ci_y - df_roi.barycentre_y], 
-                                              arrayminus=[df_roi.barycentre_y - df_roi.lower_ci_y],
-                                              visible=True, 
-                                              thickness=3, 
-                                              width=0, 
-                                              color=roi_colors[i]),
-                             showlegend=True))
+    hemis = ['hemi-L', 'hemi-R']
+    for i, hemi in enumerate(hemis): 
+        if hemi=='hemi-L': symbol, showlegend = 'square' , True
+        elif hemi=='hemi-R': symbol, showlegend = 'circle' , False
+        for j, roi in enumerate(rois) :
+            # Make df roi
+            df_roi = df_barycentre.loc[(df_barycentre.roi == roi) & (df_barycentre.hemi == hemi)]    
+    
+            # barycentre position
+            fig.add_trace(go.Scatter(x=df_roi.barycentre_x, 
+                                     y=df_roi.barycentre_y, 
+                                     mode='markers', 
+                                     name = roi,
+                                     marker=dict(symbol=symbol, 
+                                                 color=roi_colors[j], 
+                                                 size=12),
+                                     error_x=dict(type='data', 
+                                                  array=[df_roi.upper_ci_x - df_roi.barycentre_x], 
+                                                  arrayminus=[df_roi.barycentre_x - df_roi.lower_ci_x],
+                                                  visible=True, 
+                                                  thickness=3, 
+                                                  width=0, 
+                                                  color=roi_colors[j]),
+                                     error_y=dict(type='data', 
+                                                  array=[df_roi.upper_ci_y - df_roi.barycentre_y], 
+                                                  arrayminus=[df_roi.barycentre_y - df_roi.lower_ci_y],
+                                                  visible=True, 
+                                                  thickness=3, 
+                                                  width=0, 
+                                                  color=roi_colors[j]),
+                                 showlegend=showlegend))
         # Center lignes
         fig.add_trace(go.Scatter(x=[0,0], 
                                  y=[-screen_side, screen_side], 
@@ -1545,7 +1570,7 @@ def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, 
                                  line=dict(dash='2px',color='grey', width=line_width)))
         
         # Add squares 
-        for position in [1,2,3,4]:
+        for position in [2,4,6,8,10]:
             fig.add_shape(type="rect", 
                           x0=-position, 
                           y0=-position, 
@@ -1553,18 +1578,19 @@ def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, 
                           y1=position, 
                           line=dict(dash='2px',color='grey', width=line_width))
         # Add annotations 
-        fig.add_trace(go.Scatter(x=[0, 0, 0, 0], 
-                                 y=[1.2, 2.2, 3.2, 4.2], 
+        fig.add_trace(go.Scatter(x=[0, 0, 0, 0, 0], 
+                                 y=[2.2, 4.2, 6.2, 8.2, 10.2], 
                                  showlegend=False, 
-                                 text=["1 dva", 
-                                       "2 dva", 
-                                       "3 dva",
-                                       "4 dva"], 
+                                 text=["2 dva", 
+                                       "4 dva", 
+                                       "6 dva",
+                                       "8 dva", 
+                                       "10 dva"], 
                                  mode="text", 
-                                 textfont=dict(size=12)))
+                                 textfont=dict(size=10)))
     
-    fig.update_yaxes(range=[-5,5],color= ('rgba(255,255,255,0)'))
-    fig.update_xaxes(range=[-5,5],color= ('rgba(255,255,255,0)'))
+    fig.update_yaxes(range=[-12,12],color= ('rgba(255,255,255,0)'))
+    fig.update_xaxes(range=[-12,12],color= ('rgba(255,255,255,0)'))
 
     # Define parameters
     fig.update_layout(height=fig_height, 
