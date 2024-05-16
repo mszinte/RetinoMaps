@@ -170,8 +170,8 @@ for format_, extension in zip(formats, extensions):
     
     # # Polar angle distributions
     # figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
-    #                                    fig_height=300, rois=rois, roi_colors=roi_colors,
-    #                                    num_polar_angle_bins=num_polar_angle_bins)
+    #                                     fig_height=300, rois=rois, roi_colors=roi_colors,
+    #                                     num_polar_angle_bins=num_polar_angle_bins)
     # for (fig, hemi) in zip(figs, hemis):
     #     fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
     #     print('Saving pdf: {}'.format(fig_fn))
@@ -186,13 +186,16 @@ for format_, extension in zip(formats, extensions):
     # fig.write_image(fig_fn)
 
     # Spatial distibution plot
-    fig_fn = "{}/{}_distribution.pdf".format(fig_dir, subject)
-    fig = prf_distribution_plot(df_distribution=df_distribution, 
-                                    fig_width=fig_width, fig_height=300, 
-                                    rois=rois, roi_colors=roi_colors, screen_side=screen_side)
-    print('Saving pdf: {}'.format(fig_fn))
-    fig.write_image(fig_fn)
-    
+
+    figs, hemis = prf_distribution_plot(df_distribution=df_distribution, 
+                                        fig_width=fig_width, fig_height=300, 
+                                        rois=rois, roi_colors=roi_colors, screen_side=screen_side)
+
+    for (fig, hemi) in zip(figs, hemis):
+        fig_fn = "{}/{}_distribution_{}.pdf".format(fig_dir, subject, hemi)
+        print('Saving pdf: {}'.format(fig_fn))
+        fig.write_image(fig_fn)
+
     # Spatial distibution barycentre plot
     fig_fn = "{}/{}_barycentre.pdf".format(fig_dir, subject)
     fig = prf_barycentre_plot(df_barycentre=df_barycentre, 
