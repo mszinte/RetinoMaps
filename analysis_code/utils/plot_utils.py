@@ -104,22 +104,22 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             if i == 0: df_contralaterality = df_contralaterality_indiv.copy()
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_indiv])
             
-            # Spatial distibution 
+            # Spatial distribution 
             # -------------------
-            tsv_distibution_fn = "{}/{}_prf_distibution.tsv".format(tsv_dir, subject_to_group)
-            df_distribution_indiv = pd.read_table(tsv_distibution_fn, sep="\t")
+            tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject_to_group)
+            df_distribution_indiv = pd.read_table(tsv_distribution_fn, sep="\t")
             if i == 0: df_distribution = df_distribution_indiv.copy()
-            else: 
-                integer_columns = [col for col in df_distribution_indiv.columns if isinstance(col, int)]
-                non_integer_columns = df_distribution_indiv.columns.difference(integer_columns)
-                df_distibution = df_distribution[integer_columns]
-                df_distibution_indiv = df_distribution_indiv[integer_columns]
+            else:
+                # Identifying numeric columns
+                numeric_columns = df_distribution_indiv.select_dtypes(include='number').columns
+                non_numeric_columns = df_distribution_indiv.columns.difference(numeric_columns)
                 
-                # Averaging
-                df_distribution = (df_distribution + df_distibution_indiv) / 2
+                # Performing the average only on numeric columns
+                df_distribution[numeric_columns] = (df_distribution[numeric_columns] + df_distribution_indiv[numeric_columns]) / 2
                 
-            df_distribution = pd.concat([df_distibution_indiv[non_integer_columns],df_distibution])
-                
+                # Concatenating non-numeric columns back to the dataframe
+                df_distribution[non_numeric_columns] = df_distribution_indiv[non_numeric_columns]
+
         # Averaging and saving tsv
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
             main_dir, project_dir, subject, format_)
@@ -192,17 +192,26 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
         
-        # Spatial distibution 
+        # Spatial distribution 
         # -------------------
         tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_distribution_fn))
         df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
         
         # Spatial distribution hot zone barycentre 
-        # ---------------------------------------
+        # ----------------------------------------
+        hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
+        for j, hemi in enumerate(hemis):
+            hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
+            df_distribution_hemi = df_distribution.loc[df_distribution.hemi.isin(hemi_values)]
+            df_barycentre_hemi = make_prf_barycentre_df(
+                df_distribution_hemi, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+            
+            df_barycentre_hemi['hemi'] = [hemi] * len(df_barycentre_hemi)
+            if j == 0: df_barycentre = df_barycentre_hemi
+            else: df_barycentre = pd.concat([df_barycentre, df_barycentre_hemi])
+            
         tsv_barycentre_fn = "{}/{}_prf_barycentre.tsv".format(tsv_dir, subject)
-        df_barycentre = make_prf_barycentre_df(
-            df_distribution, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
         print('Saving tsv: {}'.format(tsv_barycentre_fn))
         df_barycentre.to_csv(tsv_barycentre_fn, sep="\t", na_rep='NaN', index=False)
 
@@ -356,7 +365,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             if j == 0: df_contralaterality = df_contralaterality_roi
             else: df_contralaterality = pd.concat([df_contralaterality, df_contralaterality_roi])
             
-        # Spatial distibution 
+        # Spatial distribution 
         # --------------------  
         hemis = ['hemi-L', 'hemi-R', 'hemi-LR']
         for i, hemi in enumerate(hemis):
@@ -1435,9 +1444,10 @@ def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colo
         for j, roi in enumerate(rois) :
             # Make df roi
             df_roi = df_distribution.loc[(df_distribution.roi == roi) & (df_distribution.hemi == hemi)]
-            
+
             # make the two dimensional mesh for z dimension
-            int_columns = [col for col in df_roi.columns if isinstance(col, int)]
+            exclude_columns = ['roi', 'hemi', 'x', 'y']
+            int_columns = df_roi.columns.difference(exclude_columns)
             gauss_z_tot = df_roi[int_columns].values
             
             # Contour plot

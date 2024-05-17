@@ -365,7 +365,8 @@ def make_prf_barycentre_df(df_distribution, rois, max_ecc, grain, hot_zone_perce
         df_roi = df_distribution[df_distribution.roi == roi]
         
         # make the two dimensional mesh for z dimension
-        int_columns = [col for col in df_roi.columns if isinstance(col, int)]
+        exclude_columns = ['roi', 'hemi', 'x', 'y']
+        int_columns = df_roi.columns.difference(exclude_columns)
         gauss_z_tot = df_roi[int_columns].values
         
         # Make df_barycentre
@@ -384,8 +385,8 @@ def make_prf_barycentre_df(df_distribution, rois, max_ecc, grain, hot_zone_perce
         
         # Calculate confidence intervals using bootstrap 
         num_samples = len(hot_zone_idx[0])
-        lower_ci_x, upper_ci_x = bootstrap_ci_mean(hot_zone_idx[1], n_bootstrap=num_samples, ci_level=ci_confidence_level)
-        lower_ci_y, upper_ci_y = bootstrap_ci_mean(hot_zone_idx[0], n_bootstrap=num_samples, ci_level=ci_confidence_level)
+        lower_ci_x, upper_ci_x = bootstrap_ci_mean(hot_zone_idx[1], n_bootstrap=1000, ci_level=ci_confidence_level)
+        lower_ci_y, upper_ci_y = bootstrap_ci_mean(hot_zone_idx[0], n_bootstrap=1000, ci_level=ci_confidence_level)
         
         # Convert positions to the correct reference frame
         scale_factor = max_ecc / (grain / 2)
