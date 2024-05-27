@@ -1400,9 +1400,6 @@ def prf_contralaterality_plot(df_contralaterality, fig_height, fig_width, rois, 
     
     return fig 
 
-
-
-
 def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colors, screen_side):
     """
     Make prf distribution contour plot
@@ -1613,10 +1610,6 @@ def prf_barycentre_plot(df_barycentre, fig_height, fig_width, rois, roi_colors, 
                       margin_b=50)
         
     return fig
-
-
-
-
 
 def categories_proportions_roi_plot(data, subject, fig_height, fig_width):
     data = data.copy()
