@@ -132,58 +132,58 @@ for format_, extension in zip(formats, extensions):
                           hot_zone_percent=hot_zone_percent,
                           subjects_to_group=subjects)
     
-    # # Roi area and stats plot
-    # fig = prf_roi_area(df_roi_area=df_roi_area, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Roi area and stats plot
+    fig = prf_roi_area(df_roi_area=df_roi_area, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
     
-    # # Violins plot
-    # fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
-    #                        rois=rois, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Violins plot
+    fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
+                            rois=rois, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
-    # # Parameters average plot
-    # fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
-    #                           rois=rois, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_params_avg.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Parameters average plot
+    fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
+                              rois=rois, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_params_avg.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
     
-    # # Ecc.size plots
-    # fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
-    #                         fig_height=400, rois=rois, roi_colors=roi_colors,
-    #                         plot_groups=plot_groups, max_ecc=max_ecc)
-    # fig_fn = "{}/{}_prf_ecc_size.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Ecc.size plots
+    fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
+                            fig_height=400, rois=rois, roi_colors=roi_colors,
+                            plot_groups=plot_groups, max_ecc=max_ecc)
+    fig_fn = "{}/{}_prf_ecc_size.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
-    # # Ecc.pCM plot
-    # fig_fn = "{}/{}_prf_ecc_pcm.pdf".format(fig_dir, subject)
-    # fig = prf_ecc_pcm_plot(df_ecc_pcm=df_ecc_pcm, fig_width=fig_width, fig_height=400, 
-    #                        rois=rois, roi_colors=roi_colors,
-    #                        plot_groups=plot_groups, max_ecc=max_ecc)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Ecc.pCM plot
+    fig_fn = "{}/{}_prf_ecc_pcm.pdf".format(fig_dir, subject)
+    fig = prf_ecc_pcm_plot(df_ecc_pcm=df_ecc_pcm, fig_width=fig_width, fig_height=400, 
+                            rois=rois, roi_colors=roi_colors,
+                            plot_groups=plot_groups, max_ecc=max_ecc)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
     
-    # # Polar angle distributions
-    # figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
-    #                                     fig_height=300, rois=rois, roi_colors=roi_colors,
-    #                                     num_polar_angle_bins=num_polar_angle_bins)
-    # for (fig, hemi) in zip(figs, hemis):
-    #     fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
-    #     print('Saving pdf: {}'.format(fig_fn))
-    #     fig.write_image(fig_fn)
+    # Polar angle distributions
+    figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
+                                        fig_height=300, rois=rois, roi_colors=roi_colors,
+                                        num_polar_angle_bins=num_polar_angle_bins)
+    for (fig, hemi) in zip(figs, hemis):
+        fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
+        print('Saving pdf: {}'.format(fig_fn))
+        fig.write_image(fig_fn)
 
-    # # Contralaterality plots
-    # fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
-    # fig = prf_contralaterality_plot(df_contralaterality=df_contralaterality, 
-    #                                 fig_width=fig_width, fig_height=300, 
-    #                                 rois=rois, roi_colors=roi_colors)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Contralaterality plots
+    fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
+    fig = prf_contralaterality_plot(df_contralaterality=df_contralaterality, 
+                                    fig_width=fig_width, fig_height=300, 
+                                    rois=rois, roi_colors=roi_colors)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
     # Spatial distibution plot
 
