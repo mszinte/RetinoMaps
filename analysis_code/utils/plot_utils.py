@@ -1199,9 +1199,9 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                                                                model='pcm')
 
             line_x = np.linspace(ecc_mean[0], ecc_mean[-1], 50)
-            line = 1 / (slope * line_x) + intercept
-            line_upper = 1 / (slope_upper * line_x) + intercept_upper
-            line_lower = 1 / (slope_lower * line_x) + intercept_lower
+            line = 1 / (slope * line_x + intercept)
+            line_upper = 1 / (slope_upper * line_x + intercept_upper)
+            line_lower = 1 / (slope_lower * line_x + intercept_lower)
 
             fig.add_trace(go.Scatter(x=line_x, 
                                      y=line, 

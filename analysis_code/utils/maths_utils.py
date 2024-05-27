@@ -41,7 +41,7 @@ def weighted_regression(x_reg, y_reg, weight_reg, model):
     if model == 'pcm':
         # Define the model function
         def model_function(x, c, d):
-            return 1 / (c * x) + d
+            return 1 / (c * x + d)
 
         if weight_reg_nan.size >= 2:
             # Perform curve fitting
