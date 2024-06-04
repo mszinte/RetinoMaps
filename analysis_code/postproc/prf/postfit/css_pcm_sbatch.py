@@ -56,9 +56,9 @@ server_project = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name  = analysis_info['cluster_name']
-nb_procs = 8
+nb_procs = 1
 memory_val = 48
-hour_proc = 4
+hour_proc = 20
 
 # Set folders
 log_dir = "{}/{}/derivatives/pp_data/{}/log_outputs".format(main_dir, 
