@@ -21,7 +21,7 @@
 # -----------------------------------------------------------------------------------------
 # Exemple:
 # cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit
-# sh make_rois_fig.sh /home/mszinte/projects RetinoMaps /scratch/mszinte/data
+# sh make_rois_fig.sh ~/projects RetinoMaps /scratch/mszinte/data
 # -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (martin.szinte@gmail.com)
 # Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

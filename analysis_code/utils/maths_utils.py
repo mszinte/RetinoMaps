@@ -67,6 +67,65 @@ def weighted_regression(x_reg, y_reg, weight_reg, model):
     else:
         raise ValueError("Invalid model type. Supported models are 'pcm' and 'linear'.")
 
+def weighted_nan_mean(data, weights):
+    """
+    Calculate the weighted mean of an array, ignoring NaN values.
+
+    Parameters:
+    data (np.ndarray): Array of data points, may contain NaN values.
+    weights (np.ndarray): Array of weights corresponding to the data points.
+
+    Returns:
+    float: The weighted mean of the data points, ignoring NaN values.
+    """
+    import numpy as np 
+    # Mask NaN values in the data
+    mask = ~np.isnan(data)
+    
+    # Apply the mask to data and weights
+    masked_data = data[mask]
+    masked_weights = weights[mask]
+    
+    # Calculate the weighted mean
+    mean = np.sum(masked_data * masked_weights) / np.sum(masked_weights)
+    return mean
+
+
+def weighted_nan_median(data, weights):
+    """
+    Calculate the weighted median of an array, ignoring NaN values.
+
+    Parameters:
+    data (np.ndarray): Array of data points, may contain NaN values.
+    weights (np.ndarray): Array of weights corresponding to the data points.
+
+    Returns:
+    float: The weighted median of the data points, ignoring NaN values.
+    """
+    import numpy as np 
+    # Mask NaN values in the data
+    mask = ~np.isnan(data)
+    
+    # Apply the mask to data and weights
+    masked_data = data[mask]
+    masked_weights = weights[mask]
+    
+    # Sort the data and corresponding weights
+    sorted_indices = np.argsort(masked_data)
+    sorted_data = masked_data[sorted_indices]
+    sorted_weights = masked_weights[sorted_indices]
+    
+    # Calculate the cumulative sum of weights
+    cumulative_weights = np.cumsum(sorted_weights)
+    
+    # Find the median position
+    median_weight = cumulative_weights[-1] / 2.0
+    
+    # Find the index where the cumulative weight crosses the median weight
+    median_index = np.searchsorted(cumulative_weights, median_weight)
+    
+    return sorted_data[median_index]
+
 def gaus_2d(gauss_x, gauss_y, gauss_sd, screen_side, grain=200):
     """
     Generate 2D gaussian mesh
@@ -287,7 +346,7 @@ def avg_subject_template(fns):
     return img, data_avg
 
 
-def make_prf_distribution_df(data, rois, max_ecc, grain, hot_zone_percent=0.01, ci_confidence_level=0.95):
+def make_prf_distribution_df(data, rois, max_ecc, grain):
     """
     Load the PRF TSV file and compute the PRF distribution 
     

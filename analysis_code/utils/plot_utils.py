@@ -305,6 +305,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
         # --------
         data_pcm = data
         ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_pcm_bins)**2 * max_ecc))
+
         for num_roi, roi in enumerate(rois):
             df_roi = data_pcm.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -372,7 +373,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             hemi_values = ['hemi-L', 'hemi-R'] if hemi == 'hemi-LR' else [hemi]
             data_hemi = data.loc[data.hemi.isin(hemi_values)]
             df_distribution_hemi = make_prf_distribution_df(
-                data_hemi, rois, screen_side, gaussian_mesh_grain, hot_zone_percent=hot_zone_percent, ci_confidence_level=0.95)
+                data_hemi, rois, screen_side, gaussian_mesh_grain)
 
             df_distribution_hemi['hemi'] = [hemi] * len(df_distribution_hemi)
             if i == 0: df_distribution = df_distribution_hemi
@@ -1449,30 +1450,26 @@ def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colo
             
             # Contour plot
             fig.add_trace(go.Contour(x=df_roi.x, 
-                     y=df_roi.y,
-                     z=gauss_z_tot, 
-                     colorscale='hot', 
-                     showscale=False, 
-                     contours_coloring='lines',
-                     line_width=contour_width),
-                    row=1, col=j+1)
+                                     y=df_roi.y, 
+                                     z=gauss_z_tot, 
+                                     colorscale=[[0, 'white'], [1, roi_colors[j]]],  
+                                     showscale=False,  
+                                     line=dict(color='black', width=contour_width),  
+                                     ncontours=6, 
+                                     contours=dict(coloring='fill')
+                                    ),row=1, col=j+1)
             
             # x line
             fig.add_trace(go.Scatter(x=[0,0],
-                                     y=[-screen_side, screen_side],
+                                     y=[-20,20],
                                      mode='lines',
-                                     line=dict(dash='2px', 
-                                               color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
-                                               width=line_width)),
-                                    row=1, col=j+1)
+                                     line=dict(dash='2px',color='black', width=line_width)
+                                    ),row=1, col=j+1)
             # y line
-            fig.add_trace(go.Scatter(x=[-screen_side, screen_side], 
+            fig.add_trace(go.Scatter(x=[-20,20], 
                                      y=[0,0], 
                                      mode='lines', 
-                                     line=dict(dash='2px', 
-                                               color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
-                                               width=line_width)),
-                          row=1, col=j+1)
+                                     line=dict(dash='2px',color='black', width=line_width)),row=1, col=j+1)
             
             # square
             fig.add_shape(type="rect", 
@@ -1480,13 +1477,10 @@ def prf_distribution_plot(df_distribution, fig_height, fig_width, rois, roi_colo
                           y0=-10, 
                           x1=10, 
                           y1=10, 
-                          line=dict(dash='2px', 
-                                    color=roi_colors[j].replace('rgb','rgba').replace(')',',0.5)'), 
-                                    width=line_width),
-                          row=1, col=j+1)
+                          line=dict(dash='2px',color='black', width=line_width),row=1, col=j+1)
             
-        fig.update_xaxes(color= ('rgba(255,255,255,0)'))
-        fig.update_yaxes(color= ('rgba(255,255,255,0)'))
+        fig.update_xaxes(range=[-20,20], color= ('rgba(255,255,255,0)'))
+        fig.update_yaxes(range=[-20,20], color= ('rgba(255,255,255,0)'))
         
         # Define parameters
         fig.update_layout(height=fig_height, 
