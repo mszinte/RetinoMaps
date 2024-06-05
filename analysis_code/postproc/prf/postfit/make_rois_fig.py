@@ -151,13 +151,13 @@ for format_, extension in zip(formats, extensions):
     # print('Saving pdf: {}'.format(fig_fn))
     # fig.write_image(fig_fn)
     
-    # # Ecc.size plots
-    # fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
-    #                         fig_height=400, rois=rois, roi_colors=roi_colors,
-    #                         plot_groups=plot_groups, max_ecc=max_ecc)
-    # fig_fn = "{}/{}_prf_ecc_size.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Ecc.size plots
+    fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
+                            fig_height=400, rois=rois, roi_colors=roi_colors,
+                            plot_groups=plot_groups, max_ecc=max_ecc)
+    fig_fn = "{}/{}_prf_ecc_size.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
     # Ecc.pCM plot
     fig_fn = "{}/{}_prf_ecc_pcm.pdf".format(fig_dir, subject)

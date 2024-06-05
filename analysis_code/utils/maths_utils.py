@@ -126,6 +126,68 @@ def weighted_nan_median(data, weights):
     
     return sorted_data[median_index]
 
+def weighted_nan_median_pd(data, weights):
+    """
+    Calculate the weighted median of an array, ignoring NaN values.
+
+    Parameters:
+    data (np.ndarray): Array of data points, may contain NaN values.
+    weights (np.ndarray): Array of weights corresponding to the data points.
+
+    Returns:
+    float: The weighted median of the data points, ignoring NaN values.
+    """
+    import numpy as np
+    # Mask NaN values in the data
+    mask = ~np.isnan(data)
+    
+    # Apply the mask to data and weights
+    masked_data = data[mask]
+    masked_weights = weights[mask]
+    
+    # Sort the data and corresponding weights
+    sorted_indices = np.argsort(masked_data)
+    sorted_data = masked_data[sorted_indices]
+    sorted_weights = masked_weights[sorted_indices]
+    
+    # Calculate the cumulative sum of weights
+    cumulative_weights = np.cumsum(sorted_weights)
+    
+    # Find the median position
+    median_weight = cumulative_weights[-1] / 2.0
+    
+    # Find the index where the cumulative weight crosses the median weight
+    median_index = np.searchsorted(cumulative_weights, median_weight)
+    
+    return sorted_data[median_index]
+
+def weighted_nan_percentile(data, weights, percentile):
+    """
+    Calculate the weighted percentile of an array, ignoring NaN values.
+
+    Parameters:
+    data (np.ndarray): Array of data points, may contain NaN values.
+    weights (np.ndarray): Array of weights corresponding to the data points.
+    percentile (float): Percentile to compute, between 0 and 100.
+
+    Returns:
+    float: The weighted percentile of the data points, ignoring NaN values.
+    """
+    import numpy as np
+    mask = ~np.isnan(data)
+    masked_data = data[mask]
+    masked_weights = weights[mask]
+    
+    sorted_indices = np.argsort(masked_data)
+    sorted_data = masked_data[sorted_indices]
+    sorted_weights = masked_weights[sorted_indices]
+    
+    cumulative_weights = np.cumsum(sorted_weights)
+    percentile_weight = percentile / 100.0 * cumulative_weights[-1]
+    percentile_index = np.searchsorted(cumulative_weights, percentile_weight)
+    
+    return sorted_data[percentile_index]
+        
 def gaus_2d(gauss_x, gauss_y, gauss_sd, screen_side, grain=200):
     """
     Generate 2D gaussian mesh
