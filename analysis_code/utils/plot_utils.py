@@ -50,7 +50,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
     df_params_avg: dataframe to use in parameters average plot
     df_distribution: dataframe to use in prf distribution plot
     """
-    from maths_utils import bootstrap_ci_mean, make_prf_distribution_df, make_prf_barycentre_df
+    from maths_utils import make_prf_distribution_df, make_prf_barycentre_df, weighted_nan_median_pd, weighted_nan_percentile
     
     if 'group' in subject:
         
@@ -233,7 +233,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
                  (data.prf_ecc < ecc_threshold[0]) | (data.prf_ecc > ecc_threshold[1]) |
                  (data.prf_size < size_threshold[0]) | (data.prf_size > size_threshold[1]) | 
                  (data.prf_n < n_threshold[0]) | (data.prf_n > n_threshold[1]) | 
-                 (data.pcm < pcm_threshold[0]) | (data.pcm > pcm_threshold[1]) |
+                 # (data.pcm < pcm_threshold[0]) | (data.pcm > pcm_threshold[1]) |
                  (data.prf_loo_r2 < rsqr_threshold) |
                  (data[stats_col] > stats_threshold)] = np.nan
         data = data.dropna()
@@ -281,7 +281,7 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             else: df_params_avg = pd.concat([df_params_avg, df_params_avg_roi])
 
         # Ecc.size
-        # --------
+        # --------           
         ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_size_bins)**2 * max_ecc))
         for num_roi, roi in enumerate(rois):
             df_roi = data.loc[(data.roi == roi)]
@@ -289,13 +289,14 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             df_ecc_size_bin = pd.DataFrame()
             df_ecc_size_bin['roi'] = [roi]*num_ecc_size_bins
             df_ecc_size_bin['num_bins'] = np.arange(num_ecc_size_bins)
-            df_ecc_size_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].mean())
-            df_ecc_size_bin['prf_size_bins_mean'] = np.array(df_bins['prf_size'].mean())
-            df_ecc_size_bin['prf_loo_r2_bins_mean'] = np.array(df_bins['prf_loo_r2'].mean())
-            ci = df_bins['prf_size'].apply(lambda x: bootstrap_ci_mean(x))
-            df_ecc_size_bin['prf_size_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
-            df_ecc_size_bin['prf_size_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
-
+            # df_ecc_size_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].median())
+            
+            df_ecc_size_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
+            df_ecc_size_bin['prf_size_bins_median'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_size'].values, x['prf_loo_r2'].values)).values
+            
+            df_ecc_size_bin['prf_loo_r2_bins_median'] = np.array(df_bins['prf_loo_r2'].median())
+            df_ecc_size_bin['prf_size_bins_ci_upper_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['prf_size'].values, x['prf_loo_r2'].values, 75)).values
+            df_ecc_size_bin['prf_size_bins_ci_lower_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['prf_size'].values, x['prf_loo_r2'].values, 25)).values
             if num_roi == 0: df_ecc_size_bins = df_ecc_size_bin
             else: df_ecc_size_bins = pd.concat([df_ecc_size_bins, df_ecc_size_bin])
 
@@ -312,12 +313,13 @@ def compute_plot_data(subject, main_dir, project_dir, format_, rois,
             df_ecc_pcm_bin = pd.DataFrame()
             df_ecc_pcm_bin['roi'] = [roi]*num_ecc_pcm_bins
             df_ecc_pcm_bin['num_bins'] = np.arange(num_ecc_pcm_bins)
-            df_ecc_pcm_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].mean())
-            df_ecc_pcm_bin['prf_pcm_bins_mean'] = np.array(df_bins['pcm'].mean())
-            df_ecc_pcm_bin['prf_loo_r2_bins_mean'] = np.array(df_bins['prf_loo_r2'].mean())
-            ci = df_bins['pcm'].apply(lambda x: bootstrap_ci_mean(x))
-            df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = np.array(ci.apply(lambda x: x[1] if not np.isnan(x[1]) else np.nan))
-            df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = np.array(ci.apply(lambda x: x[0] if not np.isnan(x[0]) else np.nan))
+            # df_ecc_pcm_bin['prf_ecc_bins'] = np.array(df_bins['prf_ecc'].median())
+            df_ecc_pcm_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
+            df_ecc_pcm_bin['prf_pcm_bins_median'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['pcm'].values, x['prf_loo_r2'].values)).values
+            df_ecc_pcm_bin['prf_loo_r2_bins_median'] = np.array(df_bins['prf_loo_r2'].median())
+            df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['pcm'].values, x['prf_loo_r2'].values, 75)).values
+            df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['pcm'].values, x['prf_loo_r2'].values, 25)).values
+
             if num_roi == 0: df_ecc_pcm_bins = df_ecc_pcm_bin
             else: df_ecc_pcm_bins = pd.concat([df_ecc_pcm_bins, df_ecc_pcm_bin])
 
@@ -1066,24 +1068,24 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
             
             # Get data
             df = df_ecc_size.loc[(df_ecc_size.roi == roi)]
-            ecc_mean = np.array(df.prf_ecc_bins)
-            size_mean = np.array(df.prf_size_bins_mean)
-            r2_mean = np.array(df.prf_loo_r2_bins_mean)
+            ecc_median = np.array(df.prf_ecc_bins)
+            size_median = np.array(df.prf_size_bins_median)
+            r2_median = np.array(df.prf_loo_r2_bins_median)
             size_upper_bound = np.array(df.prf_size_bins_ci_upper_bound)
             size_lower_bound = np.array(df.prf_size_bins_ci_lower_bound)
             
             # Linear regression
-            slope, intercept = weighted_regression(ecc_mean, size_mean, r2_mean, model='linear')
-            slope_upper, intercept_upper = weighted_regression(ecc_mean[np.where(~np.isnan(size_upper_bound))], 
+            slope, intercept = weighted_regression(ecc_median, size_median, r2_median, model='linear')
+            slope_upper, intercept_upper = weighted_regression(ecc_median[np.where(~np.isnan(size_upper_bound))], 
                                                                size_upper_bound[~np.isnan(size_upper_bound)], 
-                                                               r2_mean[np.where(~np.isnan(size_upper_bound))], 
+                                                               r2_median[np.where(~np.isnan(size_upper_bound))], 
                                                                model='linear')
-            slope_lower, intercept_lower = weighted_regression(ecc_mean[np.where(~np.isnan(size_lower_bound))], 
+            slope_lower, intercept_lower = weighted_regression(ecc_median[np.where(~np.isnan(size_lower_bound))], 
                                                                size_lower_bound[~np.isnan(size_lower_bound)], 
-                                                               r2_mean[np.where(~np.isnan(size_lower_bound))], 
+                                                               r2_median[np.where(~np.isnan(size_lower_bound))], 
                                                                model='linear')
 
-            line_x = np.linspace(ecc_mean[0], ecc_mean[-1], 50)
+            line_x = np.linspace(ecc_median[0], ecc_median[-1], 50)
             line = slope * line_x + intercept
             line_upper = slope_upper * line_x + intercept_upper
             line_lower = slope_lower * line_x + intercept_lower
@@ -1100,11 +1102,11 @@ def prf_ecc_size_plot(df_ecc_size, fig_width, fig_height, rois, roi_colors, plot
                           row=1, col=l+1)
 
             # Markers
-            fig.add_trace(go.Scatter(x=ecc_mean, 
-                                     y=size_mean, mode='markers', 
+            fig.add_trace(go.Scatter(x=ecc_median, 
+                                     y=size_median, mode='markers', 
                                      error_y=dict(type='data', 
-                                                  array=size_upper_bound - size_mean, 
-                                                  arrayminus=size_mean - size_lower_bound,
+                                                  array=size_upper_bound - size_median, 
+                                                  arrayminus=size_median - size_lower_bound,
                                                   visible=True, 
                                                   thickness=3, 
                                                   width=0, 
@@ -1180,26 +1182,26 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
             
             # Get data
             df = df_ecc_pcm.loc[(df_ecc_pcm.roi == roi)]
-            ecc_mean = np.array(df.prf_ecc_bins)
-            pcm_mean = np.array(df.prf_pcm_bins_mean)
-            r2_mean = np.array(df.prf_loo_r2_bins_mean)
+            ecc_median = np.array(df.prf_ecc_bins)
+            pcm_median = np.array(df.prf_pcm_bins_median)
+            r2_median = np.array(df.prf_loo_r2_bins_median)
             pcm_upper_bound = np.array(df.prf_pcm_bins_ci_upper_bound)
             pcm_lower_bound = np.array(df.prf_pcm_bins_ci_lower_bound)
             
             # Linear regression
-            slope, intercept = weighted_regression(ecc_mean, pcm_mean, r2_mean, model='pcm')
+            slope, intercept = weighted_regression(ecc_median, pcm_median, r2_median, model='pcm')
             
-            slope_upper, intercept_upper = weighted_regression(ecc_mean[~np.isnan(pcm_upper_bound)], 
+            slope_upper, intercept_upper = weighted_regression(ecc_median[~np.isnan(pcm_upper_bound)], 
                                                                pcm_upper_bound[~np.isnan(pcm_upper_bound)], 
-                                                               r2_mean[~np.isnan(pcm_upper_bound)], 
+                                                               r2_median[~np.isnan(pcm_upper_bound)], 
                                                                model='pcm')
             
-            slope_lower, intercept_lower = weighted_regression(ecc_mean[~np.isnan(pcm_lower_bound)], 
+            slope_lower, intercept_lower = weighted_regression(ecc_median[~np.isnan(pcm_lower_bound)], 
                                                                pcm_lower_bound[~np.isnan(pcm_lower_bound)], 
-                                                               r2_mean[~np.isnan(pcm_lower_bound)], 
+                                                               r2_median[~np.isnan(pcm_lower_bound)], 
                                                                model='pcm')
 
-            line_x = np.linspace(ecc_mean[0], ecc_mean[-1], 50)
+            line_x = np.linspace(ecc_median[0], ecc_median[-1], 50)
             line = 1 / (slope * line_x + intercept)
             line_upper = 1 / (slope_upper * line_x + intercept_upper)
             line_lower = 1 / (slope_lower * line_x + intercept_lower)
@@ -1221,12 +1223,12 @@ def prf_ecc_pcm_plot(df_ecc_pcm, fig_width, fig_height, rois, roi_colors, plot_g
                           row=1, col=l+1)
 
             # Markers
-            fig.add_trace(go.Scatter(x=ecc_mean, 
-                                     y=pcm_mean, 
+            fig.add_trace(go.Scatter(x=ecc_median, 
+                                     y=pcm_median, 
                                      mode='markers', 
                                      error_y=dict(type='data', 
-                                                  array=pcm_upper_bound - pcm_mean, 
-                                                  arrayminus=pcm_mean - pcm_lower_bound,
+                                                  array=pcm_upper_bound - pcm_median, 
+                                                  arrayminus=pcm_median - pcm_lower_bound,
                                                   visible=True, 
                                                   thickness=3, 
                                                   width=0, 
