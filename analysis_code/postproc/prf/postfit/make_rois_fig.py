@@ -35,12 +35,16 @@ Edited by Martin Szinte (mail@martinszinte.net)
 import warnings
 warnings.filterwarnings("ignore")
 
+# Debug
+import ipdb
+deb = ipdb.set_trace
+
 # General imports
 import os
 import sys
 import json
-import ipdb
-deb = ipdb.set_trace
+import pandas as pd
+
 
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
@@ -71,7 +75,7 @@ rsqr_th = analysis_info['rsqr_th']
 pcm_th = analysis_info['pcm_th']
 amplitude_th = analysis_info['amplitude_th']
 stats_th = analysis_info['stats_th']
-n_th = analysis_info['n_th']
+n_th = analysis_info['n_th'] 
 subjects = analysis_info['subjects']
 
 # Figure settings
@@ -90,13 +94,10 @@ colormap_dict = {'V1': (243, 231, 155),
                 }
 roi_colors = ['rgb({},{},{})'.format(*rgb) for rgb in colormap_dict.values()]
 plot_groups = [['V1', 'V2', 'V3'], ['V3AB', 'LO', 'VO'], ['hMT+', 'iIPS', 'sIPS'], ['iPCS', 'sPCS', 'mPCS']]
-num_ecc_size_bins = 6
-num_ecc_pcm_bins = 6
+
 num_polar_angle_bins = 9
-max_ecc = 15
 screen_side = 20
-gaussian_mesh_grain = 100
-hot_zone_percent = 0.01
+max_ecc = 15
 fig_width = 1440
 
 # Format loop
@@ -105,44 +106,52 @@ for format_, extension in zip(formats, extensions):
     # Create folders and fns
     fig_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/figures'.format(
         main_dir, project_dir, subject, format_)
+    tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
+        main_dir, project_dir, subject, format_)
     os.makedirs(fig_dir, exist_ok=True)
 
     # Load data
-    df_roi_area, df_violins, df_ecc_size, df_ecc_pcm, df_polar_angle, \
-        df_contralaterality, df_params_avg, df_distribution, df_barycentre = \
-        compute_plot_data(subject=subject,
-                          main_dir=main_dir,
-                          project_dir=project_dir,
-                          format_=format_,
-                          rois=rois,
-                          amplitude_threshold=amplitude_th, 
-                          ecc_threshold=ecc_th, 
-                          size_threshold=size_th, 
-                          rsqr_threshold=rsqr_th,
-                          n_threshold=n_th,
-                          stats_threshold=stats_th,
-                          pcm_threshold=pcm_th,
-                          num_ecc_size_bins=num_ecc_size_bins, 
-                          num_ecc_pcm_bins=num_ecc_pcm_bins,
-                          num_polar_angle_bins=num_polar_angle_bins,
-                          max_ecc=max_ecc,
-                          screen_side=screen_side,
-                          gaussian_mesh_grain=gaussian_mesh_grain, 
-                          hot_zone_percent=hot_zone_percent,
-                          subjects_to_group=subjects)
+    tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
+    df_roi_area = pd.read_table(tsv_roi_area_fn, sep="\t")
+
+    tsv_violins_fn = "{}/{}_prf_violins.tsv".format(tsv_dir, subject)
+    df_violins = pd.read_table(tsv_violins_fn, sep="\t")
+
+    tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)
+    df_params_avg = pd.read_table(tsv_params_avg_fn, sep="\t")
+
+    tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject)
+    df_ecc_size = pd.read_table(tsv_ecc_size_fn, sep="\t")
+
+    tsv_ecc_pcm_fn = "{}/{}_prf_ecc_pcm.tsv".format(tsv_dir, subject)
+    df_ecc_pcm = pd.read_table(tsv_ecc_pcm_fn, sep="\t")
+
+
+    tsv_polar_angle_fn = "{}/{}_prf_polar_angle.tsv".format(tsv_dir, subject)
+    df_polar_angle = pd.read_table(tsv_polar_angle_fn, sep="\t")
+
+    tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
+    df_contralaterality = pd.read_table(tsv_contralaterality_fn, sep="\t")
     
-    # # Roi area and stats plot
-    # fig = prf_roi_area(df_roi_area=df_roi_area, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
+    df_distribution = pd.read_table(tsv_distribution_fn, sep="\t")
     
-    # # Violins plot
-    # fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
-    #                         rois=rois, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    
+    tsv_barycentre_fn = "{}/{}_prf_barycentre.tsv".format(tsv_dir, subject)
+    df_barycentre = pd.read_table(tsv_barycentre_fn, sep="\t")
+    
+    # Roi area and stats plot
+    fig = prf_roi_area(df_roi_area=df_roi_area, fig_width=fig_width, fig_height=300, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_roi_area.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
+    
+    # Violins plot
+    fig = prf_violins_plot(df_violins=df_violins, fig_width=fig_width, fig_height=600, 
+                            rois=rois, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_violins.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
     # # Parameters average plot
     # fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
@@ -167,40 +176,40 @@ for format_, extension in zip(formats, extensions):
     print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
     
-    # # Polar angle distributions
-    # figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
-    #                                     fig_height=300, rois=rois, roi_colors=roi_colors,
-    #                                     num_polar_angle_bins=num_polar_angle_bins)
-    # for (fig, hemi) in zip(figs, hemis):
-    #     fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
-    #     print('Saving pdf: {}'.format(fig_fn))
-    #     fig.write_image(fig_fn)
+    # Polar angle distributions
+    figs, hemis = prf_polar_angle_plot(df_polar_angle=df_polar_angle, fig_width=fig_width, 
+                                        fig_height=300, rois=rois, roi_colors=roi_colors,
+                                        num_polar_angle_bins=num_polar_angle_bins)
+    for (fig, hemi) in zip(figs, hemis):
+        fig_fn = "{}/{}_prf_polar_angle_{}.pdf".format(fig_dir, subject, hemi)
+        print('Saving pdf: {}'.format(fig_fn))
+        fig.write_image(fig_fn)
 
-    # # Contralaterality plots
-    # fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
-    # fig = prf_contralaterality_plot(df_contralaterality=df_contralaterality, 
-    #                                 fig_width=fig_width, fig_height=300, 
-    #                                 rois=rois, roi_colors=roi_colors)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Contralaterality plots
+    fig_fn = "{}/{}_contralaterality.pdf".format(fig_dir, subject)
+    fig = prf_contralaterality_plot(df_contralaterality=df_contralaterality, 
+                                    fig_width=fig_width, fig_height=300, 
+                                    rois=rois, roi_colors=roi_colors)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
 
-    # # Spatial distibution plot
-    # figs, hemis = prf_distribution_plot(df_distribution=df_distribution, 
-    #                                     fig_width=fig_width, fig_height=300, 
-    #                                     rois=rois, roi_colors=roi_colors, screen_side=screen_side)
+    # Spatial distibution plot
+    figs, hemis = prf_distribution_plot(df_distribution=df_distribution, 
+                                        fig_width=fig_width, fig_height=300, 
+                                        rois=rois, roi_colors=roi_colors, screen_side=screen_side)
 
-    # for (fig, hemi) in zip(figs, hemis):
-    #     fig_fn = "{}/{}_distribution_{}.pdf".format(fig_dir, subject, hemi)
-    #     print('Saving pdf: {}'.format(fig_fn))
-    #     fig.write_image(fig_fn)
+    for (fig, hemi) in zip(figs, hemis):
+        fig_fn = "{}/{}_distribution_{}.pdf".format(fig_dir, subject, hemi)
+        print('Saving pdf: {}'.format(fig_fn))
+        fig.write_image(fig_fn)
 
-    # # Spatial distibution barycentre plot
-    # fig_fn = "{}/{}_barycentre.pdf".format(fig_dir, subject)
-    # fig = prf_barycentre_plot(df_barycentre=df_barycentre, 
-    #                                 fig_width=fig_width, fig_height=400, 
-    #                                 rois=rois, roi_colors=roi_colors, screen_side=screen_side)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Spatial distibution barycentre plot
+    fig_fn = "{}/{}_barycentre.pdf".format(fig_dir, subject)
+    fig = prf_barycentre_plot(df_barycentre=df_barycentre, 
+                                    fig_width=fig_width, fig_height=400, 
+                                    rois=rois, roi_colors=roi_colors, screen_side=screen_side)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
     
 # # Define permission cmd
 # print('Changing files permissions in {}/{}'.format(main_dir, project_dir))

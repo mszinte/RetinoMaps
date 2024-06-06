@@ -22,7 +22,7 @@
 # -----------------------------------------------------------------------------------------
 # Exemple:
 # cd ~/disks/meso_H/projects/RetinoMaps/analysis_code/postproc/prf/postfit
-# sh pycortex_maps_css.sh /home/mszinte/disks/meso_H/projects RetinoMaps /home/mszinte/disks/meso_S/data
+# sh pycortex_maps_css.sh ~/disks/meso_H/projects RetinoMaps ~/disks/meso_S/data
 # -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (martin.szinte@gmail.com)
 # Edited by Uriel Lascombes (uriel.lascombes@laposte.net)

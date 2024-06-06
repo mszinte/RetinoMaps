@@ -73,7 +73,8 @@ Analyses are run on individual participant (**sub-0X**) surface (**fsnative**) o
 - [x] Make subject WEBGL with pycortex [pycortex_webgl_css.py](analysis_code/postproc/prf/webgl/pycortex_webgl_css.py) or [pycortex_webgl_css.sh](analysis_code/postproc/prf/webgl/pycortex_webgl_css.sh)
 - [x] Edit [index.html](analysis_code/postproc/prf/webgl/index.html) and publish WEBGL on webapp [publish_webgl.py](analysis_code/postproc/prf/webgl/publish_webgl.py)
 - [x] Make TSV with CSS fit derivatives, pcm and statistics [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
-- [x] Make pRF derivatives and pcm main figures and figure TSV [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py) or [make_rois_fig.sh](analysis_code/postproc/prf/postfit/make_rois_fig.sh)
+- [x] Make pRF derivatives and pcm main figure TSV [make_roi_fig_tsv.py](analysis_code/postproc/prf/postfit/make_roi_fig_tsv.py)
+- [x] Make pRF derivatives and pcm main figures [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py) or [make_rois_fig.sh](analysis_code/postproc/prf/postfit/make_rois_fig.sh)
 - [x] Merge all css pycortex and pRF derivatives and pcm main figures [merge_fig_css.py](analysis_code/postproc/prf/postfit/merge_fig_css.py)
 
 ### Group analysis
@@ -105,7 +106,8 @@ or we ran a ROI based group analysis determined individually on subject surfaces
 - [x] Make subject WEBGL with pycortex for **sub-170k** [pycortex_webgl_css.py](analysis_code/postproc/prf/webgl/pycortex_webgl_css.py)
 - [x] Edit [index.html](analysis_code/postproc/prf/webgl/index.html) and publish WEBGL on webapp [publish_webgl.py](analysis_code/postproc/prf/webgl/publish_webgl.py)
 - [x] Make TSV with CSS fit derivatives, pcm and statistics for **sub-170k** [make_tsv_css.py](analysis_code/postproc/prf/postfit/make_tsv_css.py)
-- [x] Make pRF derivatives and pcm main figures and figure TSV for **sub-170k** and **group** [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py)
+- [x] Make pRF derivatives and pcm main figure TSV for **sub-170k** and **group** [make_roi_fig_tsv.py](analysis_code/postproc/prf/postfit/make_roi_fig_tsv.py)
+- [x] Make pRF derivatives and pcm main figure TSV for **sub-170k** and **group** [make_rois_fig.py](analysis_code/postproc/prf/postfit/make_rois_fig.py)
 - [x] Merge all css pycortex and pRF derivatives and pcm main figures for **sub-170k** and **group** [merge_fig_css.py](analysis_code/postproc/prf/postfit/merge_fig_css.py)
 
 ## On working
