@@ -94,92 +94,111 @@ def weighted_nan_mean(data, weights):
     return mean
 
 
+# def weighted_nan_median(data, weights):
+#     """
+#     Calculate the weighted median of an array, ignoring NaN values.
+
+#     Parameters:
+#     data (np.ndarray): Array of data points, may contain NaN values.
+#     weights (np.ndarray): Array of weights corresponding to the data points.
+
+#     Returns:
+#     float: The weighted median of the data points, ignoring NaN values.
+#     """
+#     import numpy as np 
+#     # Mask NaN values in the data
+#     mask = ~np.isnan(data)
+
+#     # Apply the mask to data and weights
+#     masked_data = data[mask]
+#     masked_weights = weights[mask]
+    
+#     # Sort the data and corresponding weights
+#     sorted_indices = np.argsort(masked_data)
+#     sorted_data = masked_data[sorted_indices]
+#     sorted_weights = masked_weights[sorted_indices]
+   
+#     # Calculate the cumulative sum of weights
+#     cumulative_weights = np.cumsum(sorted_weights)
+    
+#     # Find the median position
+#     median_weight = cumulative_weights[-1] / 2.0
+    
+#     # Find the index where the cumulative weight crosses the median weight
+#     median_index = np.searchsorted(cumulative_weights, median_weight)
+    
+#     return sorted_data[median_index]
+
 def weighted_nan_median(data, weights):
     """
-    Calculate the weighted median of an array, ignoring NaN values.
+    Calculate the weighted median of a data array, ignoring NaN values.
 
     Parameters:
-    data (np.ndarray): Array of data points, may contain NaN values.
-    weights (np.ndarray): Array of weights corresponding to the data points.
-
-    Returns:
-    float: The weighted median of the data points, ignoring NaN values.
-    """
-    import numpy as np 
-    # Mask NaN values in the data
-    mask = ~np.isnan(data)
-    
-    # Apply the mask to data and weights
-    masked_data = data[mask]
-    masked_weights = weights[mask]
-    
-    # Sort the data and corresponding weights
-    sorted_indices = np.argsort(masked_data)
-    sorted_data = masked_data[sorted_indices]
-    sorted_weights = masked_weights[sorted_indices]
-    
-    # Calculate the cumulative sum of weights
-    cumulative_weights = np.cumsum(sorted_weights)
-    
-    # Find the median position
-    median_weight = cumulative_weights[-1] / 2.0
-    
-    # Find the index where the cumulative weight crosses the median weight
-    median_index = np.searchsorted(cumulative_weights, median_weight)
-    
-    return sorted_data[median_index]
-
-def weighted_nan_median_pd(data, weights):
-    """
-    Calculate the weighted median of an array, ignoring NaN values.
-
-    Parameters:
-    data (np.ndarray): Array of data points, may contain NaN values.
-    weights (np.ndarray): Array of weights corresponding to the data points.
+    data (pd.Series, pd.DataFrame, np.ndarray): Data points, may contain NaN values.
+    weights (pd.Series, pd.DataFrame, np.ndarray): Weights corresponding to the data points.
 
     Returns:
     float: The weighted median of the data points, ignoring NaN values.
            Returns NaN if the cumulative weights are not defined.
     """
     import numpy as np
+    import pandas as pd
+
+    # Convert data and weights to pandas Series if they are numpy arrays
+    if isinstance(data, np.ndarray):
+        data = pd.Series(data)
+    if isinstance(weights, np.ndarray):
+        weights = pd.Series(weights)
+        
+    # If data and weights are DataFrames, ensure they have a single column
+    if isinstance(data, pd.DataFrame):
+        if data.shape[1] != 1:
+            raise ValueError("DataFrame data must have exactly one column")
+        data = data.iloc[:, 0]
+        
+    if isinstance(weights, pd.DataFrame):
+        if weights.shape[1] != 1:
+            raise ValueError("DataFrame weights must have exactly one column")
+        weights = weights.iloc[:, 0]
+
     # Mask NaN values in the data
-    mask = ~np.isnan(data)
-    
+    mask = ~data.isna()
+
     # Apply the mask to data and weights
-    masked_data = data[mask]
-    masked_weights = weights[mask]
-    
+    masked_data = data[mask].reset_index(drop=True)
+    masked_weights = weights[mask].reset_index(drop=True)
+
     # Check if there are no valid data points
     if masked_data.size == 0 or masked_weights.size == 0:
         return np.nan
-    
+
     # Sort the data and corresponding weights
     sorted_indices = np.argsort(masked_data)
-    sorted_data = masked_data[sorted_indices]
-    sorted_weights = masked_weights[sorted_indices]
-    
+    sorted_data = masked_data.iloc[sorted_indices].reset_index(drop=True)
+    sorted_weights = masked_weights.iloc[sorted_indices].reset_index(drop=True)
+
     # Calculate the cumulative sum of weights
     cumulative_weights = np.cumsum(sorted_weights)
-    
+
     # Check if cumulative_weights is defined and has elements
     if cumulative_weights.size == 0:
         return np.nan
-    
+
     # Find the median position
-    median_weight = cumulative_weights[-1] / 2.0
-    
+    median_weight = cumulative_weights.iloc[-1] / 2.0
+
     # Find the index where the cumulative weight crosses the median weight
     median_index = np.searchsorted(cumulative_weights, median_weight)
-    
-    return sorted_data[median_index]
+
+    return sorted_data.iloc[median_index]
 
 def weighted_nan_percentile(data, weights, percentile):
     """
-    Calculate the weighted percentile of an array, ignoring NaN values.
+    Calculate the weighted percentile of an array or a pandas Series, ignoring NaN values.
 
     Parameters:
-    data (np.ndarray): Array of data points, may contain NaN values.
-    weights (np.ndarray): Array of weights corresponding to the data points.
+    data (np.ndarray or pd.Series): Array or pandas Series of data points, may contain NaN values.
+    weights (np.ndarray or pd.Series): Array or pandas Series of weights corresponding to the data points.
     percentile (float): Percentile to compute, between 0 and 100.
 
     Returns:
@@ -187,6 +206,14 @@ def weighted_nan_percentile(data, weights, percentile):
            Returns NaN if the cumulative weights are not defined.
     """
     import numpy as np
+    import pandas as pd
+    
+    # Convert pandas Series to numpy array if needed
+    if isinstance(data, pd.Series):
+        data = data.values
+    if isinstance(weights, pd.Series):
+        weights = weights.values
+    
     # Mask NaN values in the data
     mask = ~np.isnan(data)
     
@@ -216,7 +243,8 @@ def weighted_nan_percentile(data, weights, percentile):
     # Find the index where the cumulative weight crosses the percentile weight
     percentile_index = np.searchsorted(cumulative_weights, percentile_weight)
     
-    return sorted_data[percentile_index]
+    return float(sorted_data[percentile_index])
+
         
 def gaus_2d(gauss_x, gauss_y, gauss_sd, screen_side, grain=200):
     """

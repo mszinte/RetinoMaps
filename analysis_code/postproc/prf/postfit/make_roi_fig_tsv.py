@@ -47,7 +47,7 @@ import pandas as pd
 
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
-from maths_utils import make_prf_distribution_df, make_prf_barycentre_df, weighted_nan_median_pd, weighted_nan_percentile
+from maths_utils import make_prf_distribution_df, make_prf_barycentre_df, weighted_nan_median, weighted_nan_percentile
 
 # Inputs
 main_dir = sys.argv[1]
@@ -139,31 +139,33 @@ for format_, extension in zip(formats, extensions):
         # -------
         df_violins = data
     
-        # Parameters average
+        # Parameters median
         # ------------------
         for num_roi, roi in enumerate(rois):
             df_roi = data.loc[(data.roi == roi)]
+
             df_params_avg_roi = pd.DataFrame()
             df_params_avg_roi['roi'] = [roi]
-            df_params_avg_roi['prf_loo_r2_weighted_mean'], _ = np.average(df_roi.prf_loo_r2, weights=df_roi.prf_loo_r2, axis=0, returned=True)
-            df_params_avg_roi['prf_loo_r2_ci_down'] = np.percentile(df_roi.prf_loo_r2, [2.5])
-            df_params_avg_roi['prf_loo_r2_ci_up'] = np.percentile(df_roi.prf_loo_r2, [97.5])
+        
+            df_params_avg_roi['prf_loo_r2_weighted_median'] = weighted_nan_median(df_roi.prf_loo_r2, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['prf_loo_r2_ci_down'] = weighted_nan_percentile(df_roi.prf_loo_r2, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['prf_loo_r2_ci_up'] = weighted_nan_percentile(df_roi.prf_loo_r2, df_roi.prf_loo_r2, 97.5)
             
-            df_params_avg_roi['prf_size_weighted_mean'], _ = np.average(df_roi.prf_size, weights=df_roi.prf_loo_r2, axis=0, returned=True)
-            df_params_avg_roi['prf_size_ci_down'] = np.percentile(df_roi.prf_size, [2.5])
-            df_params_avg_roi['prf_size_ci_up'] = np.percentile(df_roi.prf_size, [97.5])
+            df_params_avg_roi['prf_size_weighted_median'] = weighted_nan_median(df_roi.prf_size, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['prf_size_ci_down'] = weighted_nan_percentile(df_roi.prf_size, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['prf_size_ci_up'] = weighted_nan_percentile(df_roi.prf_size, df_roi.prf_loo_r2, 97.5)
             
-            df_params_avg_roi['prf_ecc_weighted_mean'], _ = np.average(df_roi.prf_ecc, weights=df_roi.prf_loo_r2, axis=0, returned=True)
-            df_params_avg_roi['prf_ecc_ci_down'] = np.percentile(df_roi.prf_ecc, [2.5])
-            df_params_avg_roi['prf_ecc_ci_up'] = np.percentile(df_roi.prf_ecc, [97.5])
+            df_params_avg_roi['prf_ecc_weighted_median'] = weighted_nan_median(df_roi.prf_ecc, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['prf_ecc_ci_down'] = weighted_nan_percentile(df_roi.prf_ecc, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['prf_ecc_ci_up'] = weighted_nan_percentile(df_roi.prf_ecc, df_roi.prf_loo_r2, 97.5)
             
-            df_params_avg_roi['prf_n_weighted_mean'], _ = np.average(df_roi.prf_n, weights=df_roi.prf_loo_r2, axis=0, returned=True)
-            df_params_avg_roi['prf_n_ci_down'] = np.percentile(df_roi.prf_n, [2.5])
-            df_params_avg_roi['prf_n_ci_up'] = np.percentile(df_roi.prf_n, [97.5])
+            df_params_avg_roi['prf_n_weighted_median'] = weighted_nan_median(df_roi.prf_n, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['prf_n_ci_down'] = weighted_nan_percentile(df_roi.prf_n, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['prf_n_ci_up'] = weighted_nan_percentile(df_roi.prf_n, df_roi.prf_loo_r2, 97.5)
              
-            df_params_avg_roi['pcm_weighted_mean'], _ = np.average(df_roi.pcm_median, weights=df_roi.prf_loo_r2, axis=0, returned=True)
-            df_params_avg_roi['pcm_ci_down'] = np.percentile(df_roi.pcm_median, [2.5])
-            df_params_avg_roi['pcm_ci_up'] = np.percentile(df_roi.pcm_median, [97.5])
+            df_params_avg_roi['pcm_weighted_median'] = weighted_nan_median(df_roi.pcm_median, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['pcm_ci_down'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['pcm_ci_up'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 97.5)
     
             if num_roi == 0: df_params_avg = df_params_avg_roi
             else: df_params_avg = pd.concat([df_params_avg, df_params_avg_roi])
@@ -177,8 +179,8 @@ for format_, extension in zip(formats, extensions):
             df_ecc_size_bin = pd.DataFrame()
             df_ecc_size_bin['roi'] = [roi]*num_ecc_size_bins
             df_ecc_size_bin['num_bins'] = np.arange(num_ecc_size_bins)
-            df_ecc_size_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
-            df_ecc_size_bin['prf_size_bins_median'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_size'].values, x['prf_loo_r2'].values)).values
+            df_ecc_size_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
+            df_ecc_size_bin['prf_size_bins_median'] = df_bins.apply(lambda x: weighted_nan_median(x['prf_size'].values, x['prf_loo_r2'].values)).values
             df_ecc_size_bin['prf_loo_r2_bins_median'] = np.array(df_bins['prf_loo_r2'].median())
             df_ecc_size_bin['prf_size_bins_ci_upper_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['prf_size'].values, x['prf_loo_r2'].values, 75)).values
             df_ecc_size_bin['prf_size_bins_ci_lower_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['prf_size'].values, x['prf_loo_r2'].values, 25)).values
@@ -198,8 +200,8 @@ for format_, extension in zip(formats, extensions):
             df_ecc_pcm_bin = pd.DataFrame()
             df_ecc_pcm_bin['roi'] = [roi]*num_ecc_pcm_bins
             df_ecc_pcm_bin['num_bins'] = np.arange(num_ecc_pcm_bins)
-            df_ecc_pcm_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
-            df_ecc_pcm_bin['prf_pcm_bins_median'] = df_bins.apply(lambda x: weighted_nan_median_pd(x['pcm_median'].values, x['prf_loo_r2'].values)).values
+            df_ecc_pcm_bin['prf_ecc_bins'] = df_bins.apply(lambda x: weighted_nan_median(x['prf_ecc'].values, x['prf_loo_r2'].values)).values
+            df_ecc_pcm_bin['prf_pcm_bins_median'] = df_bins.apply(lambda x: weighted_nan_median(x['pcm_median'].values, x['prf_loo_r2'].values)).values
             df_ecc_pcm_bin['prf_loo_r2_bins_median'] = np.array(df_bins['prf_loo_r2'].median())
             df_ecc_pcm_bin['prf_pcm_bins_ci_upper_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['pcm_median'].values, x['prf_loo_r2'].values, 75)).values
             df_ecc_pcm_bin['prf_pcm_bins_ci_lower_bound'] = df_bins.apply(lambda x: weighted_nan_percentile(x['pcm_median'].values, x['prf_loo_r2'].values, 25)).values

@@ -317,7 +317,7 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                                 legendgroup='pcm', 
                                 points=False, 
                                 spanmode='manual', 
-                                span=[0, 20],
+                                span=[0, 50],
                                 scalemode='width', 
                                 fillcolor=roi_colors[j],
                                 line_color=roi_colors[j]), 
@@ -349,7 +349,7 @@ def prf_violins_plot(df_violins, fig_width, fig_height, rois, roi_colors):
                          row=2, col=1)
         
         fig.update_yaxes(showline=True, 
-                         range=[0, 20],
+                         range=[0, 50],
                          nticks=10, 
                          title_text='pRF pCM (mm/dva)', 
                          row=2, col=2)
@@ -417,18 +417,18 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
         
         df = df_params_avg.loc[(df_params_avg.roi == roi)]
 
-        weighted_mean = df.prf_loo_r2_weighted_mean
+        weighted_median = df.prf_loo_r2_weighted_median
         ci_up = df.prf_loo_r2_ci_up
         ci_down = df.prf_loo_r2_ci_down
         
 
         fig.add_trace(go.Scatter(x=[roi],
-                                 y=tuple(weighted_mean),
+                                 y=tuple(weighted_median),
                                  mode='markers', 
                                  name=roi,
                                  error_y=dict(type='data', 
-                                              array=[ci_up-weighted_mean], 
-                                              arrayminus=[weighted_mean-ci_down],
+                                              array=[ci_up-weighted_median], 
+                                              arrayminus=[weighted_median-ci_down],
                                               visible=True, 
                                               thickness=3,
                                               width=0, 
@@ -443,17 +443,17 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                           row=1, col=1)
         
         # pRF size
-        weighted_mean = df.prf_size_weighted_mean
+        weighted_median = df.prf_size_weighted_median
         ci_up = df.prf_size_ci_up
         ci_down = df.prf_size_ci_down
         
         fig.add_trace(go.Scatter(x=[roi],
-                                 y=tuple(weighted_mean),
+                                 y=tuple(weighted_median),
                                  mode='markers', 
                                  name=roi,
                                  error_y=dict(type='data', 
-                                              array=[ci_up-weighted_mean], 
-                                              arrayminus=[weighted_mean-ci_down],
+                                              array=[ci_up-weighted_median], 
+                                              arrayminus=[weighted_median-ci_down],
                                               visible=True, 
                                               thickness=3,
                                               width=0, 
@@ -468,17 +468,17 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                           row=1, col=2)
                 
         # # pRF n
-        # weighted_mean = df.prf_n_weighted_mean
+        # weighted_median = df.prf_n_weighted_median
         # ci_up = df.prf_n_ci_up
         # ci_down = df.prf_n_ci_down
         
         # fig.add_trace(go.Scatter(x=[roi],
-        #                          y=tuple(weighted_mean),
+        #                          y=tuple(weighted_median),
         #                          mode='markers', 
         #                          name=roi,
         #                          error_y=dict(type='data', 
-        #                                       array=[ci_up-weighted_mean], 
-        #                                       arrayminus=[weighted_mean-ci_down],
+        #                                       array=[ci_up-weighted_median], 
+        #                                       arrayminus=[weighted_median-ci_down],
         #                                       visible=True, 
         #                                       thickness=3,
         #                                       width=0, 
@@ -493,17 +493,17 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
         #                   row=2, col=1)
         
         # pRF ecc
-        weighted_mean = df.prf_ecc_weighted_mean
+        weighted_median = df.prf_ecc_weighted_median
         ci_up = df.prf_ecc_ci_up
         ci_down = df.prf_ecc_ci_down
         
         fig.add_trace(go.Scatter(x=[roi],
-                                 y=tuple(weighted_mean),
+                                 y=tuple(weighted_median),
                                  mode='markers', 
                                  name=roi,
                                  error_y=dict(type='data', 
-                                              array=[ci_up-weighted_mean], 
-                                              arrayminus=[weighted_mean-ci_down],
+                                              array=[ci_up-weighted_median], 
+                                              arrayminus=[weighted_median-ci_down],
                                               visible=True, 
                                               thickness=3,
                                               width=0, 
@@ -518,17 +518,17 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                           row=2, col=1)
         
         # pcm
-        weighted_mean = df.pcm_weighted_mean
+        weighted_median = df.pcm_weighted_median
         ci_up = df.pcm_ci_up
         ci_down = df.pcm_ci_down
         
         fig.add_trace(go.Scatter(x=[roi],
-                                 y=tuple(weighted_mean),
+                                 y=tuple(weighted_median),
                                  mode='markers', 
                                  name=roi,
                                  error_y=dict(type='data', 
-                                              array=[ci_up-weighted_mean], 
-                                              arrayminus=[weighted_mean-ci_down],
+                                              array=[ci_up-weighted_median], 
+                                              arrayminus=[weighted_median-ci_down],
                                               visible=True, 
                                               thickness=3,
                                               width=0, 
