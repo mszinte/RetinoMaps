@@ -161,9 +161,9 @@ for format_, extension in zip(formats, extensions):
             df_params_avg_roi['prf_n_ci_down'] = weighted_nan_percentile(df_roi.prf_n, df_roi.prf_loo_r2, 2.5)
             df_params_avg_roi['prf_n_ci_up'] = weighted_nan_percentile(df_roi.prf_n, df_roi.prf_loo_r2, 97.5)
              
-            df_params_avg_roi['pcm_weighted_median'] = weighted_nan_median(df_roi.pcm_median, weights=df_roi.prf_loo_r2)
-            df_params_avg_roi['pcm_ci_down'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 2.5)
-            df_params_avg_roi['pcm_ci_up'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 97.5)
+            df_params_avg_roi['pcm_median_weighted_median'] = weighted_nan_median(df_roi.pcm_median, weights=df_roi.prf_loo_r2)
+            df_params_avg_roi['pcm_median_ci_down'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 2.5)
+            df_params_avg_roi['pcm_median_ci_up'] = weighted_nan_percentile(df_roi.pcm_median, df_roi.prf_loo_r2, 97.5)
     
             if num_roi == 0: df_params_avg = df_params_avg_roi
             else: df_params_avg = pd.concat([df_params_avg, df_params_avg_roi])
@@ -412,15 +412,15 @@ for format_, extension in zip(formats, extensions):
     
         colnames = ['prf_loo_r2', 'prf_size', 'prf_ecc', 'prf_n', 'pcm_median']
         df_params_avg_indiv = df_params_avg.groupby(['roi', 'subject'])[['prf_loo_r2']].apply(
-                weighted_average, 'prf_loo_r2', 'prf_loo_r2').reset_index(name='prf_loo_r2_weighted_mean')
+                weighted_average, 'prf_loo_r2', 'prf_loo_r2').reset_index(name='prf_loo_r2_weighted_median')
         for colname in colnames[1:]:            
-            df_params_avg_indiv['{}_weighted_mean'.format(colname)] = df_params_avg.groupby(['roi', 'subject'])[[colname, 'prf_loo_r2']].apply(
+            df_params_avg_indiv['{}_weighted_median'.format(colname)] = df_params_avg.groupby(['roi', 'subject'])[[colname, 'prf_loo_r2']].apply(
                     weighted_average, colname, 'prf_loo_r2').reset_index()[0]
-        df_params_avg_mean = df_params_avg_indiv.groupby(['roi'])[[colname + '_weighted_mean' for colname in colnames]].mean()
+        df_params_avg_mean = df_params_avg_indiv.groupby(['roi'])[[colname + '_weighted_median' for colname in colnames]].mean()
         df_params_avg_ci = pd.DataFrame()
         for colname in colnames:
-            df_params_avg_ci['{}_ci_down'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_mean'.format(colname)]].apply(lambda x: np.percentile(x, 2.5))
-            df_params_avg_ci['{}_ci_up'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_mean'.format(colname)]].apply(lambda x: np.percentile(x, 97.5))
+            df_params_avg_ci['{}_ci_down'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_median'.format(colname)]].apply(lambda x: np.percentile(x, 2.5))
+            df_params_avg_ci['{}_ci_up'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_median'.format(colname)]].apply(lambda x: np.percentile(x, 97.5))
         
         df_params_avg = pd.concat([df_params_avg_mean, df_params_avg_ci], axis=1).reset_index()
         tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)

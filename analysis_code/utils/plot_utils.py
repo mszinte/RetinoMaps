@@ -518,9 +518,9 @@ def prf_params_avg_plot(df_params_avg, fig_width, fig_height, rois, roi_colors):
                           row=2, col=1)
         
         # pcm
-        weighted_median = df.pcm_weighted_median
-        ci_up = df.pcm_ci_up
-        ci_down = df.pcm_ci_down
+        weighted_median = df.pcm_median_weighted_median
+        ci_up = df.pcm_median_ci_up
+        ci_down = df.pcm_median_ci_down
         
         fig.add_trace(go.Scatter(x=[roi],
                                  y=tuple(weighted_median),
