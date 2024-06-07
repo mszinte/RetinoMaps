@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-make_roi_fig_tsv.py
+make_rois_fig_tsv.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Make ROIs-based CSS tsv
@@ -22,9 +22,9 @@ python make_rois_fig.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/postproc/prf/postfit/
-python make_roi_fig_tsv.py /scratch/mszinte/data RetinoMaps sub-01 327
-python make_roi_fig_tsv.py /scratch/mszinte/data RetinoMaps sub-170k 327
-python make_roi_fig_tsv.py /scratch/mszinte/data RetinoMaps group 327
+python make_rois_fig_tsv.py /scratch/mszinte/data RetinoMaps sub-01 327
+python make_rois_fig_tsv.py /scratch/mszinte/data RetinoMaps sub-170k 327
+python make_rois_fig_tsv.py /scratch/mszinte/data RetinoMaps group 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
@@ -93,7 +93,6 @@ screen_side = 20
 gaussian_mesh_grain = 100
 hot_zone_percent = 0.01
 
-
 # Format loop
 for format_, extension in zip(formats, extensions):
     print(format_)
@@ -117,7 +116,6 @@ for format_, extension in zip(formats, extensions):
                  (data.prf_ecc < ecc_threshold[0]) | (data.prf_ecc > ecc_threshold[1]) |
                  (data.prf_size < size_threshold[0]) | (data.prf_size > size_threshold[1]) | 
                  (data.prf_n < n_threshold[0]) | (data.prf_n > n_threshold[1]) | 
-                 # (data.pcm < pcm_threshold[0]) | (data.pcm > pcm_threshold[1]) |
                  (data.prf_loo_r2 < rsqr_threshold) |
                  (data[stats_col] > stats_threshold)] = np.nan
         data = data.dropna()
@@ -193,7 +191,6 @@ for format_, extension in zip(formats, extensions):
         # --------
         data_pcm = data
         ecc_bins = np.concatenate(([0],np.linspace(0.4, 1, num_ecc_pcm_bins)**2 * max_ecc))
-    
         for num_roi, roi in enumerate(rois):
             df_roi = data_pcm.loc[(data.roi == roi)]
             df_bins = df_roi.groupby(pd.cut(df_roi['prf_ecc'], bins=ecc_bins))
@@ -481,7 +478,7 @@ for format_, extension in zip(formats, extensions):
         print('Saving tsv: {}'.format(tsv_barycentre_fn))
         df_barycentre.to_csv(tsv_barycentre_fn, sep="\t", na_rep='NaN', index=False)
     
-# Define permission cmd
-print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))    
+# # Define permission cmd
+# print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
+# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))    
