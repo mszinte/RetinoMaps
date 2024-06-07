@@ -93,42 +93,6 @@ def weighted_nan_mean(data, weights):
     mean = np.sum(masked_data * masked_weights) / np.sum(masked_weights)
     return mean
 
-
-# def weighted_nan_median(data, weights):
-#     """
-#     Calculate the weighted median of an array, ignoring NaN values.
-
-#     Parameters:
-#     data (np.ndarray): Array of data points, may contain NaN values.
-#     weights (np.ndarray): Array of weights corresponding to the data points.
-
-#     Returns:
-#     float: The weighted median of the data points, ignoring NaN values.
-#     """
-#     import numpy as np 
-#     # Mask NaN values in the data
-#     mask = ~np.isnan(data)
-
-#     # Apply the mask to data and weights
-#     masked_data = data[mask]
-#     masked_weights = weights[mask]
-    
-#     # Sort the data and corresponding weights
-#     sorted_indices = np.argsort(masked_data)
-#     sorted_data = masked_data[sorted_indices]
-#     sorted_weights = masked_weights[sorted_indices]
-   
-#     # Calculate the cumulative sum of weights
-#     cumulative_weights = np.cumsum(sorted_weights)
-    
-#     # Find the median position
-#     median_weight = cumulative_weights[-1] / 2.0
-    
-#     # Find the index where the cumulative weight crosses the median weight
-#     median_index = np.searchsorted(cumulative_weights, median_weight)
-    
-#     return sorted_data[median_index]
-
 def weighted_nan_median(data, weights):
     """
     Calculate the weighted median of a data array, ignoring NaN values.
@@ -244,7 +208,6 @@ def weighted_nan_percentile(data, weights, percentile):
     percentile_index = np.searchsorted(cumulative_weights, percentile_weight)
     
     return float(sorted_data[percentile_index])
-
         
 def gaus_2d(gauss_x, gauss_y, gauss_sd, screen_side, grain=200):
     """
@@ -348,8 +311,6 @@ def linear_regression_surf(bold_signal, model_prediction, correction=None, alpha
     import numpy as np
     from scipy import stats
     from statsmodels.stats.multitest import multipletests
-    import ipdb
-    deb = ipdb.set_trace
     
     if not isinstance(alpha, list):
         alpha = [alpha]
@@ -465,7 +426,6 @@ def avg_subject_template(fns):
             
     return img, data_avg
 
-
 def make_prf_distribution_df(data, rois, max_ecc, grain):
     """
     Load the PRF TSV file and compute the PRF distribution 
@@ -537,8 +497,6 @@ def make_prf_barycentre_df(df_distribution, rois, max_ecc, grain, hot_zone_perce
     -------
     df_barycentre: dataframe filtered to use in barycentre plot
     """
-    import ipdb
-    deb = ipdb.set_trace
     import pandas as pd
     import numpy as np
 

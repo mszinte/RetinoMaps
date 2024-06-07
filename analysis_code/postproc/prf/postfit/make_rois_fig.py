@@ -30,7 +30,6 @@ Written by Uriel Lascombes (uriel.lascombes@laposte.net)
 Edited by Martin Szinte (mail@martinszinte.net)
 -----------------------------------------------------------------------------------------
 """
-
 # Stop warnings
 import warnings
 warnings.filterwarnings("ignore")
