@@ -153,12 +153,12 @@ for format_, extension in zip(formats, extensions):
     print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
 
-    # # Parameters average plot
-    # fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
-    #                           rois=rois, roi_colors=roi_colors)
-    # fig_fn = "{}/{}_prf_params_avg.pdf".format(fig_dir, subject)
-    # print('Saving pdf: {}'.format(fig_fn))
-    # fig.write_image(fig_fn)
+    # Parameters average plot
+    fig = prf_params_avg_plot(df_params_avg=df_params_avg, fig_width=fig_width, fig_height=600, 
+                              rois=rois, roi_colors=roi_colors)
+    fig_fn = "{}/{}_prf_params_avg.pdf".format(fig_dir, subject)
+    print('Saving pdf: {}'.format(fig_fn))
+    fig.write_image(fig_fn)
     
     # Ecc.size plots
     fig = prf_ecc_size_plot(df_ecc_size=df_ecc_size, fig_width=fig_width, 
