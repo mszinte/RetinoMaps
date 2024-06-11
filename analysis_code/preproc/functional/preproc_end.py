@@ -159,7 +159,7 @@ preproc_files_list = [preproc_fsnative_hemi_L,
 for preproc_files in preproc_files_list:
     for task in tasks:
         # Defind output files names 
-        preproc_files_task = [file for file in preproc_files if task in file]
+        preproc_files_task = [file for file in preproc_files if 'task-{}'.format(task) in file]
 
         if not preproc_files_task:
             print('No files for {}'.format(task))
