@@ -127,9 +127,11 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                 data_dict['roi'] = np.array([roi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['subject'] = np.array([subject] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['hemi'] = np.array([hemi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
+                data_dict['num_vert'] = np.where(roi_verts[roi])[0]
                 df_rois = pd.concat([df_rois, pd.DataFrame(data_dict)], ignore_index=True)
-            
+                
     elif format_ == '170k':
+        
 
         # Derivatives
         deriv_avg_fn = '{}/{}_task-{}_fmriprep_dct_prf-deriv-loo-avg_css.dtseries.nii'.format(
@@ -172,6 +174,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                 data_dict['roi'] = np.array([roi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['subject'] = np.array([subject] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['hemi'] = np.array([hemi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
+                data_dict['num_vert'] = np.where(roi_verts[roi])[0]
                 df_rois = pd.concat([df_rois, pd.DataFrame(data_dict)], ignore_index=True)
 
     print('Saving tsv: {}'.format(tsv_fn))

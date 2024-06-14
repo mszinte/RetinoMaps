@@ -78,14 +78,12 @@ prf_task_name = analysis_info['prf_task_name']
 cortex_dir = "{}/{}/derivatives/pp_data/cortex".format(main_dir, project_dir)
 set_pycortex_config_file(cortex_dir)
 
-# Derivatives idx 
+# Derivatives and stats idx 
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx, size_idx = 0, 1, 2, 3, 4
 amp_idx, baseline_idx, x_idx, y_idx, hrf_1_idx = 5, 6, 7, 8, 9
 hrf_2_idx, n_idx, loo_rsq_idx = 10, 11, 12
-
-# Stats idx
-slope_idx, intercept_idx, rvalue_idx, pvalue_idx = 0, 1, 2, 3
-stderr_idx, trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 4, 5, 6, 7
+slope_idx, intercept_idx, rvalue_idx, pvalue_idx = 13, 14, 15, 16
+stderr_idx, trs_idx, corr_pvalue_5pt_idx, corr_pvalue_1pt_idx = 17, 18, 19, 20
 
 # compute duration 
 start_time = datetime.datetime.now()
@@ -150,6 +148,9 @@ if subject != 'sub-170k':
             stats_results = load_surface_pycortex(brain_fn=stats_avg_fn)
             stats_mat = stats_results['data_concat']
         
+        # Combine mat
+        deriv_mat = np.concatenate((deriv_mat, stats_mat))
+        
         # Threshold data
         deriv_mat_th = deriv_mat
         amp_down = deriv_mat_th[amp_idx,...] > 0
@@ -169,7 +170,7 @@ if subject != 'sub-170k':
                             n_th_down, n_th_up,
                             stats_th_down
                           )) 
-        th_idx = np.where(np.logical_and.reduce(all_th)==False)[0]
+        deriv_mat[loo_rsq_idx, np.logical_and.reduce(all_th)==False]=0
 
         # Get surfaces for each hemisphere
         surfs = [cortex.polyutils.Surface(*d) for d in cortex.db.get_surf(pycortex_subject, "flat")]
@@ -186,14 +187,6 @@ if subject != 'sub-170k':
                                   mask=False, 
                                   atlas_name=atlas_name, 
                                   surf_size=surf_size)
-        
-        # Exclude vertex out of threshold
-        th_idx_set = set(th_idx)
-        for roi, indices in roi_verts_dict.items():
-            # Filter out the indices that are in th_idx_set
-            filtered_indices = [idx for idx in indices if idx not in th_idx_set]
-            # Update the dictionary with the filtered indices
-            roi_verts_dict[roi] = np.array(filtered_indices)
         
         # Derivatives settings
         vert_rsq_data = deriv_mat[loo_rsq_idx, ...]
@@ -254,44 +247,45 @@ if subject != 'sub-170k':
 
                         if np.sum(vert_dist_th_idx) > 1:
 
-
-                            # Get prf parameters of vertices in geodesic distance threshold
+                            # Get prf parameters of vertices (center and surround) in geodesic distance threshold
                             vert_ctr_x, vert_ctr_y = vert_x[surf_idx], vert_y[surf_idx]
                             vert_dist_th_idx[surf_idx] = False
+                            vert_srd_x = vert_x[vert_dist_th_idx]
+                            vert_srd_y = vert_y[vert_dist_th_idx]
                             
-                            # MEDIANE
+                            # median
                             # Compute median geodesic distance 
                             vert_geo_dist_median = weighted_nan_median(vert_dist_th_dist[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
-
-                            vert_srd_x = weighted_nan_median(vert_x[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
-                            vert_srd_y = weighted_nan_median(vert_y[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
                             
                             # Compute prf center suround distance (deg)
-                            vert_prf_dist = np.sqrt((vert_ctr_x - vert_srd_x)**2 + (vert_ctr_y - vert_srd_y)**2)
+                            vert_prf_dist_median_array = np.sqrt((vert_ctr_x - vert_srd_x)**2 + (vert_ctr_y - vert_srd_y)**2)
+                            
+                            # Compute median of prf center suround distance
+                            vert_prf_dist_median = weighted_nan_median(vert_prf_dist_median_array, vert_rsq[vert_dist_th_idx])
                             
                             # Compute cortical magnification in mm/deg (surface distance / pRF positon distance)
-                            vert_cm[0,vert_idx] = vert_geo_dist_median/vert_prf_dist
+                            vert_cm[0, vert_idx] = vert_geo_dist_median/vert_prf_dist_median
                             
                             # export median geodesic and prf distance
-                            vert_cm[2,vert_idx] = vert_geo_dist_median
-                            vert_cm[3,vert_idx] = vert_prf_dist
+                            vert_cm[2, vert_idx] = vert_geo_dist_median
+                            vert_cm[3, vert_idx] = vert_prf_dist_median
                             
                             # mean
                             # Compute median geodesic distance 
                             vert_geo_dist_mean = weighted_nan_mean(vert_dist_th_dist[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
 
-                            vert_srd_x = weighted_nan_mean(vert_x[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
-                            vert_srd_y = weighted_nan_mean(vert_y[vert_dist_th_idx], vert_rsq[vert_dist_th_idx])
-                            
                             # Compute prf center suround distance (deg)
-                            vert_prf_dist = np.sqrt((vert_ctr_x - vert_srd_x)**2 + (vert_ctr_y - vert_srd_y)**2)
+                            vert_prf_dist_mean_array = np.sqrt((vert_ctr_x - vert_srd_x)**2 + (vert_ctr_y - vert_srd_y)**2)
+                            
+                            # Compute mean of prf center suround distance
+                            vert_prf_dist_mean = weighted_nan_mean(vert_prf_dist_mean_array, vert_rsq[vert_dist_th_idx])
                             
                             # Compute cortical magnification in mm/deg (surface distance / pRF positon distance)
-                            vert_cm[4,vert_idx] = vert_geo_dist_mean/vert_prf_dist
+                            vert_cm[4, vert_idx] = vert_geo_dist_mean/vert_prf_dist_mean
                             
                             # export median geodesic and prf distance
-                            vert_cm[5,vert_idx] = vert_geo_dist_mean
-                            vert_cm[6,vert_idx] = vert_prf_dist
+                            vert_cm[5, vert_idx] = vert_geo_dist_mean
+                            vert_cm[6, vert_idx] = vert_prf_dist_mean
 
 
         deriv_mat_new = np.zeros((4, deriv_mat.shape[1])) * np.nan
