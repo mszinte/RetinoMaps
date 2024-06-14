@@ -371,18 +371,12 @@ for format_, extension in zip(formats, extensions):
             # -------------------
             tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject_to_group)
             df_distribution_indiv = pd.read_table(tsv_distribution_fn, sep="\t")
-            if i == 0: df_distribution = df_distribution_indiv.copy()
-            else:
-                # Identifying numeric columns
-                numeric_columns = df_distribution_indiv.select_dtypes(include='number').columns
-                non_numeric_columns = df_distribution_indiv.columns.difference(numeric_columns)
-                
-                # Performing the average only on numeric columns
-                df_distribution[numeric_columns] = (df_distribution[numeric_columns] + df_distribution_indiv[numeric_columns]) / 2
-                
-                # Concatenating non-numeric columns back to the dataframe
-                df_distribution[non_numeric_columns] = df_distribution_indiv[non_numeric_columns]
-    
+            mesh_indiv = df_distribution_indiv.drop(columns=['roi', 'x', 'y', 'hemi']).values
+            others_columns = df_distribution_indiv[['roi', 'x', 'y', 'hemi']]
+
+            if i == 0: mesh_group = np.expand_dims(mesh_indiv, axis=0)
+            else: mesh_group = np.vstack((mesh_group, np.expand_dims(mesh_indiv, axis=0)))
+           
         # Averaging and saving tsv
         tsv_dir = '{}/{}/derivatives/pp_data/{}/{}/prf/tsv'.format(
             main_dir, project_dir, subject, format_)
@@ -390,7 +384,7 @@ for format_, extension in zip(formats, extensions):
         
         # ROI surface areas 
         # -----------------
-        df_roi_area = df_roi_area.groupby(['roi'], sort=False).mean().reset_index()
+        df_roi_area = df_roi_area.groupby(['roi'], sort=False).median().reset_index()
         tsv_roi_area_fn = "{}/{}_prf_roi_area.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_roi_area_fn))
         df_roi_area.to_csv(tsv_roi_area_fn, sep="\t", na_rep='NaN', index=False)
@@ -405,52 +399,54 @@ for format_, extension in zip(formats, extensions):
         # Parameters average
         # ------------------
         df_params_avg = df_violins
-    
-        # compute mean and ci
-        def weighted_average(df_groupby, column_data, column_weight):
-            return (df_groupby[column_data] * df_groupby[column_weight]).sum() / df_groupby[column_weight].sum()
-    
-        colnames = ['prf_loo_r2', 'prf_size', 'prf_ecc', 'prf_n', 'pcm_median']
-        df_params_avg_indiv = df_params_avg.groupby(['roi', 'subject'])[['prf_loo_r2']].apply(
-                weighted_average, 'prf_loo_r2', 'prf_loo_r2').reset_index(name='prf_loo_r2_weighted_median')
-        for colname in colnames[1:]:            
-            df_params_avg_indiv['{}_weighted_median'.format(colname)] = df_params_avg.groupby(['roi', 'subject'])[[colname, 'prf_loo_r2']].apply(
-                    weighted_average, colname, 'prf_loo_r2').reset_index()[0]
-        df_params_avg_mean = df_params_avg_indiv.groupby(['roi'])[[colname + '_weighted_median' for colname in colnames]].mean()
-        df_params_avg_ci = pd.DataFrame()
-        for colname in colnames:
-            df_params_avg_ci['{}_ci_down'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_median'.format(colname)]].apply(lambda x: np.percentile(x, 2.5))
-            df_params_avg_ci['{}_ci_up'.format(colname)] = df_params_avg_indiv.groupby(['roi'])[['{}_weighted_median'.format(colname)]].apply(lambda x: np.percentile(x, 97.5))
         
-        df_params_avg = pd.concat([df_params_avg_mean, df_params_avg_ci], axis=1).reset_index()
+        # compute median 
+        colnames = ['prf_loo_r2', 'prf_size', 'prf_ecc', 'prf_n', 'pcm_median']
+        df_params_median_indiv = df_params_avg.groupby(['roi', 'subject'])[['prf_loo_r2']].apply(
+            lambda x: weighted_nan_median(x['prf_loo_r2'], df_params_avg.loc[x.index, 'prf_loo_r2'])).reset_index(name='prf_loo_r2_weighted_median')
+        
+        for colname in colnames[1:]:
+            df_params_median_indiv['{}_weighted_median'.format(colname)] = df_params_avg.groupby(['roi', 'subject'])[[colname, 'prf_loo_r2']].apply(
+                lambda x: weighted_nan_median(x[colname], df_params_avg.loc[x.index, 'prf_loo_r2'])).reset_index()[0]
+        df_params_med_median = df_params_median_indiv.groupby(['roi'])[[colname + '_weighted_median' for colname in colnames]].median()
+
+        # compute Ci
+        df_params_median_ci = pd.DataFrame()
+        for colname in colnames:
+            df_params_median_ci['{}_ci_down'.format(colname)] = df_params_median_indiv.groupby(['roi']).apply(
+                lambda x: weighted_nan_percentile(x['{}_weighted_median'.format(colname)], x['prf_loo_r2_weighted_median'], 2.5)) 
+            df_params_median_ci['{}_ci_up'.format(colname)] = df_params_median_indiv.groupby(['roi']).apply(
+                lambda x: weighted_nan_percentile(x['{}_weighted_median'.format(colname)], x['prf_loo_r2_weighted_median'], 97.5)) 
+
+        df_params_median = pd.concat([df_params_med_median, df_params_median_ci], axis=1).reset_index()
         tsv_params_avg_fn = "{}/{}_prf_params_avg.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_params_avg_fn))
-        df_params_avg.to_csv(tsv_params_avg_fn, sep="\t", na_rep='NaN', index=False)
+        df_params_median.to_csv(tsv_params_avg_fn, sep="\t", na_rep='NaN', index=False)
         
         # Ecc.size
         # --------
-        df_ecc_size = df_ecc_size.groupby(['roi', 'num_bins'], sort=False).mean().reset_index()
+        df_ecc_size = df_ecc_size.groupby(['roi', 'num_bins'], sort=False).median().reset_index()
         tsv_ecc_size_fn = "{}/{}_prf_ecc_size.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_ecc_size_fn))
         df_ecc_size.to_csv(tsv_ecc_size_fn, sep="\t", na_rep='NaN', index=False)
     
         # Ecc.pCM
         # -------
-        df_ecc_pcm = df_ecc_pcm.groupby(['roi', 'num_bins'], sort=False).mean().reset_index()
+        df_ecc_pcm = df_ecc_pcm.groupby(['roi', 'num_bins'], sort=False).median().reset_index()
         tsv_ecc_pcm_fn = "{}/{}_prf_ecc_pcm.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_ecc_pcm_fn))
         df_ecc_pcm.to_csv(tsv_ecc_pcm_fn, sep="\t", na_rep='NaN', index=False)
     
         # Polar angle
         # -----------
-        df_polar_angle = df_polar_angle.groupby(['roi', 'hemi', 'num_bins'], sort=False).mean().reset_index()
+        df_polar_angle = df_polar_angle.groupby(['roi', 'hemi', 'num_bins'], sort=False).median().reset_index()
         tsv_polar_angle_fn = "{}/{}_prf_polar_angle.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_polar_angle_fn))
         df_polar_angle.to_csv(tsv_polar_angle_fn, sep="\t", na_rep='NaN', index=False)
     
         # Contralaterality
         # ----------------
-        df_contralaterality = df_contralaterality.groupby(['roi'], sort=False).mean().reset_index()
+        df_contralaterality = df_contralaterality.groupby(['roi'], sort=False).median().reset_index()
         tsv_contralaterality_fn = "{}/{}_prf_contralaterality.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_contralaterality_fn))
         df_contralaterality.to_csv(tsv_contralaterality_fn, sep="\t", na_rep='NaN', index=False)
@@ -459,6 +455,11 @@ for format_, extension in zip(formats, extensions):
         # -------------------
         tsv_distribution_fn = "{}/{}_prf_distribution.tsv".format(tsv_dir, subject)
         print('Saving tsv: {}'.format(tsv_distribution_fn))
+        median_mesh = np.median(mesh_group, axis=0)
+        df_distribution = pd.DataFrame(median_mesh)
+
+        # Concatenating non-numeric columns back to the dataframe
+        df_distribution = pd.concat([others_columns, df_distribution], axis=1)
         df_distribution.to_csv(tsv_distribution_fn, sep="\t", na_rep='NaN', index=False)
         
         # Spatial distribution hot zone barycentre 

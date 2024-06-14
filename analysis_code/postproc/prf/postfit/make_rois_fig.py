@@ -44,7 +44,6 @@ import sys
 import json
 import pandas as pd
 
-
 # Personal import
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from plot_utils import *
@@ -210,7 +209,7 @@ for format_, extension in zip(formats, extensions):
     print('Saving pdf: {}'.format(fig_fn))
     fig.write_image(fig_fn)
     
-# # Define permission cmd
-# print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
-# os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
-# os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
+# Define permission cmd
+print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
+os.system("chmod -Rf 771 {}/{}".format(main_dir, project_dir))
+os.system("chgrp -Rf {} {}/{}".format(group, main_dir, project_dir))
