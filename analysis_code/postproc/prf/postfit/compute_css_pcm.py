@@ -52,7 +52,7 @@ import nibabel as nb
 # Personal iports
 sys.path.append("{}/../../../utils".format(os.getcwd()))
 from surface_utils import make_surface_image 
-from maths_utils import  avg_subject_template, weighted_nan_mean, weighted_nan_median
+from maths_utils import  median_subject_template, weighted_nan_mean, weighted_nan_median
 from pycortex_utils import set_pycortex_config_file, load_surface_pycortex, get_rois, make_image_pycortex
 
 # Inputs
@@ -335,7 +335,7 @@ elif subject == 'sub-170k':
                 main_dir, project_dir, subject, subject, prf_task_name)]
 
     # Averaging across subject
-    img, data_pcm_avg = avg_subject_template(fns=subjects_pcm)
+    img, data_pcm_median = median_subject_template(fns=subjects_pcm)
         
     # Export results
     sub_170k_pcm_dir = "{}/{}/derivatives/pp_data/sub-170k/170k/prf/prf_derivatives".format(
@@ -347,7 +347,7 @@ elif subject == 'sub-170k':
     print("save: {}".format(sub_170k_pcm_fn))
     
     sub_170k_pcm_img = make_surface_image(
-        data=data_pcm_avg, source_img=img, maps_names=maps_names)
+        data=data_pcm_median, source_img=img, maps_names=maps_names)
     nb.save(sub_170k_pcm_img, sub_170k_pcm_fn)
 
 # Print duration
