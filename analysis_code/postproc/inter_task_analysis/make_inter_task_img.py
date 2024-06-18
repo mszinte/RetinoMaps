@@ -20,7 +20,7 @@ To run:
 python stats_final.py [main directory] [project name] [subject] [group]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd ~/projects/RetinoMaps/analysis_code/postproc/stats/
+cd ~/projects/RetinoMaps/analysis_code/postproc/inter_task_analysis/
 python make_inter_task_img.py /scratch/mszinte/data RetinoMaps sub-01 327
 -----------------------------------------------------------------------------------------
 Written by Uriel Lascombes (uriel.lascombes@laposte.net)
@@ -63,10 +63,10 @@ with open('../../settings.json') as f:
     analysis_info = json.loads(json_s)
 formats = analysis_info['formats']
 extensions = analysis_info['extensions']
-tasks = analysis_info['task_final_stats']
+tasks = analysis_info['task_inter_task']
 fdr_alpha = analysis_info['stats_th']
 glm_code_names = analysis_info['glm_code_names']
-maps_names_final_stats = analysis_info['maps_names_final_stats']
+maps_names_inter_task = analysis_info['maps_names_inter_task']
 
 #Set treshold
 if fdr_alpha == 0.05: fdr_p_map_idx = corr_pvalue_5pt_idx
@@ -130,25 +130,26 @@ for stats_files in stats_files_list:
     final_map[0,:] = np.sum(final_map, axis=0)                
     #  Make specifique maps 
     for vert, final_value in enumerate(final_map[0,:]):
-        if final_value == 3 : final_map[3, vert] = glm_code_names['pursuit_and_saccade']
-        elif final_value == 5 : final_map[5, vert] = glm_code_names['vision_and_pursuit']
-        elif final_value == 6 : final_map[6, vert] = glm_code_names['vision_and_saccade']
-        elif final_value == 7 : final_map[7, vert] = glm_code_names['vision_and_pursuit_and_saccade']
+        if final_value == glm_code_names['pursuit_and_saccade'] : final_map[3, vert] = glm_code_names['pursuit_and_saccade']
+        elif final_value == glm_code_names['vision_and_pursuit'] : final_map[5, vert] = glm_code_names['vision_and_pursuit']
+        elif final_value == glm_code_names['vision_and_saccade'] : final_map[6, vert] = glm_code_names['vision_and_saccade']
+        elif final_value == glm_code_names['vision_and_pursuit_and_saccade'] : final_map[7, vert] = glm_code_names['vision_and_pursuit_and_saccade']
                 
     # Export finals map
     if hemi:
-        final_stats_dir = '{}/{}/derivatives/pp_data/{}/fsnative/inter_task/'.format(main_dir, project_dir, subject)
-        os.makedirs(final_stats_dir, exist_ok=True)
-        final_stats_fn = '{}_{}_final-stats.func.gii' .format(subject, hemi)
+        inter_task_dir = '{}/{}/derivatives/pp_data/{}/fsnative/inter_task/'.format(main_dir, project_dir, subject)
+        os.makedirs(inter_task_dir, exist_ok=True)
+        inter_task_fn = '{}_{}_inter_task.func.gii' .format(subject, hemi)
            
     else:
-        final_stats_dir = '{}/{}/derivatives/pp_data/{}/170k/inter_task/'.format(main_dir, project_dir, subject)
-        os.makedirs(final_stats_dir, exist_ok=True)
-        final_stats_fn = '{}_inter-task.dtseries.nii' .format(subject)
+        inter_task_dir = '{}/{}/derivatives/pp_data/{}/170k/inter_task/'.format(main_dir, project_dir, subject)
+        os.makedirs(inter_task_dir, exist_ok=True)
+        inter_task_fn = '{}_inter_task.dtseries.nii' .format(subject)
         
-    # Save img   
-    final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names_final_stats)
-    nb.save(final_img, '{}/{}'.format(final_stats_dir, final_stats_fn))
+    # Save img 
+    print('Save {}/{}'.format(inter_task_dir, inter_task_fn))
+    final_img = make_surface_image(data=final_map, source_img=img, maps_names=maps_names_inter_task)
+    nb.save(final_img, '{}/{}'.format(inter_task_dir, inter_task_fn))
         
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))

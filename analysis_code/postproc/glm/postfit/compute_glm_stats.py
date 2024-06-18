@@ -131,7 +131,7 @@ glm_stats_loo_fns_list = []
 for format_, extension in zip(formats, extensions):
     list_ = glob.glob("{}/{}/derivatives/pp_data/{}/{}/glm/glm_derivatives/*loo-*_glm-stats.{}".format(
         main_dir, project_dir, subject, format_, extension))
-    list_ = [item for item in list_ if "loo-avg" not in item]
+    list_ = [item for item in list_ if "loo-median" not in item]
     glm_stats_loo_fns_list.extend(list_)
         
 # split filtered files  depending of their nature
@@ -141,9 +141,9 @@ for subtype in glm_stats_loo_fns_list:
     elif "hemi-R" in subtype: stats_fsnative_hemi_R.append(subtype)
     else : stats_170k.append(subtype)
 loo_stats_fns_list = [stats_fsnative_hemi_L, stats_fsnative_hemi_R, stats_170k]
-hemi_data_avg = {'hemi-L': [], 'hemi-R': [], '170k': []}
+hemi_data_median = {'hemi-L': [], 'hemi-R': [], '170k': []}
 
-# Averaging
+# Median
 for loo_stats_fns in loo_stats_fns_list:
     for task in tasks:
         # defind output files names 
@@ -158,47 +158,47 @@ for loo_stats_fns in loo_stats_fns_list:
         elif loo_stats_fns_task[0].find('hemi-R') != -1: hemi = 'hemi-R'
         else: hemi = None
     
-        # Averaging 
+        # Median 
         stats_img, stats_data = load_surface(fn=loo_stats_fns[0])
-        loo_stats_data_avg = np.zeros(stats_data.shape)
+        loo_stats_data_median = np.zeros(stats_data.shape)
         
         for n_run, loo_stats_fn in enumerate(loo_stats_fns_task):
-            loo_stats_avg_fn = loo_stats_fn.split('/')[-1]
-            loo_stats_avg_fn = re.sub(r'avg_loo-\d+_glm-stats', 'loo-avg_glm-stats', loo_stats_avg_fn)
+            loo_stats_median_fn = loo_stats_fn.split('/')[-1]
+            loo_stats_median_fn = re.sub(r'avg_loo-\d+_glm-stats', 'loo-avg_glm-stats', loo_stats_median_fn)
             
             # load data 
             print('adding {} to averaging'.format(loo_stats_fn))
             loo_stats_img, loo_stats_data = load_surface(fn=loo_stats_fn)
             
-            # Averagin
-            if n_run == 0: loo_stats_data_avg = np.copy(loo_stats_data)
-            else: loo_stats_data_avg = np.nanmean(np.array([loo_stats_data_avg, loo_stats_data]), axis=0)
+            # Median
+            if n_run == 0: loo_stats_data_median = np.copy(loo_stats_data)
+            else: loo_stats_data_median = np.nanmedian(np.array([loo_stats_data_median, loo_stats_data]), axis=0)
             
         # Compute two sided corrected p-values
-        t_statistic = loo_stats_data_avg[slope_idx, :] / loo_stats_data_avg[stderr_idx, :]
-        degrees_of_freedom = np.nanmax(loo_stats_data_avg[trs_idx, :]) - 2
+        t_statistic = loo_stats_data_median[slope_idx, :] / loo_stats_data_median[stderr_idx, :]
+        degrees_of_freedom = np.nanmax(loo_stats_data_median[trs_idx, :]) - 2
         p_values = 2 * (1 - stats.t.cdf(abs(t_statistic), df=degrees_of_freedom)) 
         corrected_p_values = multipletests_surface(pvals=p_values, 
                                                    correction='fdr_tsbh', 
                                                    alpha=fdr_alpha)
-        loo_stats_data_avg[pvalue_idx, :] = p_values
-        loo_stats_data_avg[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
-        loo_stats_data_avg[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
+        loo_stats_data_median[pvalue_idx, :] = p_values
+        loo_stats_data_median[corr_pvalue_5pt_idx, :] = corrected_p_values[0,:]
+        loo_stats_data_median[corr_pvalue_1pt_idx, :] = corrected_p_values[1,:]
             
         if hemi:
-            avg_fn = '{}/{}/derivatives/pp_data/{}/fsnative/glm/glm_derivatives/{}'.format(
-                main_dir, project_dir, subject, loo_stats_avg_fn)
-            hemi_data_avg[hemi] = loo_stats_data_avg
+            median_fn = '{}/{}/derivatives/pp_data/{}/fsnative/glm/glm_derivatives/{}'.format(
+                main_dir, project_dir, subject, loo_stats_median_fn)
+            hemi_data_median[hemi] = loo_stats_data_median
         else:
-            avg_fn = '{}/{}/derivatives/pp_data/{}/170k/glm/glm_derivatives/{}'.format(
-                main_dir, project_dir, subject, loo_stats_avg_fn)
-            hemi_data_avg['170k'] = loo_stats_data_avg
+            median_fn = '{}/{}/derivatives/pp_data/{}/170k/glm/glm_derivatives/{}'.format(
+                main_dir, project_dir, subject, loo_stats_median_fn)
+            hemi_data_median['170k'] = loo_stats_data_median
         
         # export averaged data in surface format 
-        loo_stats_img = make_surface_image(data=loo_stats_data_avg, 
+        loo_stats_img = make_surface_image(data=loo_stats_data_median, 
                                            source_img=loo_stats_img, 
                                            maps_names=maps_names)
-        nb.save(loo_stats_img, avg_fn)
+        nb.save(loo_stats_img, median_fn)
 
 # Define permission cmd
 print('Changing files permissions in {}/{}'.format(main_dir, project_dir))
