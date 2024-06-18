@@ -114,7 +114,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
             vertex_area_img, vertex_area_mat = load_surface(vertex_area_fn)
             
             # Inter task
-            inter_task_fn = '{}/{}_{}_vertex_area.func.gii'.format(inter_task_dir, subject, hemi)
+            inter_task_fn = '{}/{}_{}_inter_task.func.gii'.format(inter_task_dir, subject, hemi)
             inter_task_img, inter_task_mat = load_surface(inter_task_fn)
 
             # Combine all derivatives
@@ -137,6 +137,8 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                 data_dict['hemi'] = np.array([hemi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['num_vert'] = np.where(roi_verts[roi])[0]
                 df_rois = pd.concat([df_rois, pd.DataFrame(data_dict)], ignore_index=True)
+                
+
                 
     elif format_ == '170k':
         
@@ -161,7 +163,7 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
         vertex_area_img, vertex_area_mat = load_surface(vertex_area_fn)
 
         # Inter task
-        inter_task_fn = '{}/{}_{}_vertex_area.func.gii'.format(inter_task_dir, subject, hemi)
+        inter_task_fn = '{}/{}_inter_task.dtseries.nii'.format(inter_task_dir, subject)
         inter_task_img, inter_task_mat = load_surface(inter_task_fn)
 
         # Combine all derivatives
@@ -188,7 +190,13 @@ for format_, pycortex_subject in zip(formats, [subject, 'sub-170k']):
                 data_dict['hemi'] = np.array([hemi] * all_deriv_mat[:, roi_verts[roi]].shape[1])
                 data_dict['num_vert'] = np.where(roi_verts[roi])[0]
                 df_rois = pd.concat([df_rois, pd.DataFrame(data_dict)], ignore_index=True)
-
+      
+    # Replace numbers by code value 
+    code_to_name = {v: k for k, v in glm_code_names.items()}
+    for column in maps_names_inter_task:
+        if column in df_rois.columns:
+            df_rois[column] = df_rois[column].map(code_to_name)
+            
     print('Saving tsv: {}'.format(tsv_fn))
     df_rois.to_csv(tsv_fn, sep="\t", na_rep='NaN', index=False)
 
