@@ -452,6 +452,8 @@ def make_prf_distribution_df(data, rois, max_ecc, grain):
         df_roi = data.loc[data.roi == roi].reset_index()
         
         gauss_z_tot = np.zeros((grain,grain)) 
+        x = np.full(grain, np.nan)
+        y = np.full(grain, np.nan)
         for vert in range(len(df_roi)):
             # compute the gaussian mesh
             x, y, gauss_z = gaus_2d(gauss_x=df_roi.prf_x[vert],  
