@@ -1,6 +1,6 @@
 """
 -----------------------------------------------------------------------------------------
-make_tsv_inter_task.py
+make_inter_task_tsv.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Create TSV file with all css analysis output and glm outputs
@@ -22,8 +22,8 @@ To run:
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/projects/RetinoMaps/analysis_code/postproc/inter_task_analysis
-python make_tsv_inter_task.py /scratch/mszinte/data RetinoMaps sub-01 327
-python make_tsv_inter_task.py /scratch/mszinte/data RetinoMaps sub-170k 327
+python make_inter_task_tsv.py /scratch/mszinte/data RetinoMaps sub-01 327
+python make_inter_task_tsv.py /scratch/mszinte/data RetinoMaps sub-170k 327
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 Edited by Uriel Lascombes (uriel.lascombes@laposte.net)
